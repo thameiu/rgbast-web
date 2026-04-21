@@ -122,6 +122,7 @@ import type { PaletteHistoryGraphResponse } from '@/api/types'
 
 const now = Date.now()
 const dummyHistory: PaletteHistoryGraphResponse = {
+  owner_username: 'demo-user',
   main: [
     {
       id: 4, palette_id: 1, parent_snapshot_id: 3, branch_id: null,

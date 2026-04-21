@@ -1,5 +1,5 @@
-/** Base URL for all API requests. Set VITE_API_BASE_URL in .env to override. */
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+/** Base URL for all API requests. Set BACKEND_URL in .env. */
+const API_BASE_URL = import.meta.env.BACKEND_URL || 'http://localhost:8000';
 
 /** Thin fetch wrapper that attaches the JWT bearer token and handles error responses. */
 export class ApiClient {

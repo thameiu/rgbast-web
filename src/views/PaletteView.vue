@@ -261,7 +261,9 @@ function getTokenUsername(): string | null {
   const token = localStorage.getItem('access_token')
   if (!token) return null
   try {
-    const payload = JSON.parse(atob(token.split('.')[1]))
+    const payloadPart = token.split('.')[1]
+    if (!payloadPart) return null
+    const payload = JSON.parse(atob(payloadPart))
     return payload.sub ?? null
   } catch { return null }
 }

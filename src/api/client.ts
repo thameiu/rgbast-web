@@ -1,5 +1,10 @@
-/** Base URL for all API requests. Set BACKEND_URL in .env. */
-const API_BASE_URL = import.meta.env.BACKEND_URL || 'http://localhost:8000';
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+
+/** Base URL for all API requests. Prefer VITE_BACKEND_URL in Vite builds. */
+const API_BASE_URL =
+  import.meta.env.VITE_BACKEND_URL ||
+  import.meta.env.BACKEND_URL ||
+  'http://localhost:8000';
 
 /** Thin fetch wrapper that attaches the JWT bearer token and handles error responses. */
 export class ApiClient {
@@ -17,42 +22,34 @@ export class ApiClient {
     return headers;
   }
 
-  /** GET request. Throws on non-2xx responses with the backend's detail message. */
-  static async get<T>(endpoint: string): Promise<T> {
+  /** Generic request with explicit HTTP method. */
+  static async request<T>(endpoint: string, method: HttpMethod, body?: unknown): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'GET',
+      method,
       headers: this.getHeaders(),
+      body: body ? JSON.stringify(body) : undefined,
     });
     return this.handleResponse(response);
+  }
+
+  /** GET request. */
+  static async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, 'GET');
   }
 
   /** POST request with optional JSON body. */
-  static async post<T>(endpoint: string, body?: any): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: this.getHeaders(),
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    return this.handleResponse(response);
+  static async post<T>(endpoint: string, body?: unknown): Promise<T> {
+    return this.request<T>(endpoint, 'POST', body);
   }
 
   /** PUT request with optional JSON body. */
-  static async put<T>(endpoint: string, body?: any): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'PUT',
-      headers: this.getHeaders(),
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    return this.handleResponse(response);
+  static async put<T>(endpoint: string, body?: unknown): Promise<T> {
+    return this.request<T>(endpoint, 'PUT', body);
   }
 
   /** DELETE request. */
   static async delete<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: this.getHeaders(),
-    });
-    return this.handleResponse(response);
+    return this.request<T>(endpoint, 'DELETE');
   }
 
   private static async handleResponse<T>(response: Response): Promise<T> {
@@ -60,6 +57,10 @@ export class ApiClient {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.detail || `HTTP error ${response.status}`);
     }
+    if (response.status === 204) {
+      return undefined as T;
+    }
+
     return response.json();
   }
 }

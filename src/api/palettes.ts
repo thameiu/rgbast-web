@@ -16,27 +16,27 @@ const CACHE_KEY = 'rgbast_palettes';
 export const palettesApi = {
   /** Create a new palette (with an optional initial set of colors). */
   create: (data: PaletteCreate): Promise<PaletteCreateResponse> => {
-    return ApiClient.post<PaletteCreateResponse>('/palettes', data);
+    return ApiClient.request<PaletteCreateResponse>('/palettes', 'POST', data);
   },
 
   /** Save a new snapshot on the given branch (or create a new branch if create_branch is true). */
   saveSnapshot: (paletteId: number, data: PaletteSnapshotSave): Promise<PaletteSnapshotSaveResponse> => {
-    return ApiClient.put<PaletteSnapshotSaveResponse>(`/palettes/${paletteId}/snapshots`, data);
+    return ApiClient.request<PaletteSnapshotSaveResponse>(`/palettes/${paletteId}/snapshots`, 'PUT', data);
   },
 
   /** Fetch the full commit + branch history for the history graph. */
   getHistory: (paletteId: number): Promise<PaletteHistoryGraphResponse> => {
-    return ApiClient.get<PaletteHistoryGraphResponse>(`/palettes/${paletteId}/history`);
+    return ApiClient.request<PaletteHistoryGraphResponse>(`/palettes/${paletteId}/history`, 'GET');
   },
 
   /** Merge a branch into main, creating a merge commit on main. */
   mergeBranch: (paletteId: number, branchId: number): Promise<PaletteBranchMergeResponse> => {
-    return ApiClient.post<PaletteBranchMergeResponse>(`/palettes/${paletteId}/branches/${branchId}/merge`);
+    return ApiClient.request<PaletteBranchMergeResponse>(`/palettes/${paletteId}/branches/${branchId}/merge`, 'POST');
   },
 
   /** Fetch all palettes (with their latest main snapshot) for a given username. */
   getByUsername: (username: string): Promise<PaletteByUsernameResponse> => {
-    return ApiClient.get<PaletteByUsernameResponse>(`/users/${username}/palettes`);
+    return ApiClient.request<PaletteByUsernameResponse>(`/users/${username}/palettes`, 'GET');
   },
 
   // ── Local cache (localStorage) ─────────────────────────────────────────────

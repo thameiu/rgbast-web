@@ -1,0 +1,8 @@
+@import './base.css';
+
+body {
+  background:
+    radial-gradient(circle at 1px 1px, rgba(14, 14, 16, 0.055) 1px, transparent 0) 0 0 / 28px 28px,
+    var(--paper);
+  background-attachment: fixed;
+}

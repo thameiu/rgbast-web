@@ -40,11 +40,6 @@
         @click="$emit('selectSnapshot', node.id)"
       >
         <div class="commit-top">
-          <span
-            class="change-dot"
-            :class="changeDotClass(node)"
-            :title="changeDotLabel(node)"
-          ></span>
           <div class="cubes-row">
             <ColorCube
               v-for="(col, ci) in node.palette_colors.slice(0, 8)"
@@ -65,6 +60,16 @@
         </div>
         <p class="commit-msg">{{ node.comment || 'Initial palette creation' }}</p>
         <time class="commit-time">{{ fmtDate(node.created_at) }}</time>
+
+        <!-- Change indicator: top-right corner -->
+        <div class="change-corner">
+          <span class="change-summary" v-if="hasChanges(node)">
+            <span v-if="node.colors_added   > 0" class="cs-add">+{{ node.colors_added }}</span>
+            <span v-if="node.colors_deleted > 0" class="cs-del">-{{ node.colors_deleted }}</span>
+            <span v-if="node.colors_modified > 0" class="cs-mod">~{{ node.colors_modified }}</span>
+          </span>
+          <span class="change-badge" :class="changeDotClass(node)" :title="changeDotLabel(node)"></span>
+        </div>
       </div>
     </div>
   </div>
@@ -212,12 +217,15 @@ const lines = computed<Line[]>(() => {
   return result
 })
 
+function hasChanges(node: CommitNode) {
+  return node.colors_added > 0 || node.colors_deleted > 0 || node.colors_modified > 0
+}
+
 function changeDotClass(node: CommitNode) {
-  if (node.colors_added === 0 && node.colors_deleted === 0 && node.colors_modified === 0)
-    return 'dot-init'
+  if (!hasChanges(node)) return 'dot-init'
   if (node.colors_modified > 0 || (node.colors_added > 0 && node.colors_deleted > 0))
     return 'dot-edit'
-  if (node.colors_added > 0)   return 'dot-add'
+  if (node.colors_added > 0) return 'dot-add'
   return 'dot-del'
 }
 
@@ -254,7 +262,7 @@ function fmtDate(iso: string) {
 .commit-info {
   position: absolute; right: 0; height: 80px;
   display: flex; flex-direction: column; justify-content: center; gap: 3px;
-  padding: 0 16px 0 12px;
+  padding: 0 80px 0 12px;
   cursor: pointer;
   border-radius: 8px;
   transition: background 0.12s;
@@ -266,12 +274,41 @@ function fmtDate(iso: string) {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
 }
 
-.change-dot {
-  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+/* Change indicator — top-right of each commit row */
+.change-corner {
+  position: absolute;
+  top: 10px; right: 12px;
+  display: flex; align-items: center; gap: 5px;
 }
-.dot-init { background: rgba(255,255,255,0.2); }
+.change-summary {
+  display: flex; gap: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em;
+}
+.cs-add  { color: #2faa45; }
+.cs-del  { color: #e04444; }
+.cs-mod  { color: #4d96ff; }
+
+.change-badge {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-init { background: rgba(255,255,255,0.18); }
 .dot-add  { background: #2faa45; box-shadow: 0 0 0 2px rgba(47,170,69,0.25); }
-.dot-del  { background: #e04444; box-shadow: 0 0 0 2px rgba(224,68,68,0.25); }
+.dot-del  {
+  background: #e04444;
+  box-shadow: 0 0 0 2px rgba(224,68,68,0.25);
+  position: relative; overflow: hidden;
+}
+.dot-del::after {
+  content: '';
+  position: absolute; inset: -1px;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255,255,255,0.75) 40%, rgba(255,255,255,0.75) 60%,
+    transparent 60%
+  );
+}
 .dot-edit { background: #4d96ff; box-shadow: 0 0 0 2px rgba(77,150,255,0.25); }
 
 .cubes-row { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }

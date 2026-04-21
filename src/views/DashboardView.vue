@@ -5,28 +5,9 @@
     <span class="regmark regmark-bl" aria-hidden="true"></span>
     <span class="regmark regmark-br" aria-hidden="true"></span>
 
-    <!-- Top bar -->
-    <header class="topbar">
-      <RouterLink to="/" class="brand">
-        <RgbastLogo size="32px" />
-        <span class="brand-name">RGBAST</span>
-        <span class="brand-meta font-mono">atelier</span>
-      </RouterLink>
+    <SiteHeader :user="user" brand-meta="atelier" />
 
-      <nav class="topnav">
-        <span v-if="user" class="greeting">
-          <span class="greet-label font-mono">user</span>
-          <strong>{{ user.username }}</strong>
-        </span>
-        <RouterLink to="/" class="topnav-link">Home</RouterLink>
-        <button class="topnav-cta" @click="logout">
-          Sign out
-          <span aria-hidden="true">→</span>
-        </button>
-      </nav>
-    </header>
-
-    <!-- Page shell -->
+    <!-- Page shell (offset for fixed header) -->
     <div class="shell">
       <!-- Sidebar -->
       <aside class="sidebar">
@@ -37,6 +18,9 @@
             {{ user.username?.charAt(0)?.toUpperCase() }}
           </div>
           <p class="sidebar-name font-display">{{ user.username }}</p>
+          <p v-if="user.firstname || user.lastname" class="sidebar-fullname">
+            {{ [user.firstname, user.lastname].filter(Boolean).join(' ') }}
+          </p>
           <p class="sidebar-email">{{ user.email || 'No email on file' }}</p>
 
           <dl class="sidebar-stats">
@@ -46,13 +30,6 @@
             </div>
           </dl>
 
-          <div class="sidebar-foot font-mono">
-            <span>session</span>
-            <span class="pulse-row">
-              <span class="pulse"></span>
-              active
-            </span>
-          </div>
         </template>
 
         <p v-else class="err">Unable to fetch session.</p>
@@ -62,7 +39,7 @@
       <section class="content">
         <header class="content-head">
           <p class="eyebrow font-mono">
-            <span class="eyebrow-bullet"></span>
+            <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
             Atelier · active workspace
           </p>
           <h1 class="content-title font-display">
@@ -121,11 +98,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
+
 import { authApi } from '@/api'
 import { palettesApi } from '@/api/palettes'
 import type { PaletteCache } from '@/api/types'
 import RgbastLogo from '@/components/RgbastLogo.vue'
+import SiteHeader from '@/components/SiteHeader.vue'
 import AppLoader from '@/components/AppLoader.vue'
 
 const router = useRouter()
@@ -142,7 +121,7 @@ onMounted(async () => {
       const cached: PaletteCache = {
         id: p.id,
         title: p.title,
-        description: undefined,
+        description: p.description,
         created_at: p.created_at,
         palette_colors: p.latest_main_snapshot?.palette_colors ?? [],
       }
@@ -156,11 +135,6 @@ onMounted(async () => {
     loading.value = false
   }
 })
-
-function logout() {
-  localStorage.removeItem('access_token')
-  router.push('/login')
-}
 
 function openPalette(p: PaletteCache) {
   router.push({ name: 'palette', params: { id: p.id } })
@@ -205,85 +179,12 @@ function fmtDate(iso: string) {
 .regmark-bl { bottom: 20px; left: 20px; }
 .regmark-br { bottom: 20px; right: 20px; }
 
-/* Topbar */
-.topbar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 22px clamp(24px, 4vw, 56px);
-  border-bottom: 1px solid var(--rule);
-}
-.brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 14px;
-  text-decoration: none;
-  color: var(--ink);
-}
-.brand-name {
-  font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 22px;
-  letter-spacing: -0.03em;
-}
-.brand-meta {
-  padding-left: 12px;
-  border-left: 1px solid var(--rule);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-.topnav {
-  display: flex;
-  align-items: center;
-  gap: 22px;
-}
-.greeting {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  color: var(--ink-2);
-}
-.greet-label {
-  font-size: 10px;
-  letter-spacing: 0.12em;
-  color: var(--ink-3);
-  text-transform: uppercase;
-}
-.greeting strong { font-weight: 600; color: var(--ink); }
-.topnav-link {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-2);
-  text-decoration: none;
-  transition: color .2s;
-}
-.topnav-link:hover { color: var(--magenta); }
-.topnav-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  transition: background .2s, transform .2s;
-}
-.topnav-cta:hover { background: var(--magenta); transform: translateY(-1px); }
-
 /* Shell */
 .shell {
   display: grid;
   grid-template-columns: 280px minmax(0, 1fr);
   gap: clamp(24px, 3vw, 40px);
-  padding: clamp(32px, 5vw, 64px) clamp(24px, 4vw, 56px);
+  padding: calc(68px + clamp(32px, 5vw, 64px)) clamp(24px, 4vw, 56px) clamp(32px, 5vw, 64px);
 }
 @media (max-width: 960px) { .shell { grid-template-columns: 1fr; } }
 
@@ -303,7 +204,8 @@ function fmtDate(iso: string) {
   border-radius: 16px;
 }
 .sidebar-name { margin-top: 18px; font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
-.sidebar-email { margin-top: 4px; font-size: 13px; color: var(--ink-3); }
+.sidebar-fullname { margin-top: 3px; font-size: 14px; color: var(--ink-2); font-weight: 500; }
+.sidebar-email { margin-top: 4px; font-size: 12px; color: var(--ink-3); }
 .sidebar-stats {
   margin-top: 28px; padding-top: 20px;
   border-top: 1px solid var(--rule);
@@ -312,25 +214,6 @@ function fmtDate(iso: string) {
 .sidebar-stats div { display: flex; align-items: baseline; justify-content: space-between; }
 .sidebar-stats dt { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
 .sidebar-stats dd { font-size: 20px; font-family: var(--font-display); font-weight: 900; color: var(--ink); letter-spacing: -0.02em; }
-.sidebar-foot {
-  margin-top: 28px; padding-top: 18px;
-  border-top: 1px solid var(--rule);
-  display: flex; justify-content: space-between;
-  font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-3);
-}
-.pulse-row { display: inline-flex; align-items: center; gap: 6px; color: #1f7a2e; }
-.pulse {
-  width: 7px; height: 7px;
-  background: #2faa45;
-  border-radius: 50%;
-  box-shadow: 0 0 0 0 rgba(47, 170, 69, 0.5);
-  animation: pulse 2.2s infinite;
-}
-@keyframes pulse {
-  0%   { box-shadow: 0 0 0 0 rgba(47, 170, 69, 0.45); }
-  80%  { box-shadow: 0 0 0 8px rgba(47, 170, 69, 0); }
-  100% { box-shadow: 0 0 0 0 rgba(47, 170, 69, 0); }
-}
 .muted { font-size: 13px; color: var(--ink-3); }
 .err { padding: 10px 12px; border: 1px solid rgba(179,32,50,.3); border-radius: 10px; background: rgba(179,32,50,.08); color: #862028; font-size: 13px; }
 
@@ -350,12 +233,8 @@ function fmtDate(iso: string) {
   text-transform: uppercase;
   color: var(--ink-2);
 }
-.eyebrow-bullet {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--magenta);
-  box-shadow: 0 0 0 4px rgba(180,16,204,.15);
+.eyebrow-logo {
+  flex-shrink: 0;
 }
 .content-title {
   margin-top: 14px;

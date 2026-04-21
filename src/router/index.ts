@@ -36,7 +36,6 @@ const router = createRouter({
       path: '/palette/:id',
       name: 'palette',
       component: PaletteView,
-      meta: { requiresAuth: true },
     },
     {
       path: '/:pathMatch(.*)*',

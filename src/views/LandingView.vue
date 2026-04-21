@@ -1,30 +1,13 @@
 <template>
   <main class="landing">
     <RgbBackground />
-    <!-- Top bar -->
-    <header class="topbar">
-      <div class="brand">
-        <RgbastLogo size="34px" />
-        <span class="brand-name">RGBAST</span>
-        <span class="brand-meta font-mono">v0.1 · 2026</span>
-      </div>
-
-      <nav class="topnav">
-        <a href="#features" class="topnav-link">Features</a>
-        <a href="#log" class="topnav-link">History</a>
-        <RouterLink to="/login" class="topnav-link">Log in</RouterLink>
-        <RouterLink to="/register" class="topnav-cta">
-          Start designing
-          <span aria-hidden="true">→</span>
-        </RouterLink>
-      </nav>
-    </header>
+    <SiteHeader brand-meta="v0.1 · 2026" />
 
     <!-- Hero: editorial 12-col, spans full width -->
     <section class="hero">
       <div class="hero-left">
         <p class="eyebrow font-mono">
-          <span class="eyebrow-bullet"></span>
+          <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
           Color design · version controlled
         </p>
 
@@ -41,7 +24,7 @@
         </p>
 
         <div class="cta-row">
-          <RouterLink to="/register" class="btn-primary">
+          <RouterLink to="/palette/new" class="btn-primary">
             Create a palette
           </RouterLink>
           <RouterLink to="/login" class="btn-ghost">
@@ -90,32 +73,32 @@
           <span class="feat-num font-mono">F.01</span>
           <h3 class="feat-title font-display">Palette&nbsp;Atelier</h3>
           <p class="feat-body">
-            Compose named swatches, annotate roles, attach intent. A palette
-            is a document, not a grid of squares.
+            Build named palettes with hex swatches and custom labels.
+            Every color gets a role — not just a value.
           </p>
         </article>
         <article class="feat">
           <span class="feat-num font-mono">F.02</span>
-          <h3 class="feat-title font-display">Commit&nbsp;&amp;&nbsp;diff</h3>
+          <h3 class="feat-title font-display">Commit&nbsp;History</h3>
           <p class="feat-body">
-            Every edit becomes a commit with a message. Diffs show exactly
-            which swatches shifted, by how many deltas.
+            Every save is a commit with a message. Browse the full timeline,
+            inspect past colors, and reload any snapshot.
           </p>
         </article>
         <article class="feat">
           <span class="feat-num font-mono">F.03</span>
-          <h3 class="feat-title font-display">Branch&nbsp;&amp;&nbsp;merge</h3>
+          <h3 class="feat-title font-display">Branch&nbsp;&amp;&nbsp;Fork</h3>
           <p class="feat-body">
-            Try a neon variant without risking the main palette. Merge
-            back when it earns its place.
+            Experiment on a named branch without touching main. Fork from
+            any past snapshot, merge back when it's ready.
           </p>
         </article>
         <article class="feat">
           <span class="feat-num font-mono">F.04</span>
-          <h3 class="feat-title font-display">Time&nbsp;travel</h3>
+          <h3 class="feat-title font-display">Clone&nbsp;&amp;&nbsp;Remix</h3>
           <p class="feat-body">
-            Scrub the full history of a palette. Revert any swatch, any
-            commit, any moment — pixel-perfect.
+            Find a palette you like and clone it in one click. Start from
+            inspiration — commit it as your own.
           </p>
         </article>
       </div>
@@ -133,6 +116,7 @@
 import { RouterLink } from 'vue-router'
 import RgbastLogo from '@/components/RgbastLogo.vue'
 import RgbBackground from '@/components/RgbBackground.vue'
+import SiteHeader from '@/components/SiteHeader.vue'
 import HistoryGraph from '@/components/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
 
@@ -196,71 +180,6 @@ const dummyHistory: PaletteHistoryGraphResponse = {
   color: var(--ink);
 }
 
-/* ============ Topbar ============ */
-.topbar {
-  position: relative;
-  z-index: 2;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 22px clamp(24px, 4vw, 56px);
-  border-bottom: 1px solid var(--rule);
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.brand-name {
-  font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 22px;
-  letter-spacing: -0.03em;
-  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
-}
-.brand-meta {
-  padding-left: 12px;
-  margin-left: 4px;
-  border-left: 1px solid var(--rule);
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-.topnav {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
-.topnav-link {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-2);
-  text-decoration: none;
-  transition: color .2s;
-}
-.topnav-link:hover { color: var(--magenta); }
-.topnav-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 18px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 13px;
-  font-weight: 600;
-  border-radius: 999px;
-  text-decoration: none;
-  transition: transform .2s, background .2s;
-}
-.topnav-cta:hover {
-  background: var(--magenta);
-  transform: translateY(-1px);
-}
-
 /* ============ Hero ============ */
 .hero {
   position: relative;
@@ -268,7 +187,7 @@ const dummyHistory: PaletteHistoryGraphResponse = {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: clamp(32px, 5vw, 80px);
-  padding: clamp(48px, 7vw, 96px) clamp(24px, 4vw, 56px) clamp(64px, 8vw, 120px);
+  padding: calc(68px + clamp(48px, 7vw, 96px)) clamp(24px, 4vw, 56px) clamp(64px, 8vw, 120px);
   align-items: start;
 }
 @media (max-width: 1024px) {
@@ -288,12 +207,8 @@ const dummyHistory: PaletteHistoryGraphResponse = {
   color: var(--ink-2);
   animation: riseIn .7s cubic-bezier(.2,.9,.2,1) .05s backwards;
 }
-.eyebrow-bullet {
-  display: inline-block;
-  width: 8px; height: 8px;
-  background: var(--magenta);
-  border-radius: 50%;
-  box-shadow: 0 0 0 4px rgba(180, 16, 204, 0.15);
+.eyebrow-logo {
+  flex-shrink: 0;
 }
 
 .headline {

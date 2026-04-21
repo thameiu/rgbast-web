@@ -109,6 +109,7 @@ export interface PaletteBranchHistoryResponse {
 
 /** Full history graph: main-branch commits + per-branch commit lists. */
 export interface PaletteHistoryGraphResponse {
+  owner_username: string;
   main: PaletteCommitResponse[];
   branches: PaletteBranchHistoryResponse[];
 }
@@ -131,6 +132,7 @@ export interface PaletteBranchMergeResponse {
 export interface PaletteByUsernameItemResponse {
   id: number;
   title: string;
+  description?: string;
   created_at: string;
   latest_main_snapshot: PaletteCommitResponse | null;
 }

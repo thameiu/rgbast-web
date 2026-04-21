@@ -172,7 +172,6 @@ async function copyHex() {
 /* Footer */
 .col-footer {
   padding: 10px 14px 14px;
-  background: linear-gradient(to top, rgba(0,0,0,0.48) 0%, transparent 100%);
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -209,4 +208,25 @@ async function copyHex() {
 }
 .copy-btn:hover { opacity: 1; }
 .copy-ok { font-size: 12px; }
+
+/* ─── Mobile: horizontal rows ──────── */
+@media (max-width: 768px) {
+  .col {
+    flex: none !important;
+    height: 100px;
+    min-width: unset !important;
+    flex-direction: row;
+  }
+  .col-body { flex: 1; }
+  .drag-handle { display: none; }
+  .remove-btn { top: 8px; right: 8px; opacity: 0.55; }
+  .col:hover .remove-btn { opacity: 1; }
+  .col-footer {
+    width: 150px;
+    flex-shrink: 0;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 8px 14px 10px;
+  }
+}
 </style>

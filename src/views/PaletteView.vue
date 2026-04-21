@@ -12,7 +12,7 @@
       :snapshotHint="snapshotCommitHint"
       :isOwned="isOwned"
       @back="router.push('/dashboard')"
-      @save="showSaveModal = true"
+      @save="requestSave"
       @clone="clonePalette"
       @branchChange="switchBranch"
       @toggleHistory="historyOpen = !historyOpen"
@@ -37,17 +37,17 @@
       <Transition name="banner-slide">
         <div v-if="selectedSnapshotId && !isNewPalette" class="snapshot-banner">
           <span class="banner-text">
-            Viewing a past snapshot —
-            <template v-if="selectedSnapshotCtx?.isMain">
-              saving will create a <strong>new branch</strong> from this point.
+            <template v-if="!isOwned">
+              Viewing a past snapshot.
+            </template>
+            <template v-else-if="selectedSnapshotCtx?.isMain">
+              Viewing a past snapshot — saving will create a <strong>new branch</strong> from this point.
+            </template>
+            <template v-else-if="selectedSnapshotCtx?.isMerged">
+              Viewing a past snapshot — this branch is merged, saving will create a commit on <strong>main</strong>.
             </template>
             <template v-else>
-              <template v-if="selectedSnapshotCtx?.isMerged">
-                this branch is merged — saving will create a commit on <strong>main</strong>.
-              </template>
-              <template v-else>
-                saving will create a new latest commit on branch <strong>{{ selectedSnapshotCtx?.branchTitle }}</strong>.
-              </template>
+              Viewing a past snapshot — saving will create a new commit on branch <strong>{{ selectedSnapshotCtx?.branchTitle }}</strong>.
             </template>
           </span>
           <button class="banner-dismiss" @click="clearSnapshotSelection">Deselect ×</button>
@@ -211,6 +211,13 @@
       </div>
     </Teleport>
 
+    <!-- Auth gate modal (shown when saving without a token) -->
+    <AuthModal
+      v-if="showAuthModal"
+      @authenticated="onAuthenticated"
+      @cancel="showAuthModal = false"
+    />
+
     <!-- Merge confirm modal -->
     <Teleport to="body">
       <div v-if="mergeTargetId !== null" class="modal-overlay" @click.self="mergeTargetId = null">
@@ -242,6 +249,7 @@ import PaletteAppHeader from '@/components/PaletteAppHeader.vue'
 import ColorColumn from '@/components/ColorColumn.vue'
 import HistoryGraph from '@/components/HistoryGraph.vue'
 import AppLoader from '@/components/AppLoader.vue'
+import AuthModal from '@/components/AuthModal.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -249,10 +257,21 @@ const router = useRouter()
 const isNewPalette = computed(() => route.params.id === 'new')
 const paletteId = computed(() => isNewPalette.value ? 0 : Number(route.params.id))
 
-// Palette is "owned" if it was previously cached by the dashboard (user's own palettes only)
-const isOwned = computed(() =>
-  isNewPalette.value || palettesApi.getCachedPalette(paletteId.value) !== null
-)
+function getTokenUsername(): string | null {
+  const token = localStorage.getItem('access_token')
+  if (!token) return null
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.sub ?? null
+  } catch { return null }
+}
+
+const isOwned = computed(() => {
+  if (isNewPalette.value) return true
+  if (!history.value) return false
+  const me = getTokenUsername()
+  return me !== null && me === history.value.owner_username
+})
 
 // For unsaved new palettes, pendingTitle holds the name until the palette is created
 const pendingTitle = ref('')
@@ -335,6 +354,20 @@ const hasUnsavedChanges = computed(() => currentColorsSig.value !== savedColorsS
 // UI state
 const historyOpen = ref(false)
 const showSaveModal = ref(false)
+const showAuthModal = ref(false)
+
+function requestSave() {
+  if (!localStorage.getItem('access_token')) {
+    showAuthModal.value = true
+  } else {
+    showSaveModal.value = true
+  }
+}
+
+function onAuthenticated() {
+  showAuthModal.value = false
+  showSaveModal.value = true
+}
 const saveComment = ref('')
 const saveError = ref('')
 const createNewBranch = ref(false)
@@ -709,17 +742,52 @@ onMounted(() => {
 .editor-shell {
   position: relative;
   display: flex;
+  flex-direction: column;
   flex: 1;
   overflow: hidden;
   margin-top: 56px;
 }
+
+/* Snapshot selection banner */
+.snapshot-banner {
+  flex-shrink: 0;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(246, 195, 67, 0.08);
+  border-bottom: 1px solid rgba(246, 195, 67, 0.2);
+  gap: 12px;
+  z-index: 10;
+}
+.banner-text {
+  font-size: 12px;
+  color: rgba(246, 195, 67, 0.75);
+}
+.banner-text strong { color: rgba(246, 195, 67, 1); }
+.banner-dismiss {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(246, 195, 67, 0.6);
+  background: transparent;
+  border: 1px solid rgba(246, 195, 67, 0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.banner-dismiss:hover { color: rgba(246, 195, 67, 1); border-color: rgba(246, 195, 67, 0.6); }
+
+.banner-slide-enter-active, .banner-slide-leave-active { transition: height 0.2s ease, opacity 0.2s ease; }
+.banner-slide-enter-from, .banner-slide-leave-to { height: 0; opacity: 0; }
 
 /* Columns area */
 .columns-area {
   display: flex;
   flex: 1;
   overflow: hidden;
-  height: 100%;
 }
 .cols-tg {
   display: flex;
@@ -939,4 +1007,49 @@ onMounted(() => {
 }
 .modal-btn.confirm:hover:not(:disabled) { background: #9a0db0; }
 .modal-btn.confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.modal-info {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 20px;
+  padding: 10px 12px;
+  background: rgba(246,195,67,0.07);
+  border-radius: 8px;
+  border: 1px solid rgba(246,195,67,0.18);
+  line-height: 1.45;
+}
+.modal-info strong { color: rgba(255,255,255,0.85); }
+
+.required { color: #b410cc; }
+
+/* ─── Mobile: vertical color rows ─── */
+@media (max-width: 768px) {
+  .columns-area, .cols-tg {
+    flex-direction: column !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    flex: 1;
+  }
+  .add-col-btn {
+    width: 100%;
+    height: 52px;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    flex-shrink: 0;
+  }
+  .history-panel {
+    width: 100%;
+    height: 60vh;
+    top: auto;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
+  }
+  .history-slide-enter-from,
+  .history-slide-leave-to {
+    transform: translateY(100%);
+  }
+}
 </style>

@@ -243,7 +243,6 @@ function handleLogout() {
   display: flex;
   flex-direction: column;
   padding: 24px 20px 32px;
-  box-shadow: -24px 0 60px rgba(0,0,0,0.6);
 }
 
 .mob-top {

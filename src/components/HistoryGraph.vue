@@ -1,5 +1,11 @@
 <template>
   <div class="hg-wrap">
+    <!-- Branch filter pill -->
+    <div v-if="activeBranchId !== null" class="branch-filter-bar">
+      <span class="filter-label">Showing branch: <strong>{{ activeBranchTitle }}</strong></span>
+      <button class="filter-clear" @click="activeBranchId = null">× all</button>
+    </div>
+
     <div class="hg-inner" :style="{ height: totalHeight + 'px' }">
       <!-- SVG graph lines and dots -->
       <svg
@@ -8,18 +14,35 @@
         :height="totalHeight"
         :style="{ minWidth: svgWidth + 'px' }"
       >
+        <!-- Visible lines -->
         <path
           v-for="(line, i) in lines"
           :key="'l' + i"
           :d="line.d"
           :stroke="line.color"
-          stroke-width="1.8"
+          :stroke-width="hoveredBranchId === line.branchId && line.branchId !== null ? 3.5 : 1.8"
+          :opacity="activeBranchId !== null && line.branchId !== activeBranchId ? 0.15 : (hoveredBranchId === line.branchId && line.branchId !== null ? 1 : 0.75)"
           fill="none"
           stroke-linecap="round"
-          opacity="0.75"
+          style="transition: stroke-width 0.15s, opacity 0.15s"
         />
+        <!-- Invisible wider hit areas for branch lines -->
+        <path
+          v-for="(line, i) in lines.filter(l => l.branchId !== null)"
+          :key="'hit' + i"
+          :d="line.d"
+          stroke="transparent"
+          stroke-width="18"
+          fill="none"
+          stroke-linecap="round"
+          style="cursor: pointer"
+          @mouseenter="hoveredBranchId = line.branchId"
+          @mouseleave="hoveredBranchId = null"
+          @click.stop="onClickBranchLine(line.branchId!)"
+        />
+        <!-- Commit dots -->
         <circle
-          v-for="node in nodes"
+          v-for="node in displayNodes"
           :key="'d' + node.id"
           :cx="laneX(node.lane)"
           :cy="rowY(node.rowIndex)"
@@ -27,15 +50,21 @@
           :fill="getLaneColor(node.lane)"
           :stroke="node.isMerge ? 'rgba(255,255,255,0.6)' : getLaneColor(node.lane)"
           :stroke-width="node.isMerge ? 2 : 0"
+          :opacity="activeBranchId !== null && node.lane !== 0 && node.branchId !== activeBranchId ? 0.15 : 1"
+          style="transition: opacity 0.15s"
         />
       </svg>
 
       <!-- Commit info panels -->
       <div
-        v-for="node in nodes"
+        v-for="node in displayNodes"
         :key="'info' + node.id"
         class="commit-info"
-        :class="{ selected: node.id === selectedId }"
+        :class="{
+          selected: node.id === selectedId,
+          dimmed: activeBranchId !== null && node.lane !== 0 && node.branchId !== activeBranchId,
+          'branch-hovered': hoveredBranchId !== null && node.branchId === hoveredBranchId,
+        }"
         :style="{ top: (node.rowIndex * ROW_H) + 'px', left: svgWidth + 'px' }"
         @click="$emit('selectSnapshot', node.id)"
       >
@@ -76,10 +105,7 @@
 </template>
 
 <script setup lang="ts">
-/** Git-style history graph. Renders lane lines and commit dots in SVG,
- *  with commit info panels (color cubes, message, date) positioned alongside.
- *  All branches visually diverge from the main lane regardless of true parent chain. */
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import type { PaletteHistoryGraphResponse, PaletteCommitResponse } from '@/api/types'
 import { getLaneColor } from '@/utils/branchColors'
 import ColorCube from './ColorCube.vue'
@@ -89,7 +115,10 @@ const props = defineProps<{
   selectedId?: number | null
 }>()
 
-const emit = defineEmits<{ selectSnapshot: [id: number] }>()
+const emit = defineEmits<{
+  selectSnapshot: [id: number]
+  selectBranch: [id: number]
+}>()
 
 const ROW_H  = 80
 const LANE_W = 28
@@ -99,11 +128,30 @@ const DOT_R  = 6
 function laneX(lane: number) { return PAD + lane * LANE_W }
 function rowY(row: number)   { return row * ROW_H + ROW_H / 2 }
 
+// Branch interaction state
+const activeBranchId  = ref<number | null>(null)
+const hoveredBranchId = ref<number | null>(null)
+
+const activeBranchTitle = computed(() => {
+  if (activeBranchId.value === null) return ''
+  return props.history.branches.find(b => b.id === activeBranchId.value)?.title ?? ''
+})
+
+function onClickBranchLine(branchId: number) {
+  if (activeBranchId.value === branchId) {
+    activeBranchId.value = null
+  } else {
+    activeBranchId.value = branchId
+    emit('selectBranch', branchId)
+  }
+}
+
 interface CommitNode extends PaletteCommitResponse {
   lane: number
   rowIndex: number
   isMerge: boolean
   branchTitle?: string
+  branchId: number | null
 }
 
 const nodes = computed<CommitNode[]>(() => {
@@ -115,6 +163,7 @@ const nodes = computed<CommitNode[]>(() => {
       lane: 0,
       rowIndex: -1,
       isMerge: (c.comment ?? '').startsWith('Merge branch'),
+      branchId: null,
     })
   })
 
@@ -126,6 +175,7 @@ const nodes = computed<CommitNode[]>(() => {
         rowIndex: -1,
         isMerge: false,
         branchTitle: branch.title,
+        branchId: branch.id,
       })
     })
   })
@@ -135,13 +185,19 @@ const nodes = computed<CommitNode[]>(() => {
   return all
 })
 
+// Filtered view when a branch is active
+const displayNodes = computed<CommitNode[]>(() => {
+  if (activeBranchId.value === null) return nodes.value
+  return nodes.value.filter(n => n.branchId === activeBranchId.value)
+    .map((n, i) => ({ ...n, rowIndex: i }))
+})
+
 const nodeById = computed(() => {
   const m = new Map<number, CommitNode>()
   nodes.value.forEach(n => m.set(n.id, n))
   return m
 })
 
-// IDs that are the chronologically FIRST commit of each branch (the fork point)
 const branchFirstIds = computed(() => {
   const s = new Set<number>()
   props.history.branches.forEach(branch => {
@@ -153,21 +209,24 @@ const branchFirstIds = computed(() => {
 
 const maxLane     = computed(() => Math.max(0, ...nodes.value.map(n => n.lane)))
 const svgWidth    = computed(() => PAD + (maxLane.value + 1) * LANE_W + PAD)
-const totalHeight = computed(() => Math.max(1, nodes.value.length) * ROW_H)
+const totalHeight = computed(() => Math.max(1, displayNodes.value.length) * ROW_H)
 
-interface Line { d: string; color: string }
+interface Line { d: string; color: string; branchId: number | null }
 
 const lines = computed<Line[]>(() => {
   const result: Line[] = []
+
+  // When filtered, only show lines within the active branch
+  const activeNodes = activeBranchId.value !== null
+    ? new Set(displayNodes.value.map(n => n.id))
+    : null
 
   for (const node of nodes.value) {
     if (node.parent_snapshot_id == null) continue
     const parent = nodeById.value.get(node.parent_snapshot_id)
     if (!parent) continue
+    if (activeNodes && !activeNodes.has(node.id)) continue
 
-    // If this is a branch's fork commit and its parent is NOT on main,
-    // visually connect it to the nearest main commit instead so all
-    // branches appear to diverge from the main lane.
     let visualParent = parent
     if (branchFirstIds.value.has(node.id) && parent.lane !== 0) {
       const nearestMain = nodes.value
@@ -176,10 +235,18 @@ const lines = computed<Line[]>(() => {
       if (nearestMain) visualParent = nearestMain
     }
 
+    // Use displayNodes rowIndex when filtered
+    const nodeRow = activeBranchId.value !== null
+      ? (displayNodes.value.find(n => n.id === node.id)?.rowIndex ?? node.rowIndex)
+      : node.rowIndex
+    const parentRow = activeBranchId.value !== null
+      ? (displayNodes.value.find(n => n.id === visualParent.id)?.rowIndex ?? visualParent.rowIndex)
+      : visualParent.rowIndex
+
     const x1 = laneX(node.lane)
-    const y1 = rowY(node.rowIndex)
+    const y1 = rowY(nodeRow)
     const x2 = laneX(visualParent.lane)
-    const y2 = rowY(visualParent.rowIndex)
+    const y2 = rowY(parentRow)
     const color = getLaneColor(node.lane)
 
     let d: string
@@ -189,30 +256,33 @@ const lines = computed<Line[]>(() => {
       const dy = y2 - y1
       d = `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.6}, ${x2} ${y2 - dy * 0.6}, ${x2} ${y2}`
     }
-    result.push({ d, color })
+    result.push({ d, color, branchId: node.branchId })
   }
 
-  // Merge convergence: from merge commit → branch tip
-  props.history.branches.forEach((branch, bi) => {
-    if (!branch.is_merged || branch.snapshots.length === 0) return
-    const tip = branch.snapshots[0]
-    if (!tip) return
-    const branchTip  = nodeById.value.get(tip.id)
-    const mergeCommit = nodes.value.find(
-      n => n.lane === 0 && (n.comment ?? '') === `Merge branch '${branch.title}'`
-    )
-    if (!branchTip || !mergeCommit) return
+  // Merge convergence lines
+  if (activeBranchId.value === null) {
+    props.history.branches.forEach((branch, bi) => {
+      if (!branch.is_merged || branch.snapshots.length === 0) return
+      const tip = branch.snapshots[0]
+      if (!tip) return
+      const branchTip  = nodeById.value.get(tip.id)
+      const mergeCommit = nodes.value.find(
+        n => n.lane === 0 && (n.comment ?? '') === `Merge branch '${branch.title}'`
+      )
+      if (!branchTip || !mergeCommit) return
 
-    const x1 = laneX(mergeCommit.lane)
-    const y1 = rowY(mergeCommit.rowIndex)
-    const x2 = laneX(branchTip.lane)
-    const y2 = rowY(branchTip.rowIndex)
-    const dy = y2 - y1
-    result.push({
-      d: `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.6}, ${x2} ${y2 - dy * 0.6}, ${x2} ${y2}`,
-      color: getLaneColor(bi + 1),
+      const x1 = laneX(mergeCommit.lane)
+      const y1 = rowY(mergeCommit.rowIndex)
+      const x2 = laneX(branchTip.lane)
+      const y2 = rowY(branchTip.rowIndex)
+      const dy = y2 - y1
+      result.push({
+        d: `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.6}, ${x2} ${y2 - dy * 0.6}, ${x2} ${y2}`,
+        color: getLaneColor(bi + 1),
+        branchId: branch.id,
+      })
     })
-  })
+  }
 
   return result
 })
@@ -255,8 +325,36 @@ function fmtDate(iso: string) {
   flex: 1;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
+  display: flex;
+  flex-direction: column;
 }
-.hg-inner { position: relative; }
+
+/* Branch filter bar */
+.branch-filter-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+}
+.branch-filter-bar strong { color: rgba(255,255,255,0.85); }
+.filter-clear {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.45);
+  font-size: 10px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.filter-clear:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
+
+.hg-inner { position: relative; flex: 1; }
 .hg-svg   { position: absolute; top: 0; left: 0; }
 
 .commit-info {
@@ -265,10 +363,12 @@ function fmtDate(iso: string) {
   padding: 0 80px 0 12px;
   cursor: pointer;
   border-radius: 8px;
-  transition: background 0.12s;
+  transition: background 0.12s, opacity 0.15s;
 }
 .commit-info:hover { background: rgba(255,255,255,0.04); }
 .commit-info.selected { background: rgba(180,16,204,0.12); box-shadow: inset 0 0 0 1px rgba(180,16,204,0.3); }
+.commit-info.dimmed { opacity: 0.2; pointer-events: none; }
+.commit-info.branch-hovered { background: rgba(255,255,255,0.035); }
 
 .commit-top {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;

@@ -44,7 +44,7 @@
               Viewing a past snapshot — saving will create a <strong>new branch</strong> from this point.
             </template>
             <template v-else-if="selectedSnapshotCtx?.isMerged">
-              Viewing a past snapshot — this branch is merged, saving will create a commit on <strong>main</strong>.
+              Viewing a past snapshot from a merged branch — saving will create a <strong>new branch</strong> from this point.
             </template>
             <template v-else>
               Viewing a past snapshot — saving will create a new commit on branch <strong>{{ selectedSnapshotCtx?.branchTitle }}</strong>.
@@ -55,12 +55,12 @@
       </Transition>
 
       <!-- Color columns -->
-      <div ref="colsAreaEl" class="columns-area">
+      <div ref="colsAreaEl" class="columns-area" @mousemove="onColsMouseMove" @mouseleave="showAddBtn = false">
         <TransitionGroup
           tag="div"
           class="cols-tg"
           name="col"
-          :css="false"
+          move-class="col-move"
           @before-enter="onBeforeEnter"
           @enter="onEnter"
           @leave="onLeave"
@@ -69,17 +69,18 @@
             v-for="(col, i) in colors"
             :key="col._key"
             :modelValue="col"
+            :colKey="col._key"
             :isDragging="draggedIdx === i"
-            :style="getColStyle(i)"
+            :dragStyle="getColStyle(i)"
             @update:hex="hex => updateHex(i, hex)"
             @update:label="lbl => updateLabel(i, lbl)"
             @remove="removeColor(i)"
-            @dragStart="onDragStart(i)"
+            @dragStart="e => onDragStart(i, e)"
           />
         </TransitionGroup>
 
-        <!-- Add color button -->
-        <button class="add-col-btn" @click="addColor" title="Add color">
+        <!-- Add color button — only visible when near right edge -->
+        <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="addColor" title="Add color">
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
             <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
           </svg>
@@ -98,6 +99,7 @@
             :history="history"
             :selectedId="selectedSnapshotId"
             @selectSnapshot="onSelectSnapshot"
+            @selectBranch="id => switchBranch(id)"
           />
           <div v-else class="history-empty">No history yet.</div>
         </aside>
@@ -149,7 +151,7 @@
             <p class="modal-info">
               <template v-if="selectedSnapshotCtx.isMerged">
                 This snapshot belongs to merged branch <strong>{{ selectedSnapshotCtx.branchTitle }}</strong>.
-                Saving will create a new commit on <strong>main</strong>.
+                You must save to a <strong>new branch</strong> from this point.
               </template>
               <template v-else>
                 This snapshot belongs to branch <strong>{{ selectedSnapshotCtx.branchTitle }}</strong>.
@@ -163,8 +165,18 @@
               placeholder="What changed?"
               maxlength="500"
               autofocus
-              @keydown.enter="doSave()"
+              @keydown.enter="selectedSnapshotCtx?.isMerged ? undefined : doSave()"
             />
+            <template v-if="selectedSnapshotCtx.isMerged">
+              <label class="field-label">New branch name <span class="required">*</span></label>
+              <input
+                v-model="newBranchName"
+                class="modal-input"
+                placeholder="e.g. merged-fix"
+                maxlength="100"
+                @keydown.enter="doSave()"
+              />
+            </template>
           </template>
 
           <!-- Normal save -->
@@ -201,7 +213,7 @@
             <button class="modal-btn cancel" @click="showSaveModal = false">Cancel</button>
             <button
               class="modal-btn confirm"
-              :disabled="isSaving || (isNewPalette ? !pendingTitle.trim() : !saveComment.trim()) || (selectedSnapshotCtx?.isMain && !newBranchName.trim())"
+              :disabled="isSaving || (isNewPalette ? !pendingTitle.trim() : !saveComment.trim()) || ((selectedSnapshotCtx?.isMain || selectedSnapshotCtx?.isMerged) && !newBranchName.trim())"
               @click="doSave"
             >
               {{ isSaving ? (isNewPalette ? 'Creating…' : 'Saving…') : (isNewPalette ? 'Create' : 'Save') }}
@@ -241,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
 import type { PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
@@ -342,7 +354,7 @@ const snapshotCommitHint = computed(() => {
   const ctx = selectedSnapshotCtx.value
   if (!ctx) return null
   if (ctx.isMain) return 'Selected old main snapshot: saving will create a new branch.'
-  if (ctx.isMerged) return `Selected snapshot from merged branch "${ctx.branchTitle}": saving will commit on main.`
+  if (ctx.isMerged) return `Selected snapshot from merged branch "${ctx.branchTitle}": saving will create a new branch.`
   return `Selected snapshot from branch "${ctx.branchTitle}": saving will commit to that branch.`
 })
 
@@ -381,55 +393,175 @@ const mergeTargetName = ref('')
 const isMerging = ref(false)
 const mergeError = ref('')
 
-// Drag and drop (pointer-based, horizontal-only)
-const draggedIdx = ref<number | null>(null)
-const dragOverIdx = ref<number | null>(null)
-const colsAreaEl = ref<HTMLElement | null>(null)
-
-function getColStyle(i: number): Record<string, string> {
-  const d = draggedIdx.value
-  const t = dragOverIdx.value
-  if (d === null || t === null || d === t || !colsAreaEl.value) return {}
-  const usableW = colsAreaEl.value.getBoundingClientRect().width - 48 // minus add-btn
-  const colW = usableW / colors.value.length
-  if (i === d) return { transform: `translateX(${(t - d) * colW}px)`, transition: 'transform 0.12s ease', position: 'relative', zIndex: '5' }
-  if (t < d && i >= t && i < d) return { transform: `translateX(${colW}px)`, transition: 'transform 0.12s ease' }
-  if (t > d && i > d && i <= t) return { transform: `translateX(${-colW}px)`, transition: 'transform 0.12s ease' }
-  return {}
+// Add button — only visible near right edge
+const showAddBtn = ref(false)
+function onColsMouseMove(e: MouseEvent) {
+  if (!colsAreaEl.value) return
+  const rect = colsAreaEl.value.getBoundingClientRect()
+  showAddBtn.value = e.clientX > rect.right - 72
 }
 
-function onDragStart(i: number) {
+// Drag and drop (pointer-based, horizontal-only)
+const draggedIdx = ref<number | null>(null)
+const colsAreaEl = ref<HTMLElement | null>(null)
+const dragPointerStartX = ref<number | null>(null)
+const dragPointerStartY = ref<number | null>(null)
+const dragDeltaX = ref<number>(0)
+const dragDeltaY = ref<number>(0)
+const draggedKey = ref<string | null>(null)
+
+function isMobileLayout() {
+  return window.matchMedia('(max-width: 768px)').matches
+}
+
+function getDragUnit(): number {
+  if (!colsAreaEl.value || colors.value.length === 0) return 1
+  const firstCol = colsAreaEl.value.querySelector<HTMLElement>('.col')
+  if (firstCol) {
+    const rect = firstCol.getBoundingClientRect()
+    return Math.max(1, isMobileLayout() ? rect.height : rect.width)
+  }
+  const rect = colsAreaEl.value.getBoundingClientRect()
+  return Math.max(1, isMobileLayout() ? rect.height / colors.value.length : rect.width / colors.value.length)
+}
+
+function captureColRects() {
+  const rects = new Map<string, DOMRect>()
+  if (!colsAreaEl.value) return rects
+  const nodes = colsAreaEl.value.querySelectorAll<HTMLElement>('.col[data-col-key]')
+  nodes.forEach((node) => {
+    const key = node.dataset.colKey
+    if (key) rects.set(key, node.getBoundingClientRect())
+  })
+  return rects
+}
+
+async function animateReorderedCols(before: Map<string, DOMRect>) {
+  await nextTick()
+  if (!colsAreaEl.value) return
+  const nodes = colsAreaEl.value.querySelectorAll<HTMLElement>('.col[data-col-key]')
+  nodes.forEach((node) => {
+    const key = node.dataset.colKey
+    if (!key || key === draggedKey.value) return
+    const prev = before.get(key)
+    if (!prev) return
+    const now = node.getBoundingClientRect()
+    const dx = prev.left - now.left
+    const dy = prev.top - now.top
+    if (dx === 0 && dy === 0) return
+
+    node.style.transition = 'none'
+    node.style.transform = `translate(${dx}px, ${dy}px)`
+    node.style.willChange = 'transform'
+
+    requestAnimationFrame(() => {
+      node.style.transition = 'transform 150ms cubic-bezier(0.2, 0.9, 0.2, 1)'
+      node.style.transform = ''
+      const cleanup = () => {
+        node.style.transition = ''
+        node.style.willChange = ''
+        node.removeEventListener('transitionend', cleanup)
+      }
+      node.addEventListener('transitionend', cleanup)
+    })
+  })
+}
+
+function getColStyle(i: number): Record<string, string> {
+  if (draggedIdx.value === null || !colsAreaEl.value) return {}
+  const mobile = isMobileLayout()
+  const d = draggedIdx.value
+  const dragTransform = mobile
+    ? `translateY(${dragDeltaY.value}px)`
+    : `translateX(${dragDeltaX.value}px)`
+
+  if (i === d) {
+    return {
+      transform: dragTransform,
+      transition: 'none',
+      position: 'relative',
+      zIndex: '10',
+      willChange: 'transform',
+    }
+  }
+  return { transition: 'transform 0.12s ease' }
+}
+
+function onDragStart(i: number, e: PointerEvent) {
   draggedIdx.value = i
-  dragOverIdx.value = i
+  draggedKey.value = colors.value[i]?._key ?? null
+  dragPointerStartX.value = e.clientX
+  dragPointerStartY.value = e.clientY
+  dragDeltaX.value = 0
+  dragDeltaY.value = 0
+  ;(e.target as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
+  e.preventDefault()
   document.addEventListener('pointermove', onPointerMove)
+  document.addEventListener('pointercancel', onPointerUp, { once: true })
   document.addEventListener('pointerup', onPointerUp, { once: true })
   document.body.style.userSelect = 'none'
   document.body.style.cursor = 'grabbing'
 }
 
 function onPointerMove(e: PointerEvent) {
-  if (draggedIdx.value === null || !colsAreaEl.value) return
-  const rect = colsAreaEl.value.getBoundingClientRect()
-  const usableW = rect.width - 48
-  const colW = usableW / colors.value.length
-  const relX = Math.max(0, Math.min(e.clientX - rect.left, usableW - 1))
-  dragOverIdx.value = Math.max(0, Math.min(colors.value.length - 1, Math.floor(relX / colW)))
+  if (draggedIdx.value === null) return
+  const mobile = isMobileLayout()
+  const unit = getDragUnit()
+  const pointer = mobile ? e.clientY : e.clientX
+  let idx = draggedIdx.value
+  let start = mobile ? (dragPointerStartY.value ?? pointer) : (dragPointerStartX.value ?? pointer)
+  let delta = pointer - start
+
+  // Reorder in-flight as soon as the pointer crosses half a column/row.
+  while (delta > unit / 2 && idx < colors.value.length - 1) {
+    const before = captureColRects()
+    const arr = [...colors.value]
+    const moved = arr.splice(idx, 1)[0]
+    if (!moved) break
+    arr.splice(idx + 1, 0, moved)
+    colors.value = arr
+    void animateReorderedCols(before)
+    idx += 1
+    start += unit
+    delta -= unit
+  }
+
+  while (delta < -unit / 2 && idx > 0) {
+    const before = captureColRects()
+    const arr = [...colors.value]
+    const moved = arr.splice(idx, 1)[0]
+    if (!moved) break
+    arr.splice(idx - 1, 0, moved)
+    colors.value = arr
+    void animateReorderedCols(before)
+    idx -= 1
+    start -= unit
+    delta += unit
+  }
+
+  draggedIdx.value = idx
+  if (mobile) {
+    dragPointerStartY.value = start
+    dragDeltaY.value = delta
+    dragDeltaX.value = 0
+  } else {
+    dragPointerStartX.value = start
+    dragDeltaX.value = delta
+    dragDeltaY.value = 0
+  }
 }
 
 function onPointerUp() {
   document.removeEventListener('pointermove', onPointerMove)
+  document.removeEventListener('pointercancel', onPointerUp)
   document.body.style.userSelect = ''
   document.body.style.cursor = ''
-  const from = draggedIdx.value
-  const to = dragOverIdx.value
-  if (from !== null && to !== null && from !== to) {
-    const arr = [...colors.value]
-    const removed = arr.splice(from, 1)
-    if (removed[0]) arr.splice(to, 0, removed[0])
-    colors.value = arr
-  }
   draggedIdx.value = null
-  dragOverIdx.value = null
+  dragPointerStartX.value = null
+  dragPointerStartY.value = null
+  dragDeltaX.value = 0
+  dragDeltaY.value = 0
+  draggedKey.value = null
 }
 
 // Color operations
@@ -538,10 +670,13 @@ async function doSave() {
       }
     } else if (selectedSnapshotCtx.value && !selectedSnapshotCtx.value.isMain) {
       if (selectedSnapshotCtx.value.isMerged) {
-        // Snapshot belongs to a merged branch, so save on main.
+        // Snapshot belongs to a merged branch; force a new branch from that point.
         payload = {
           comment: saveComment.value.trim(),
           palette_colors: paletteColors,
+          create_branch: true,
+          branch_title: newBranchName.value.trim() || undefined,
+          parent_snapshot_id: selectedSnapshotId.value,
         }
       } else {
         // Cannot create branch from branch snapshots: commit to latest in that branch.
@@ -564,7 +699,7 @@ async function doSave() {
 
     const resp = await palettesApi.saveSnapshot(paletteId.value, payload)
 
-    if ((selectedSnapshotCtx.value?.isMain || createNewBranch.value) && resp.branch_id !== null) {
+    if ((selectedSnapshotCtx.value?.isMain || selectedSnapshotCtx.value?.isMerged || createNewBranch.value) && resp.branch_id !== null) {
       currentBranchId.value = resp.branch_id
     }
 
@@ -621,6 +756,25 @@ function onSelectSnapshot(id: number) {
     clearSnapshotSelection()
     return
   }
+
+  // Clicking the latest main commit → just ensure we're on main, no banner
+  if (history.value?.main[0]?.id === id) {
+    selectedSnapshotId.value = null
+    if (currentBranchId.value !== null) switchBranch(null)
+    return
+  }
+
+  // Clicking the latest commit of any branch → silently switch to that branch, no banner
+  for (const branch of (history.value?.branches ?? [])) {
+    if (branch.snapshots[0]?.id === id) {
+      if (branch.is_merged) break
+      selectedSnapshotId.value = null
+      switchBranch(branch.id)
+      return
+    }
+  }
+
+  // Historical snapshot — show banner and load its colors
   selectedSnapshotId.value = id
   const snap = findSnapshot(id)
   if (snap) {
@@ -787,34 +941,49 @@ onMounted(() => {
 
 /* Columns area */
 .columns-area {
-  display: flex;
+  position: relative;
   flex: 1;
   overflow: hidden;
 }
 .cols-tg {
   display: flex;
-  flex: 1;
-  overflow: hidden;
+  gap: 0;
+  width: 100%;
   height: 100%;
+  overflow: visible;
 }
 
-/* Add color button */
+.col-move {
+  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+/* Add color button — floating bubble on hover */
 .add-col-btn {
-  flex-shrink: 0;
-  width: 48px;
-  background: rgba(255,255,255,0.03);
-  border: none;
-  border-left: 1px solid rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.3);
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(20, 20, 28, 0.75);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  opacity: 0;
+  transition: opacity 0.18s, background 0.15s;
+  z-index: 20;
+  backdrop-filter: blur(6px);
+}
+.add-col-btn.visible,
+.add-col-btn:hover {
+  opacity: 1;
 }
 .add-col-btn:hover {
-  background: rgba(255,255,255,0.07);
-  color: rgba(255,255,255,0.8);
+  background: rgba(40, 40, 56, 0.9);
 }
 
 /* History panel */
@@ -829,7 +998,6 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   z-index: 50;
-  box-shadow: -20px 0 60px rgba(0,0,0,0.5);
 }
 
 .history-slide-enter-active,
@@ -1026,19 +1194,31 @@ onMounted(() => {
 
 /* ─── Mobile: vertical color rows ─── */
 @media (max-width: 768px) {
-  .columns-area, .cols-tg {
-    flex-direction: column !important;
+  .columns-area {
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
     height: auto;
     flex: 1;
   }
+  .cols-tg {
+    flex-direction: column !important;
+    height: auto;
+    overflow: visible;
+  }
   .add-col-btn {
+    position: static;
+    transform: none;
+    opacity: 1;
     width: 100%;
     height: 52px;
-    border-left: none;
+    border-radius: 0;
+    background: rgba(255,255,255,0.03);
+    border: none;
     border-top: 1px solid rgba(255,255,255,0.06);
     flex-shrink: 0;
+    backdrop-filter: none;
   }
   .history-panel {
     width: 100%;
@@ -1047,7 +1227,6 @@ onMounted(() => {
     bottom: 0;
     border-left: none;
     border-top: 1px solid rgba(255,255,255,0.1);
-    box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
   }
   .history-slide-enter-from,
   .history-slide-leave-to {

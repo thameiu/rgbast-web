@@ -2,10 +2,11 @@
   <div
     class="col"
     :class="{ 'is-dragging': isDragging }"
-    :style="{ '--bg': '#' + modelValue.hex, '--fg': textColor }"
+    :data-col-key="colKey"
+    :style="colStyle"
   >
     <!-- Drag handle -->
-    <div class="drag-handle" aria-hidden="true" @pointerdown.stop="$emit('dragStart')">
+    <div class="drag-handle" aria-hidden="true" @pointerdown.stop="$emit('dragStart', $event)">
       <span></span><span></span><span></span>
       <span></span><span></span><span></span>
     </div>
@@ -71,7 +72,9 @@ import ColorPicker from './ColorPicker.vue'
 
 const props = defineProps<{
   modelValue: { hex: string; label: string | null }
+  colKey?: string
   isDragging?: boolean
+  dragStyle?: Record<string, string>
   isDragOver?: boolean
 }>()
 
@@ -79,7 +82,7 @@ const emit = defineEmits<{
   'update:hex': [hex: string]
   'update:label': [label: string | null]
   'remove': []
-  'dragStart': []
+  'dragStart': [e: PointerEvent]
 }>()
 
 const hovering    = ref(false)
@@ -96,6 +99,15 @@ const textColor = computed(() => {
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
   return lum > 0.5 ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.85)'
 })
+
+const colStyle = computed(() => ([
+  {
+    '--bg': '#' + props.modelValue.hex,
+    '--fg': textColor.value,
+    backgroundColor: '#' + props.modelValue.hex,
+  },
+  props.dragStyle ?? {},
+]))
 
 function openPicker() {
   anchorRect.value = hexTextEl.value?.getBoundingClientRect() ?? null
@@ -121,8 +133,6 @@ async function copyHex() {
   flex-direction: column;
   cursor: default;
   user-select: none;
-  /* used by TransitionGroup move */
-  will-change: transform;
 }
 
 .col.is-dragging { cursor: grabbing; }
@@ -135,15 +145,15 @@ async function copyHex() {
   transform: translateX(-50%);
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 3px;
+  gap: 4px;
   opacity: 0;
   transition: opacity 0.15s;
   cursor: grab;
   pointer-events: none;
 }
-.col:hover .drag-handle { opacity: 0.45; pointer-events: all; }
+.col:hover .drag-handle { opacity: 0.5; pointer-events: all; }
 .drag-handle span {
-  width: 3px; height: 3px;
+  width: 5px; height: 5px;
   border-radius: 50%;
   background: var(--fg);
 }
@@ -216,9 +226,16 @@ async function copyHex() {
     height: 100px;
     min-width: unset !important;
     flex-direction: row;
+    padding-left: 30px;
   }
   .col-body { flex: 1; }
-  .drag-handle { display: none; }
+  .drag-handle {
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    opacity: 0.6;
+    pointer-events: all;
+  }
   .remove-btn { top: 8px; right: 8px; opacity: 0.55; }
   .col:hover .remove-btn { opacity: 1; }
   .col-footer {

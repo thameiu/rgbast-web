@@ -17,7 +17,7 @@ export class ApiClient {
     // Example: retrieve token from localStorage
     const token = localStorage.getItem('access_token');
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = `${token}`;
     }
     return headers;
   }

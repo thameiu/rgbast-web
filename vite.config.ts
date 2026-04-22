@@ -7,6 +7,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://vite.dev/config/
 export default defineConfig({
+  base:"/",
   envPrefix: ['VITE_', 'BACKEND_'],
   plugins: [
     vue(),

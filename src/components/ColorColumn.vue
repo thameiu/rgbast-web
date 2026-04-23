@@ -4,6 +4,10 @@
     :class="{ 'is-dragging': isDragging }"
     :data-col-key="colKey"
     :style="colStyle"
+    @pointerdown="onColPointerDown"
+    @pointerup="cancelLongPress"
+    @pointercancel="cancelLongPress"
+    @pointermove="onLongPressMove"
   >
     <!-- Drag handle -->
     <div class="drag-handle" aria-hidden="true" @pointerdown.stop="$emit('dragStart', $event)">
@@ -121,6 +125,32 @@ async function copyHex() {
     setTimeout(() => { copied.value = false }, 1500)
   } catch {}
 }
+
+// Long-press to drag (mobile only)
+let longPressTimer: ReturnType<typeof setTimeout> | null = null
+let longPressOrigin: { x: number; y: number } | null = null
+
+function onColPointerDown(e: PointerEvent) {
+  if (!window.matchMedia('(max-width: 768px)').matches) return
+  if ((e.target as HTMLElement).closest('button, input')) return
+  longPressOrigin = { x: e.clientX, y: e.clientY }
+  longPressTimer = setTimeout(() => {
+    longPressOrigin = null
+    emit('dragStart', e)
+  }, 400)
+}
+
+function cancelLongPress() {
+  if (longPressTimer !== null) { clearTimeout(longPressTimer); longPressTimer = null }
+  longPressOrigin = null
+}
+
+function onLongPressMove(e: PointerEvent) {
+  if (!longPressOrigin) return
+  const dx = e.clientX - longPressOrigin.x
+  const dy = e.clientY - longPressOrigin.y
+  if (dx * dx + dy * dy > 64) cancelLongPress()
+}
 </script>
 
 <style scoped>
@@ -226,16 +256,9 @@ async function copyHex() {
     height: 100px;
     min-width: unset !important;
     flex-direction: row;
-    padding-left: 30px;
   }
   .col-body { flex: 1; }
-  .drag-handle {
-    top: 50%;
-    left: 12px;
-    transform: translateY(-50%);
-    opacity: 0.6;
-    pointer-events: all;
-  }
+  .drag-handle { display: none; }
   .remove-btn { top: 8px; right: 8px; opacity: 0.55; }
   .col:hover .remove-btn { opacity: 1; }
   .col-footer {

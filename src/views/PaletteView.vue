@@ -379,7 +379,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
 import type { PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
@@ -821,13 +821,7 @@ function getColStyle(i: number): Record<string, string> {
 }
 
 function onDragStart(i: number, e: PointerEvent) {
-  draggedIdx.value = i
-  dragPointerStartX.value = e.clientX
-  dragPointerStartY.value = e.clientY
-  ;(e.target as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
-  e.preventDefault()
-
-  // Create a ghost div that follows the cursor; the real column becomes invisible
+  // Clone the column BEFORE marking it as dragging so the clone captures the fully-visible state
   const key = colors.value[i]?._key
   if (key && colsAreaEl.value) {
     const colEl = colsAreaEl.value.querySelector<HTMLElement>(`.col[data-col-key="${key}"]`)
@@ -835,12 +829,31 @@ function onDragStart(i: number, e: PointerEvent) {
       const rect = colEl.getBoundingClientRect()
       ghostOffsetX.value = e.clientX - rect.left
       ghostOffsetY.value = e.clientY - rect.top
-      const ghost = document.createElement('div')
-      ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;background:#${colors.value[i]!.hex};z-index:9999;pointer-events:none;opacity:0.92;box-shadow:0 16px 48px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.07);`
+
+      const ghost = colEl.cloneNode(true) as HTMLDivElement
+      ghost.style.position = 'fixed'
+      ghost.style.left = rect.left + 'px'
+      ghost.style.top = rect.top + 'px'
+      ghost.style.width = rect.width + 'px'
+      ghost.style.height = rect.height + 'px'
+      ghost.style.zIndex = '9999'
+      ghost.style.pointerEvents = 'none'
+      ghost.style.cursor = 'grabbing'
+      ghost.style.margin = '0'
+      ghost.style.flexGrow = '0'
+      ghost.style.flexShrink = '0'
+      ghost.style.boxShadow = 'none'
+      ghost.style.transition = 'none'
       document.body.appendChild(ghost)
       ghostEl.value = ghost
     }
   }
+
+  draggedIdx.value = i
+  dragPointerStartX.value = e.clientX
+  dragPointerStartY.value = e.clientY
+  ;(e.target as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
+  e.preventDefault()
 
   document.addEventListener('pointermove', onPointerMove)
   document.addEventListener('pointercancel', onPointerUp, { once: true })
@@ -852,13 +865,17 @@ function onDragStart(i: number, e: PointerEvent) {
 function onPointerMove(e: PointerEvent) {
   if (draggedIdx.value === null) return
 
-  // Ghost follows the cursor exactly
+  const mobile = isMobileLayout()
+
+  // Ghost tracks cursor: horizontal-only on desktop, vertical-only on mobile
   if (ghostEl.value) {
-    ghostEl.value.style.left = `${e.clientX - ghostOffsetX.value}px`
-    ghostEl.value.style.top = `${e.clientY - ghostOffsetY.value}px`
+    if (mobile) {
+      ghostEl.value.style.top = `${e.clientY - ghostOffsetY.value}px`
+    } else {
+      ghostEl.value.style.left = `${e.clientX - ghostOffsetX.value}px`
+    }
   }
 
-  const mobile = isMobileLayout()
   const unit = getDragUnit()
   const pointer = mobile ? e.clientY : e.clientX
   let idx = draggedIdx.value
@@ -896,18 +913,63 @@ function onPointerMove(e: PointerEvent) {
   }
 }
 
-function onPointerUp() {
-  if (ghostEl.value) {
-    document.body.removeChild(ghostEl.value)
-    ghostEl.value = null
-  }
+async function onPointerUp() {
   document.removeEventListener('pointermove', onPointerMove)
   document.removeEventListener('pointercancel', onPointerUp)
   document.body.style.userSelect = ''
   document.body.style.cursor = ''
-  draggedIdx.value = null
   dragPointerStartX.value = null
   dragPointerStartY.value = null
+
+  const ghost = ghostEl.value
+  const idx = draggedIdx.value
+
+  if (!ghost || idx === null) {
+    if (ghost?.parentNode) document.body.removeChild(ghost)
+    ghostEl.value = null
+    draggedIdx.value = null
+    return
+  }
+
+  // Wait for Vue to resolve any in-flight reorder before reading final positions
+  await nextTick()
+
+  const key = colors.value[idx]?._key
+  const colEl = key ? colsAreaEl.value?.querySelector<HTMLElement>(`.col[data-col-key="${key}"]`) : null
+
+  if (!colEl) {
+    if (ghost.parentNode) document.body.removeChild(ghost)
+    ghostEl.value = null
+    draggedIdx.value = null
+    return
+  }
+
+  const finalRect = colEl.getBoundingClientRect()
+  const mobile = isMobileLayout()
+  const animProp = mobile ? 'top' : 'left'
+
+  let cleanedUp = false
+  const cleanup = () => {
+    if (cleanedUp) return
+    cleanedUp = true
+    if (ghost.parentNode) document.body.removeChild(ghost)
+    ghostEl.value = null
+    draggedIdx.value = null
+  }
+
+  // transitionend fires per-property; clean up on whichever finishes first
+  ghost.addEventListener('transitionend', (e: TransitionEvent) => {
+    if (e.propertyName === animProp || e.propertyName === 'opacity') cleanup()
+  })
+  setTimeout(cleanup, 300) // fallback if transition doesn't fire (zero-distance drop)
+
+  // Slide ghost to its final slot, then swap it for the real column instantly
+  ghost.style.transition = `${animProp} 0.18s cubic-bezier(0.2,0.9,0.2,1)`
+  if (mobile) {
+    ghost.style.top = `${finalRect.top}px`
+  } else {
+    ghost.style.left = `${finalRect.left}px`
+  }
 }
 
 // Color operations

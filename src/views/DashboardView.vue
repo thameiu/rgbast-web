@@ -87,12 +87,33 @@
                 <p v-if="p.description" class="card-desc">{{ p.description }}</p>
                 <p class="card-meta font-mono">{{ fmtDate(p.created_at) }}</p>
               </div>
+              <button class="card-del-btn" title="Delete palette" @click.stop="confirmDeletePalette(p)">
+                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                  <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
             </article>
           </div>
         </div>
       </section>
     </div>
 
+  <!-- Delete confirm modal -->
+  <Teleport to="body">
+    <div v-if="deleteTarget" class="modal-overlay" @click.self="deleteTarget = null">
+      <div class="modal">
+        <h3 class="modal-title font-display">Delete Palette</h3>
+        <p class="modal-sub">Delete <strong>{{ deleteTarget.title }}</strong>? All snapshots and branches will be permanently lost.</p>
+        <p v-if="deleteError" class="modal-error">{{ deleteError }}</p>
+        <div class="modal-actions">
+          <button class="modal-btn cancel" @click="deleteTarget = null">Cancel</button>
+          <button class="modal-btn danger" :disabled="isDeleting" @click="doDeletePalette">
+            {{ isDeleting ? 'Deleting…' : 'Delete permanently' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
   </main>
 </template>
 
@@ -111,6 +132,9 @@ const router = useRouter()
 const loading = ref(true)
 const user = ref<any>(null)
 const palettes = ref<PaletteCache[]>([])
+const deleteTarget = ref<PaletteCache | null>(null)
+const isDeleting = ref(false)
+const deleteError = ref('')
 
 
 onMounted(async () => {
@@ -146,6 +170,26 @@ function newPalette() {
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function confirmDeletePalette(p: PaletteCache) {
+  deleteTarget.value = p
+  deleteError.value = ''
+}
+
+async function doDeletePalette() {
+  if (!deleteTarget.value) return
+  isDeleting.value = true
+  deleteError.value = ''
+  try {
+    await palettesApi.deletePalette(deleteTarget.value.id)
+    palettes.value = palettes.value.filter(p => p.id !== deleteTarget.value!.id)
+    deleteTarget.value = null
+  } catch (e: any) {
+    deleteError.value = e.message ?? 'Delete failed'
+  } finally {
+    isDeleting.value = false
+  }
 }
 </script>
 
@@ -314,12 +358,30 @@ function fmtDate(iso: string) {
   overflow: hidden;
   cursor: pointer;
   transition: transform .2s, border-color .2s, box-shadow .2s;
+  position: relative;
 }
 .palette-card:hover {
   transform: translateY(-3px);
   border-color: var(--ink-3);
   box-shadow: 0 8px 24px rgba(14,14,16,.08);
 }
+
+.card-del-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: rgba(14,14,16,0.55);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.75);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  z-index: 5;
+}
+.palette-card:hover .card-del-btn { opacity: 1; }
+.card-del-btn:hover { background: rgba(180,20,20,0.85) !important; border-color: rgba(255,80,80,0.4); color: #fff; }
 
 .card-strip {
   display: flex;
@@ -430,6 +492,13 @@ function fmtDate(iso: string) {
 }
 .modal-btn.confirm:hover:not(:disabled) { background: var(--magenta); }
 .modal-btn.confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+.modal-btn.danger {
+  background: #b41414;
+  border: 1px solid transparent;
+  color: #fff;
+}
+.modal-btn.danger:hover:not(:disabled) { background: #991010; }
+.modal-btn.danger:disabled { opacity: 0.35; cursor: not-allowed; }
 
 @keyframes riseIn {
   from { opacity: 0; transform: translateY(12px); }

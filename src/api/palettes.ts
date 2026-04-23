@@ -1,9 +1,13 @@
 import { ApiClient } from './client';
 import type {
+  PaletteBranchDeleteResponse,
+  PaletteBranchRevertResponse,
   PaletteByUsernameResponse,
+  PaletteMainRevertResponse,
   PaletteCache,
   PaletteCreate,
   PaletteCreateResponse,
+  PaletteDeleteResponse,
   PaletteBranchMergeResponse,
   PaletteSnapshotSave,
   PaletteSnapshotSaveResponse,
@@ -32,6 +36,41 @@ export const palettesApi = {
   /** Merge a branch into main, creating a merge commit on main. */
   mergeBranch: (paletteId: number, branchId: number): Promise<PaletteBranchMergeResponse> => {
     return ApiClient.request<PaletteBranchMergeResponse>(`/palettes/${paletteId}/branches/${branchId}/merge`, 'POST');
+  },
+
+  /** Delete a palette and all associated branches, snapshots, colors, and changes. */
+  deletePalette: async (paletteId: number): Promise<PaletteDeleteResponse> => {
+    const resp = await ApiClient.request<PaletteDeleteResponse>(`/palettes/${paletteId}`, 'DELETE');
+    palettesApi.removeCachedPalette(paletteId);
+    return resp;
+  },
+
+  /** Delete an unmerged branch and all branch snapshots, colors, and changes. */
+  deleteBranch: (paletteId: number, branchId: number): Promise<PaletteBranchDeleteResponse> => {
+    return ApiClient.request<PaletteBranchDeleteResponse>(`/palettes/${paletteId}/branches/${branchId}`, 'DELETE');
+  },
+
+  /** Revert a branch to a selected snapshot by deleting all newer branch snapshots and related data. */
+  revertBranchToSnapshot: (
+    paletteId: number,
+    branchId: number,
+    snapshotId: number,
+  ): Promise<PaletteBranchRevertResponse> => {
+    return ApiClient.request<PaletteBranchRevertResponse>(
+      `/palettes/${paletteId}/branches/${branchId}/revert/${snapshotId}`,
+      'POST',
+    );
+  },
+
+  /** Revert main to a selected snapshot, deleting all newer main snapshots (and orphaned branches). */
+  revertMainToSnapshot: (
+    paletteId: number,
+    snapshotId: number,
+  ): Promise<PaletteMainRevertResponse> => {
+    return ApiClient.request<PaletteMainRevertResponse>(
+      `/palettes/${paletteId}/main/revert/${snapshotId}`,
+      'POST',
+    );
   },
 
   /** Fetch all palettes (with their latest main snapshot) for a given username. */
@@ -75,5 +114,11 @@ export const palettesApi = {
   /** Look up a single palette by id from the local cache. Returns null if not found. */
   getCachedPalette(paletteId: number): PaletteCache | null {
     return palettesApi.getCachedPalettes().find(p => p.id === paletteId) ?? null;
+  },
+
+  /** Remove a palette entry from local cache after permanent deletion. */
+  removeCachedPalette(paletteId: number): void {
+    const list = palettesApi.getCachedPalettes().filter(p => p.id !== paletteId);
+    localStorage.setItem(CACHE_KEY, JSON.stringify(list));
   },
 };

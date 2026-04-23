@@ -3,7 +3,19 @@
     <!-- Branch filter pill -->
     <div v-if="activeBranchId !== null" class="branch-filter-bar">
       <span class="filter-label">Branch: <strong>{{ activeBranchTitle }}</strong></span>
-      <button class="filter-clear" @click="activeBranchId = null">× clear</button>
+      <div class="filter-actions">
+        <button
+          v-if="!activeBranchIsMerged"
+          class="filter-delete"
+          title="Delete branch (Del)"
+          @click="emit('deleteBranch', activeBranchId!)"
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M1.5 3h9M4.5 3V1.5h3V3M3.5 3l.5 7.5M6 3v7.5M8.5 3l-.5 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button class="filter-clear" @click="activeBranchId = null">× clear</button>
+      </div>
     </div>
 
     <div class="hg-inner" :style="{ minHeight: totalHeight + 'px' }">
@@ -103,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import type { PaletteHistoryGraphResponse, PaletteCommitResponse } from '@/api/types'
 import { getLaneColor } from '@/utils/branchColors'
 import ColorCube from './ColorCube.vue'
@@ -116,6 +128,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   selectSnapshot: [id: number]
   selectBranch: [id: number]
+  deleteBranch: [id: number]
 }>()
 
 const ROW_H  = 80
@@ -134,6 +147,30 @@ const activeBranchTitle = computed(() => {
   if (activeBranchId.value === null) return ''
   return props.history.branches.find(b => b.id === activeBranchId.value)?.title ?? ''
 })
+
+const activeBranchIsMerged = computed(() => {
+  if (activeBranchId.value === null) return false
+  return props.history.branches.find(b => b.id === activeBranchId.value)?.is_merged ?? false
+})
+
+// Clear active branch if it no longer exists (e.g. after deletion)
+watch(() => props.history, () => {
+  if (activeBranchId.value !== null) {
+    const exists = props.history.branches.some(b => b.id === activeBranchId.value)
+    if (!exists) activeBranchId.value = null
+  }
+})
+
+// Delete key shortcut when a deletable branch is selected
+function onKeyDown(e: KeyboardEvent) {
+  if (e.key !== 'Delete' && e.key !== 'Backspace') return
+  if (activeBranchId.value === null || activeBranchIsMerged.value) return
+  if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+  e.preventDefault()
+  emit('deleteBranch', activeBranchId.value)
+}
+onMounted(() => document.addEventListener('keydown', onKeyDown))
+onUnmounted(() => document.removeEventListener('keydown', onKeyDown))
 
 function onClickBranchLine(branchId: number) {
   if (activeBranchId.value === branchId) {
@@ -320,6 +357,18 @@ function fmtDate(iso: string) {
   color: rgba(255,255,255,0.5);
 }
 .branch-filter-bar strong { color: rgba(255,255,255,0.85); }
+.filter-actions { display: flex; align-items: center; gap: 6px; }
+.filter-delete {
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.2);
+  border-radius: 5px;
+  color: rgba(255,100,100,0.55);
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.filter-delete:hover { color: rgba(255,120,120,0.9); border-color: rgba(255,80,80,0.5); background: rgba(255,80,80,0.08); }
 .filter-clear {
   background: transparent;
   border: 1px solid rgba(255,255,255,0.12);

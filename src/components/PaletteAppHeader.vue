@@ -65,6 +65,16 @@
       <span v-if="snapshotHint" class="snapshot-hint">{{ snapshotHint }}</span>
       <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
       <button
+        v-if="isOwned && canDelete"
+        class="action-btn danger-icon"
+        title="Delete palette"
+        @click="$emit('deletePalette')"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button
         class="action-btn secondary"
         @click="$emit('toggleHistory')"
         :class="{ active: historyOpen }"
@@ -119,6 +129,7 @@ const props = defineProps<{
   historyOpen: boolean
   snapshotHint?: string | null
   isOwned?: boolean
+  canDelete?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -128,6 +139,7 @@ const emit = defineEmits<{
   branchChange: [id: number | null]
   toggleHistory: []
   merge: [branchId: number]
+  deletePalette: []
 }>()
 
 const branchOpen = ref(false)
@@ -374,4 +386,16 @@ const dropdownStyle = ref({
   color: #0ec6d4;
 }
 .action-btn.clone:hover { background: rgba(14, 198, 212, 0.22); border-color: #0ec6d4; }
+
+.action-btn.danger-icon {
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.18);
+  color: rgba(255,100,100,0.5);
+  padding: 7px 10px;
+}
+.action-btn.danger-icon:hover {
+  background: rgba(255,80,80,0.1);
+  border-color: rgba(255,80,80,0.4);
+  color: rgba(255,120,120,0.9);
+}
 </style>

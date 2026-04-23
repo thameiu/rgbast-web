@@ -11,12 +11,14 @@
       :historyOpen="historyOpen"
       :snapshotHint="snapshotCommitHint"
       :isOwned="isOwned"
+      :canDelete="isOwned && !isNewPalette"
       @back="router.push('/dashboard')"
       @save="requestSave"
       @clone="clonePalette"
       @branchChange="switchBranch"
       @toggleHistory="historyOpen = !historyOpen"
       @merge="confirmMerge"
+      @deletePalette="showDeletePaletteModal = true"
     />
 
     <!-- Loading state -->
@@ -50,7 +52,16 @@
               Viewing a past snapshot — saving will create a new commit on branch <strong>{{ selectedSnapshotCtx?.branchTitle }}</strong>.
             </template>
           </span>
-          <button class="banner-dismiss" @click="clearSnapshotSelection">Deselect ×</button>
+          <div class="banner-actions">
+            <button
+              v-if="isOwned && revertableSnapshotCount > 0"
+              class="banner-revert"
+              @click="showRevertModal = true"
+            >
+              Revert branch here
+            </button>
+            <button class="banner-dismiss" @click="clearSnapshotSelection">Deselect ×</button>
+          </div>
         </div>
       </Transition>
 
@@ -100,6 +111,7 @@
             :selectedId="selectedSnapshotId"
             @selectSnapshot="onSelectSnapshot"
             @selectBranch="id => switchBranch(id)"
+            @deleteBranch="onDeleteBranchRequest"
           />
           <div v-else class="history-empty">No history yet.</div>
         </aside>
@@ -244,6 +256,65 @@
             <button class="modal-btn cancel" @click="mergeTargetId = null">Cancel</button>
             <button class="modal-btn confirm" :disabled="isMerging" @click="doMerge">
               {{ isMerging ? 'Merging…' : 'Merge' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Delete palette modal -->
+    <Teleport to="body">
+      <div v-if="showDeletePaletteModal" class="modal-overlay" @click.self="showDeletePaletteModal = false">
+        <div class="modal">
+          <h3 class="modal-title font-display">Delete Palette</h3>
+          <p class="modal-sub">
+            Delete <strong>{{ paletteTitle }}</strong>? All snapshots and branches will be permanently lost.
+          </p>
+          <p v-if="deletePaletteError" class="modal-error">{{ deletePaletteError }}</p>
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="showDeletePaletteModal = false">Cancel</button>
+            <button class="modal-btn danger" :disabled="isDeletingPalette" @click="doDeletePalette">
+              {{ isDeletingPalette ? 'Deleting…' : 'Delete permanently' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Delete branch modal -->
+    <Teleport to="body">
+      <div v-if="deleteBranchTargetId !== null" class="modal-overlay" @click.self="deleteBranchTargetId = null">
+        <div class="modal">
+          <h3 class="modal-title font-display">Delete Branch</h3>
+          <p class="modal-sub">
+            Delete branch <strong>{{ deleteBranchTargetName }}</strong>? All snapshots in this branch will be permanently lost.
+          </p>
+          <p v-if="deleteBranchError" class="modal-error">{{ deleteBranchError }}</p>
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="deleteBranchTargetId = null">Cancel</button>
+            <button class="modal-btn danger" :disabled="isDeletingBranch" @click="doDeleteBranch">
+              {{ isDeletingBranch ? 'Deleting…' : 'Delete branch' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Revert branch modal -->
+    <Teleport to="body">
+      <div v-if="showRevertModal" class="modal-overlay" @click.self="showRevertModal = false">
+        <div class="modal">
+          <h3 class="modal-title font-display">Revert</h3>
+          <p class="modal-sub">
+            Revert <strong>{{ revertTargetLabel }}</strong> to this snapshot?
+            <strong>{{ revertableSnapshotCount }} newer snapshot{{ revertableSnapshotCount === 1 ? '' : 's' }}</strong>
+            will be permanently deleted.
+          </p>
+          <p v-if="revertError" class="modal-error">{{ revertError }}</p>
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="showRevertModal = false">Cancel</button>
+            <button class="modal-btn danger" :disabled="isReverting" @click="doRevert">
+              {{ isReverting ? 'Reverting…' : 'Revert' }}
             </button>
           </div>
         </div>
@@ -698,6 +769,112 @@ async function doMerge() {
   }
 }
 
+// ── Delete palette ────────────────────────────────────────────────────────────
+const showDeletePaletteModal = ref(false)
+const isDeletingPalette = ref(false)
+const deletePaletteError = ref('')
+
+async function doDeletePalette() {
+  isDeletingPalette.value = true
+  deletePaletteError.value = ''
+  try {
+    await palettesApi.deletePalette(paletteId.value)
+    showDeletePaletteModal.value = false
+    router.push('/dashboard')
+  } catch (e: any) {
+    deletePaletteError.value = e.message ?? 'Delete failed'
+  } finally {
+    isDeletingPalette.value = false
+  }
+}
+
+// ── Delete branch ─────────────────────────────────────────────────────────────
+const deleteBranchTargetId = ref<number | null>(null)
+const deleteBranchTargetName = ref('')
+const isDeletingBranch = ref(false)
+const deleteBranchError = ref('')
+
+function onDeleteBranchRequest(branchId: number) {
+  const branch = history.value?.branches.find(b => b.id === branchId)
+  if (!branch) return
+  deleteBranchTargetId.value = branchId
+  deleteBranchTargetName.value = branch.title
+  deleteBranchError.value = ''
+}
+
+async function doDeleteBranch() {
+  if (deleteBranchTargetId.value === null) return
+  isDeletingBranch.value = true
+  deleteBranchError.value = ''
+  try {
+    await palettesApi.deleteBranch(paletteId.value, deleteBranchTargetId.value)
+    if (currentBranchId.value === deleteBranchTargetId.value) currentBranchId.value = null
+    deleteBranchTargetId.value = null
+    await loadHistory()
+  } catch (e: any) {
+    deleteBranchError.value = e.message ?? 'Delete failed'
+  } finally {
+    isDeletingBranch.value = false
+  }
+}
+
+// ── Revert (branch or main) ───────────────────────────────────────────────────
+const showRevertModal = ref(false)
+const isReverting = ref(false)
+const revertError = ref('')
+
+const revertableSnapshotCount = computed(() => {
+  if (!selectedSnapshotId.value) return 0
+  const ctx = selectedSnapshotCtx.value
+  if (ctx?.isMerged) return 0
+
+  if (ctx?.isMain) {
+    // main: count newer main snapshots (index of selected in newest-first list)
+    const idx = (history.value?.main ?? []).findIndex(s => s.id === selectedSnapshotId.value)
+    return Math.max(0, idx)
+  }
+
+  if (ctx && !ctx.isMain) {
+    // branch: count newer branch snapshots
+    const branch = history.value?.branches.find(b => b.id === ctx.branchId)
+    if (!branch) return 0
+    const idx = branch.snapshots.findIndex(s => s.id === selectedSnapshotId.value)
+    return Math.max(0, idx)
+  }
+
+  return 0
+})
+
+const revertTargetLabel = computed(() => {
+  const ctx = selectedSnapshotCtx.value
+  if (!ctx) return ''
+  if (ctx.isMain) return 'main'
+  return `branch "${ctx.branchTitle}"`
+})
+
+async function doRevert() {
+  const ctx = selectedSnapshotCtx.value
+  if (!selectedSnapshotId.value) return
+  isReverting.value = true
+  revertError.value = ''
+  try {
+    if (ctx?.isMain) {
+      await palettesApi.revertMainToSnapshot(paletteId.value, selectedSnapshotId.value)
+      currentBranchId.value = null
+    } else if (ctx && !ctx.isMain && ctx.branchId) {
+      await palettesApi.revertBranchToSnapshot(paletteId.value, ctx.branchId, selectedSnapshotId.value)
+      currentBranchId.value = ctx.branchId
+    }
+    showRevertModal.value = false
+    selectedSnapshotId.value = null
+    await loadHistory()
+  } catch (e: any) {
+    revertError.value = e.message ?? 'Revert failed'
+  } finally {
+    isReverting.value = false
+  }
+}
+
 function findSnapshot(id: number) {
   if (!history.value) return null
   const mainSnap = history.value.main.find(s => s.id === id)
@@ -880,6 +1057,25 @@ onMounted(() => {
   color: rgba(246, 195, 67, 0.75);
 }
 .banner-text strong { color: rgba(246, 195, 67, 1); }
+.banner-actions {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.banner-revert {
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255,100,100,0.75);
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.25);
+  border-radius: 6px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.banner-revert:hover { color: rgba(255,120,120,1); border-color: rgba(255,80,80,0.55); }
 .banner-dismiss {
   flex-shrink: 0;
   font-size: 11px;
@@ -891,6 +1087,7 @@ onMounted(() => {
   padding: 3px 8px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
+  white-space: nowrap;
 }
 .banner-dismiss:hover { color: rgba(246, 195, 67, 1); border-color: rgba(246, 195, 67, 0.6); }
 
@@ -1135,6 +1332,13 @@ onMounted(() => {
 }
 .modal-btn.confirm:hover:not(:disabled) { background: #9a0db0; }
 .modal-btn.confirm:disabled { opacity: 0.35; cursor: not-allowed; }
+.modal-btn.danger {
+  background: #b41414;
+  border: 1px solid transparent;
+  color: #fff;
+}
+.modal-btn.danger:hover:not(:disabled) { background: #991010; }
+.modal-btn.danger:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .modal-info {
   font-size: 13px;

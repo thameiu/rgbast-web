@@ -128,6 +128,42 @@ export interface PaletteBranchMergeResponse {
   colors_modified: number;
 }
 
+export interface PaletteDeleteResponse {
+  palette_id: number;
+  deleted_branches: number;
+  deleted_snapshots: number;
+  deleted_colors: number;
+  deleted_changes: number;
+}
+
+export interface PaletteBranchDeleteResponse {
+  palette_id: number;
+  branch_id: number;
+  deleted_snapshots: number;
+  deleted_colors: number;
+  deleted_changes: number;
+}
+
+export interface PaletteBranchRevertResponse {
+  palette_id: number;
+  branch_id: number;
+  target_snapshot_id: number;
+  latest_snapshot_id: number;
+  deleted_snapshots: number;
+  deleted_colors: number;
+  deleted_changes: number;
+}
+
+export interface PaletteMainRevertResponse {
+  palette_id: number;
+  target_snapshot_id: number;
+  latest_snapshot_id: number;
+  deleted_snapshots: number;
+  deleted_branches: number;
+  deleted_colors: number;
+  deleted_changes: number;
+}
+
 /** Summary item returned by GET /users/{username}/palettes. */
 export interface PaletteByUsernameItemResponse {
   id: number;

@@ -864,6 +864,7 @@ function onDragStart(i: number, e: PointerEvent) {
 
 function onPointerMove(e: PointerEvent) {
   if (draggedIdx.value === null) return
+  e.preventDefault() // prevents browser from firing pointercancel (scroll takeover) on mobile
 
   const mobile = isMobileLayout()
 

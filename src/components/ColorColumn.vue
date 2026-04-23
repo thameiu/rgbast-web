@@ -137,7 +137,7 @@ function onColPointerDown(e: PointerEvent) {
   longPressTimer = setTimeout(() => {
     longPressOrigin = null
     emit('dragStart', e)
-  }, 400)
+  }, 300)
 }
 
 function cancelLongPress() {

@@ -5,7 +5,7 @@
       <span class="filter-label">Branch: <strong>{{ activeBranchTitle }}</strong></span>
       <div class="filter-actions">
         <button
-          v-if="!activeBranchIsMerged"
+          v-if="activeBranchId !== 0 && !activeBranchIsMerged"
           class="filter-delete"
           title="Delete branch (Del)"
           @click="emit('deleteBranch', activeBranchId!)"
@@ -54,10 +54,10 @@
         />
         <!-- Commit dots -->
         <circle
-          v-for="node in displayNodes"
+          v-for="node in nodes"
           :key="'d' + node.id"
           :cx="laneX(node.lane)"
-          :cy="rowY(node.rowIndex)"
+          :cy="nodeCenterY(node)"
           :r="DOT_R"
           :fill="getLaneColor(node.lane)"
           :stroke="node.isMerge ? 'rgba(255,255,255,0.6)' : getLaneColor(node.lane)"
@@ -67,18 +67,24 @@
 
       <!-- Commit info panels -->
       <div
-        v-for="node in displayNodes"
+        v-for="node in visibleInfoNodes"
         :key="'info' + node.id"
         class="commit-info"
         :class="{
           selected: node.id === selectedId,
-          dimmed: activeBranchId !== null && node.lane !== 0 && node.branchId !== activeBranchId,
+          dimmed: false,
           'branch-hovered': hoveredBranchId !== null && node.branchId === hoveredBranchId,
         }"
-        :style="{ top: (node.rowIndex * ROW_H) + 'px', left: svgWidth + 'px' }"
+        :style="{ top: nodeTopY(node) + 'px', left: svgWidth + 'px', height: nodeHeight(node) + 'px' }"
         @click="$emit('selectSnapshot', node.id)"
       >
         <div class="commit-top">
+          <span v-if="node.isMerge" class="badge merge-badge">merge</span>
+          <span
+            v-else-if="node.branchTitle"
+            class="badge branch-badge"
+            :style="{ borderColor: getLaneColor(node.lane), color: getLaneColor(node.lane) }"
+          >{{ node.branchTitle }}</span>
           <div class="cubes-row">
             <ColorCube
               v-for="(col, ci) in node.palette_colors.slice(0, 8)"
@@ -90,15 +96,19 @@
               +{{ node.palette_colors.length - 8 }}
             </span>
           </div>
-          <span v-if="node.isMerge" class="badge merge-badge">merge</span>
-          <span
-            v-else-if="node.branchTitle"
-            class="badge branch-badge"
-            :style="{ borderColor: getLaneColor(node.lane), color: getLaneColor(node.lane) }"
-          >{{ node.branchTitle }}</span>
         </div>
-        <p class="commit-msg">{{ node.comment || 'Initial palette creation' }}</p>
+        <p class="commit-msg" :class="{ expanded: node.id === selectedId }">
+          {{ node.comment || 'Initial palette creation' }}
+        </p>
         <time class="commit-time">{{ fmtDate(node.created_at) }}</time>
+
+        <button
+          v-if="node.id === selectedId && showRevertButton"
+          class="node-revert"
+          @click.stop="emit('revertSnapshot', node.id)"
+        >
+          Revert
+        </button>
 
         <!-- Change indicator: top-right corner -->
         <div class="change-corner">
@@ -123,21 +133,26 @@ import ColorCube from './ColorCube.vue'
 const props = defineProps<{
   history: PaletteHistoryGraphResponse
   selectedId?: number | null
+  showRevertButton?: boolean
 }>()
 
 const emit = defineEmits<{
   selectSnapshot: [id: number]
   selectBranch: [id: number]
   deleteBranch: [id: number]
+  revertSnapshot: [id: number]
 }>()
 
-const ROW_H  = 80
+const BASE_ROW_H  = 92
 const LANE_W = 28
 const PAD    = 18
 const DOT_R  = 6
+const ROW_TOP_PAD = 20
+const COMMENT_LINE_H = 16
+const APPROX_COMMENT_CHARS_PER_LINE = 42
+const EXPANDED_EXTRA_PAD = 12
 
 function laneX(lane: number) { return PAD + lane * LANE_W }
-function rowY(row: number)   { return row * ROW_H + ROW_H / 2 }
 
 // Branch interaction state
 const activeBranchId  = ref<number | null>(null)
@@ -145,17 +160,19 @@ const hoveredBranchId = ref<number | null>(null)
 
 const activeBranchTitle = computed(() => {
   if (activeBranchId.value === null) return ''
+  if (activeBranchId.value === 0) return 'main'
   return props.history.branches.find(b => b.id === activeBranchId.value)?.title ?? ''
 })
 
 const activeBranchIsMerged = computed(() => {
   if (activeBranchId.value === null) return false
+  if (activeBranchId.value === 0) return false
   return props.history.branches.find(b => b.id === activeBranchId.value)?.is_merged ?? false
 })
 
 // Clear active branch if it no longer exists (e.g. after deletion)
 watch(() => props.history, () => {
-  if (activeBranchId.value !== null) {
+  if (activeBranchId.value !== null && activeBranchId.value !== 0) {
     const exists = props.history.branches.some(b => b.id === activeBranchId.value)
     if (!exists) activeBranchId.value = null
   }
@@ -164,7 +181,7 @@ watch(() => props.history, () => {
 // Delete key shortcut when a deletable branch is selected
 function onKeyDown(e: KeyboardEvent) {
   if (e.key !== 'Delete' && e.key !== 'Backspace') return
-  if (activeBranchId.value === null || activeBranchIsMerged.value) return
+  if (activeBranchId.value === null || activeBranchId.value === 0 || activeBranchIsMerged.value) return
   if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
   e.preventDefault()
   emit('deleteBranch', activeBranchId.value)
@@ -198,7 +215,7 @@ const nodes = computed<CommitNode[]>(() => {
       lane: 0,
       rowIndex: -1,
       isMerge: (c.comment ?? '').startsWith('Merge branch'),
-      branchId: null,
+      branchId: 0,
     })
   })
 
@@ -220,8 +237,43 @@ const nodes = computed<CommitNode[]>(() => {
   return all
 })
 
-// Always show all nodes; active branch is highlighted, others dimmed
-const displayNodes = computed<CommitNode[]>(() => nodes.value)
+const visibleInfoNodes = computed<CommitNode[]>(() => {
+  let filtered = nodes.value
+  if (activeBranchId.value === 0) {
+    filtered = nodes.value.filter(n => n.branchId === 0)
+  } else if (activeBranchId.value !== null) {
+    filtered = nodes.value.filter(n => n.branchId === activeBranchId.value)
+  }
+
+  return filtered
+})
+
+const visibleInfoIdSet = computed(() => new Set(visibleInfoNodes.value.map(n => n.id)))
+
+function nodeHeight(node: CommitNode): number {
+  if (node.id !== props.selectedId || !visibleInfoIdSet.value.has(node.id)) return BASE_ROW_H
+  const comment = (node.comment || 'Initial palette creation').trim()
+  const lines = Math.max(1, Math.ceil(comment.length / APPROX_COMMENT_CHARS_PER_LINE))
+  return BASE_ROW_H + Math.max(0, lines - 1) * COMMENT_LINE_H + EXPANDED_EXTRA_PAD
+}
+
+const rowTopById = computed(() => {
+  const m = new Map<number, number>()
+  let y = ROW_TOP_PAD
+  for (const n of nodes.value) {
+    m.set(n.id, y)
+    y += nodeHeight(n)
+  }
+  return m
+})
+
+function nodeTopY(node: CommitNode): number {
+  return rowTopById.value.get(node.id) ?? ROW_TOP_PAD
+}
+
+function nodeCenterY(node: CommitNode): number {
+  return nodeTopY(node) + nodeHeight(node) / 2
+}
 
 const nodeById = computed(() => {
   const m = new Map<number, CommitNode>()
@@ -240,7 +292,11 @@ const branchFirstIds = computed(() => {
 
 const maxLane     = computed(() => Math.max(0, ...nodes.value.map(n => n.lane)))
 const svgWidth    = computed(() => PAD + (maxLane.value + 1) * LANE_W + PAD)
-const totalHeight = computed(() => Math.max(1, displayNodes.value.length) * ROW_H)
+const totalHeight = computed(() => {
+  let sum = ROW_TOP_PAD
+  for (const n of nodes.value) sum += nodeHeight(n)
+  return sum
+})
 
 interface Line { d: string; color: string; branchId: number | null }
 
@@ -261,9 +317,9 @@ const lines = computed<Line[]>(() => {
     }
 
     const x1 = laneX(node.lane)
-    const y1 = rowY(node.rowIndex)
+    const y1 = nodeCenterY(node)
     const x2 = laneX(visualParent.lane)
-    const y2 = rowY(visualParent.rowIndex)
+    const y2 = nodeCenterY(visualParent)
     const color = getLaneColor(node.lane)
 
     let d: string
@@ -288,9 +344,9 @@ const lines = computed<Line[]>(() => {
     if (!branchTip || !mergeCommit) return
 
     const x1 = laneX(mergeCommit.lane)
-    const y1 = rowY(mergeCommit.rowIndex)
+    const y1 = nodeCenterY(mergeCommit)
     const x2 = laneX(branchTip.lane)
-    const y2 = rowY(branchTip.rowIndex)
+    const y2 = nodeCenterY(branchTip)
     const dy = y2 - y1
     result.push({
       d: `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.6}, ${x2} ${y2 - dy * 0.6}, ${x2} ${y2}`,
@@ -346,17 +402,20 @@ function fmtDate(iso: string) {
 
 /* Branch filter bar */
 .branch-filter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 7;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 6px 14px;
-  background: rgba(255,255,255,0.04);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: #171720;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
   font-size: 11px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.72);
 }
-.branch-filter-bar strong { color: rgba(255,255,255,0.85); }
+.branch-filter-bar strong { color: #ffffff; }
 .filter-actions { display: flex; align-items: center; gap: 6px; }
 .filter-delete {
   background: transparent;
@@ -393,12 +452,21 @@ function fmtDate(iso: string) {
   transition: background 0.12s, opacity 0.15s;
 }
 .commit-info:hover { background: rgba(255,255,255,0.04); }
-.commit-info.selected { background: rgba(180,16,204,0.12); box-shadow: inset 0 0 0 1px rgba(180,16,204,0.3); }
+.commit-info.selected {
+  background: rgba(180,16,204,0.12);
+  box-shadow: inset 0 0 0 1px rgba(180,16,204,0.3);
+  z-index: 4;
+}
 .commit-info.dimmed { opacity: 0.25; }
 .commit-info.branch-hovered { background: rgba(255,255,255,0.035); }
 
 .commit-top {
-  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 20px;
+  margin-top: 3px;
 }
 
 /* Change indicator — top-right of each commit row */
@@ -438,16 +506,68 @@ function fmtDate(iso: string) {
 }
 .dot-edit { background: #4d96ff; box-shadow: 0 0 0 2px rgba(77,150,255,0.25); }
 
-.cubes-row { display: flex; align-items: center; gap: 3px; flex-wrap: wrap; }
+.cubes-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
 .more-cubes { font-size: 10px; color: rgba(255,255,255,0.4); }
 
 .badge {
   font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; padding: 2px 6px; border-radius: 4px; border: 1px solid;
+  flex-shrink: 0;
 }
 .merge-badge  { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.45); }
-.branch-badge { border-color: currentColor; }
+.branch-badge {
+  border-color: currentColor;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-.commit-msg  { font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+.commit-msg  {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.commit-msg.expanded {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: 300px;
+  line-height: 1.3;
+  word-break: break-word;
+}
 .commit-time { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.03em; }
+
+.node-revert {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.35);
+  color: rgba(255,120,120,0.95);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.node-revert:hover {
+  border-color: rgba(255,80,80,0.6);
+  background: rgba(255,80,80,0.12);
+  color: rgba(255,150,150,1);
+}
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <header class="pal-header">
+  <header class="pal-header" :class="{ 'focus-header': tutorialFocus === 'header' }">
     <!-- Left: back + title -->
     <div class="left-group">
       <button class="back-btn" @click="$emit('back')" title="Back to dashboard">
@@ -13,7 +13,11 @@
 
     <!-- Center: branch selector -->
     <div class="center-group">
-      <div class="branch-selector" :class="{ open: branchOpen }" @click="branchOpen = !branchOpen">
+      <div
+        class="branch-selector"
+        :class="{ open: branchOpen, 'focus-ring': tutorialFocus === 'branches' }"
+        @click="branchOpen = !branchOpen"
+      >
         <svg class="branch-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
           <circle cx="3" cy="3" r="2" stroke="currentColor" stroke-width="1.4"/>
           <circle cx="3" cy="11" r="2" stroke="currentColor" stroke-width="1.4"/>
@@ -62,6 +66,13 @@
 
     <!-- Right: actions -->
     <div class="right-group">
+      <button
+        class="help-btn"
+        title="How palettes work"
+        @click="$emit('openTutorial')"
+      >
+        ?
+      </button>
       <span v-if="snapshotHint" class="snapshot-hint">{{ snapshotHint }}</span>
       <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
       <button
@@ -77,7 +88,7 @@
       <button
         class="action-btn secondary"
         @click="$emit('toggleHistory')"
-        :class="{ active: historyOpen }"
+        :class="{ active: historyOpen, 'focus-ring': tutorialFocus === 'history' }"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
           <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
@@ -89,6 +100,7 @@
         v-if="isOwned"
         class="action-btn primary"
         :disabled="isSaving || !hasUnsavedChanges"
+        :class="{ 'focus-ring': tutorialFocus === 'save' }"
         @click="$emit('save')"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -130,6 +142,7 @@ const props = defineProps<{
   snapshotHint?: string | null
   isOwned?: boolean
   canDelete?: boolean
+  tutorialFocus?: 'header' | 'branches' | 'save' | 'history' | null
 }>()
 
 const emit = defineEmits<{
@@ -140,6 +153,7 @@ const emit = defineEmits<{
   toggleHistory: []
   merge: [branchId: number]
   deletePalette: []
+  openTutorial: []
 }>()
 
 const branchOpen = ref(false)
@@ -191,6 +205,36 @@ const dropdownStyle = ref({
 }
 
 .right-group { justify-content: flex-end; }
+
+.focus-header {
+  z-index: 340;
+  box-shadow: 0 0 0 2px rgba(14, 198, 212, 0.55), 0 0 42px rgba(14, 198, 212, 0.2);
+}
+
+.focus-ring {
+  position: relative;
+  z-index: 341;
+  box-shadow: 0 0 0 2px rgba(246, 195, 67, 0.78), 0 0 28px rgba(246, 195, 67, 0.22);
+}
+
+.help-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.help-btn:hover {
+  background: rgba(14,198,212,0.18);
+  border-color: rgba(14,198,212,0.45);
+  color: #ffffff;
+}
 
 .snapshot-hint {
   font-size: 11px;

@@ -12,6 +12,7 @@
       :snapshotHint="snapshotCommitHint"
       :isOwned="isOwned"
       :canDelete="isOwned && !isNewPalette"
+      :tutorialFocus="headerTutorialFocus"
       @back="router.push('/dashboard')"
       @save="requestSave"
       @clone="clonePalette"
@@ -19,6 +20,7 @@
       @toggleHistory="historyOpen = !historyOpen"
       @merge="confirmMerge"
       @deletePalette="showDeletePaletteModal = true"
+      @openTutorial="openTutorial"
     />
 
     <!-- Loading state -->
@@ -33,11 +35,11 @@
     </div>
 
     <!-- Editor -->
-    <div v-else class="editor-shell" :class="{ 'history-open': historyOpen, 'has-banner': !!selectedSnapshotId && !isNewPalette }">
+    <div v-else class="editor-shell" :class="{ 'history-open': historyOpen, 'has-banner': showSnapshotBanner }">
 
       <!-- Snapshot selection banner -->
       <Transition name="banner-slide">
-        <div v-if="selectedSnapshotId && !isNewPalette" class="snapshot-banner">
+        <div v-if="showSnapshotBanner" class="snapshot-banner">
           <span class="banner-text">
             <template v-if="!isOwned">
               Viewing a past snapshot.
@@ -66,7 +68,13 @@
       </Transition>
 
       <!-- Color columns -->
-      <div ref="colsAreaEl" class="columns-area" @mousemove="onColsMouseMove" @mouseleave="showAddBtn = false">
+      <div
+        ref="colsAreaEl"
+        class="columns-area"
+        :class="{ 'tutorial-focus': tutorialFocus === 'canvas' }"
+        @mousemove="onColsMouseMove"
+        @mouseleave="showAddBtn = false"
+      >
         <TransitionGroup
           tag="div"
           class="cols-tg"
@@ -100,18 +108,20 @@
 
       <!-- History panel -->
       <Transition name="history-slide">
-        <aside v-if="historyOpen" class="history-panel">
+        <aside v-if="historyOpen" class="history-panel" :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
           <div class="history-header">
             <h2 class="history-title font-display">History</h2>
             <button class="close-btn" @click="historyOpen = false">×</button>
           </div>
           <HistoryGraph
-            v-if="history"
-            :history="history"
-            :selectedId="selectedSnapshotId"
-            @selectSnapshot="onSelectSnapshot"
-            @selectBranch="id => switchBranch(id)"
-            @deleteBranch="onDeleteBranchRequest"
+            v-if="historyForDisplay"
+            :history="historyForDisplay"
+            :selectedId="showDemoHistory ? null : selectedSnapshotId"
+            :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
+            @selectSnapshot="onHistorySelectSnapshot"
+            @selectBranch="onHistorySelectBranch"
+            @deleteBranch="onHistoryDeleteBranch"
+            @revertSnapshot="onHistoryRevertSnapshot"
           />
           <div v-else class="history-empty">No history yet.</div>
         </aside>
@@ -138,7 +148,7 @@
           </template>
 
           <!-- Case A: historical main snapshot selected → must create new branch -->
-          <template v-else-if="selectedSnapshotCtx?.isMain">
+          <template v-else-if="selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot">
             <p class="modal-info">Forking from an older main snapshot. You must save to a new branch.</p>
             <label class="field-label">Commit message</label>
             <input
@@ -225,7 +235,7 @@
             <button class="modal-btn cancel" @click="showSaveModal = false">Cancel</button>
             <button
               class="modal-btn confirm"
-              :disabled="isSaving || (isNewPalette ? !pendingTitle.trim() : !saveComment.trim()) || ((selectedSnapshotCtx?.isMain || selectedSnapshotCtx?.isMerged) && !newBranchName.trim())"
+              :disabled="isSaving || (isNewPalette ? !pendingTitle.trim() : !saveComment.trim()) || ((((selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot) || selectedSnapshotCtx?.isMerged)) && !newBranchName.trim())"
               @click="doSave"
             >
               {{ isSaving ? (isNewPalette ? 'Creating…' : 'Saving…') : (isNewPalette ? 'Create' : 'Save') }}
@@ -320,6 +330,51 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Tutorial overlay -->
+    <Teleport to="body">
+      <div v-if="showTutorial" class="tutorial-shell" :class="{ 'focus-history': tutorialFocus === 'history' }">
+        <div class="tutorial-dim"></div>
+        <div class="tutorial-card" :class="tutorialCardClass">
+          <div class="tutorial-top">
+            <span class="tutorial-step">Step {{ tutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
+            <button class="tutorial-close" @click="closeTutorial">×</button>
+          </div>
+
+          <h3 class="tutorial-title font-display">{{ currentTutorial.title }}</h3>
+          <p class="tutorial-body">{{ currentTutorial.body }}</p>
+
+          <p v-if="showDemoHistory" class="tutorial-note">
+            Demo mode: the History panel is currently showing example data. Your real history is restored when the tutorial closes.
+          </p>
+
+          <div v-if="currentTutorial.showDemo" class="tutorial-demo">
+            <div class="demo-header">
+              <span>main</span>
+              <span class="demo-branch">draft/warm-variant</span>
+            </div>
+            <div class="demo-row">
+              <span class="demo-dot main"></span>
+              <span>main: Approved baseline palette</span>
+            </div>
+            <div class="demo-row">
+              <span class="demo-dot draft"></span>
+              <span>branch: A draft you can merge, park, or delete</span>
+            </div>
+            <div class="demo-row">
+              <span class="demo-dot revert"></span>
+              <span>revert: Keep one snapshot and drop newer draft commits</span>
+            </div>
+          </div>
+
+          <div class="tutorial-actions">
+            <button class="modal-btn cancel" :disabled="tutorialStep === 0" @click="prevTutorialStep">Back</button>
+            <button v-if="tutorialStep < tutorialSteps.length - 1" class="modal-btn confirm" @click="nextTutorialStep">Next</button>
+            <button v-else class="modal-btn confirm" @click="closeTutorial">Got it</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -410,6 +465,25 @@ const selectedSnapshotCtx = computed(() => {
   return null
 })
 
+const isSelectedLatestMainSnapshot = computed(() => {
+  if (!selectedSnapshotId.value || !history.value) return false
+  return history.value.main[0]?.id === selectedSnapshotId.value
+})
+
+const showSnapshotBanner = computed(() => {
+  if (!selectedSnapshotId.value || isNewPalette.value) return false
+  const ctx = selectedSnapshotCtx.value
+  if (!ctx) return false
+  if (ctx.isMain) {
+    return !isSelectedLatestMainSnapshot.value
+  }
+  if (ctx.isMerged) return true
+
+  const branch = history.value?.branches.find(b => b.id === ctx.branchId)
+  const isLatestUnmergedBranchTip = branch?.is_merged === false && branch.snapshots[0]?.id === selectedSnapshotId.value
+  return !isLatestUnmergedBranchTip
+})
+
 // Branch state
 const currentBranchId = ref<number | null>(null)
 const currentBranchName = computed(() => {
@@ -424,6 +498,7 @@ const allBranches = computed(() =>
 const snapshotCommitHint = computed(() => {
   const ctx = selectedSnapshotCtx.value
   if (!ctx) return null
+  if (ctx.isMain && isSelectedLatestMainSnapshot.value) return null
   if (ctx.isMain) return 'Selected old main snapshot: saving will create a new branch.'
   if (ctx.isMerged) return `Selected snapshot from merged branch "${ctx.branchTitle}": saving will create a new branch.`
   return `Selected snapshot from branch "${ctx.branchTitle}": saving will commit to that branch.`
@@ -440,6 +515,248 @@ const hasUnsavedChanges = computed(() => currentColorsSig.value !== savedColorsS
 const historyOpen = ref(false)
 const showSaveModal = ref(false)
 const showAuthModal = ref(false)
+
+type TutorialFocus = 'header' | 'branches' | 'canvas' | 'history' | 'save' | null
+interface TutorialStep {
+  title: string
+  body: string
+  focus: TutorialFocus
+  showHistory?: boolean
+  showDemo?: boolean
+  useDemoHistory?: boolean
+}
+
+const showTutorial = ref(false)
+const tutorialStep = ref(0)
+const previousHistoryOpen = ref(false)
+const tutorialNow = Date.now()
+const tutorialDemoHistory: PaletteHistoryGraphResponse = {
+  owner_username: 'tutorial-user',
+  title: 'brand-system',
+  main: [
+    {
+      id: 9004,
+      palette_id: 999,
+      parent_snapshot_id: 9003,
+      branch_id: null,
+      comment: "Merge branch 'draft/warm-variant'",
+      created_at: new Date(tutorialNow - 10 * 60_000).toISOString(),
+      palette_colors: [
+        { hex: '121826', label: 'bg-main' },
+        { hex: 'F6C343', label: 'accent' },
+        { hex: '16C9D8', label: 'info' },
+        { hex: 'F4EFE6', label: 'surface' },
+      ],
+      colors_added: 1,
+      colors_deleted: 0,
+      colors_modified: 1,
+    },
+    {
+      id: 9003,
+      palette_id: 999,
+      parent_snapshot_id: 9001,
+      branch_id: null,
+      comment: 'Main: baseline approved v2',
+      created_at: new Date(tutorialNow - 5 * 60 * 60_000).toISOString(),
+      palette_colors: [
+        { hex: '121826', label: 'bg-main' },
+        { hex: 'B410CC', label: 'accent' },
+        { hex: '16C9D8', label: 'info' },
+      ],
+      colors_added: 1,
+      colors_deleted: 0,
+      colors_modified: 1,
+    },
+    {
+      id: 9001,
+      palette_id: 999,
+      parent_snapshot_id: null,
+      branch_id: null,
+      comment: 'Initial palette creation',
+      created_at: new Date(tutorialNow - 6 * 24 * 60 * 60_000).toISOString(),
+      palette_colors: [
+        { hex: '121826', label: 'bg-main' },
+        { hex: '9A7BFF', label: 'accent' },
+      ],
+      colors_added: 0,
+      colors_deleted: 0,
+      colors_modified: 0,
+    },
+  ],
+  branches: [
+    {
+      id: 9101,
+      title: 'draft/warm-variant',
+      merged_at: new Date(tutorialNow - 10 * 60_000).toISOString(),
+      is_merged: true,
+      snapshots: [
+        {
+          id: 9103,
+          palette_id: 999,
+          parent_snapshot_id: 9102,
+          branch_id: 9101,
+          comment: 'Draft commit: warmer accent candidate',
+          created_at: new Date(tutorialNow - 120 * 60_000).toISOString(),
+          palette_colors: [
+            { hex: '121826', label: 'bg-main' },
+            { hex: 'F6C343', label: 'accent' },
+            { hex: '16C9D8', label: 'info' },
+          ],
+          colors_added: 0,
+          colors_deleted: 0,
+          colors_modified: 1,
+        },
+        {
+          id: 9102,
+          palette_id: 999,
+          parent_snapshot_id: 9003,
+          branch_id: 9101,
+          comment: 'Fork from main to test warm direction',
+          created_at: new Date(tutorialNow - 220 * 60_000).toISOString(),
+          palette_colors: [
+            { hex: '121826', label: 'bg-main' },
+            { hex: 'E38B2F', label: 'accent' },
+            { hex: '16C9D8', label: 'info' },
+          ],
+          colors_added: 0,
+          colors_deleted: 0,
+          colors_modified: 1,
+        },
+      ],
+    },
+    {
+      id: 9102,
+      title: 'draft/cta-focus',
+      merged_at: null,
+      is_merged: false,
+      snapshots: [
+        {
+          id: 9203,
+          palette_id: 999,
+          parent_snapshot_id: 9202,
+          branch_id: 9102,
+          comment: 'Draft commit 3: too strong, will revert',
+          created_at: new Date(tutorialNow - 80 * 60_000).toISOString(),
+          palette_colors: [
+            { hex: '121826', label: 'bg-main' },
+            { hex: 'FF4B5C', label: 'cta' },
+            { hex: '16C9D8', label: 'info' },
+          ],
+          colors_added: 0,
+          colors_deleted: 0,
+          colors_modified: 1,
+        },
+        {
+          id: 9202,
+          palette_id: 999,
+          parent_snapshot_id: 9201,
+          branch_id: 9102,
+          comment: 'Draft commit 2: balanced CTA',
+          created_at: new Date(tutorialNow - 170 * 60_000).toISOString(),
+          palette_colors: [
+            { hex: '121826', label: 'bg-main' },
+            { hex: 'F28B52', label: 'cta' },
+            { hex: '16C9D8', label: 'info' },
+          ],
+          colors_added: 0,
+          colors_deleted: 0,
+          colors_modified: 1,
+        },
+        {
+          id: 9201,
+          palette_id: 999,
+          parent_snapshot_id: 9003,
+          branch_id: 9102,
+          comment: 'Fork from main for CTA experiment',
+          created_at: new Date(tutorialNow - 260 * 60_000).toISOString(),
+          palette_colors: [
+            { hex: '121826', label: 'bg-main' },
+            { hex: 'B410CC', label: 'accent' },
+            { hex: '16C9D8', label: 'info' },
+          ],
+          colors_added: 0,
+          colors_deleted: 0,
+          colors_modified: 0,
+        },
+      ],
+    },
+  ],
+}
+
+const tutorialSteps: TutorialStep[] = [
+  {
+    title: 'Palette Basics: Main + Snapshots',
+    body: 'Your palette is a timeline of snapshots. A snapshot stores the full visible color state at save time, plus a commit message. Main is the main branch: the current true version of the palette.',
+    focus: 'header',
+  },
+  {
+    title: 'Branches = Draft Tracks',
+    body: 'Treat branches as drafts. You can explore ideas without touching main, then merge when validated, keep them parked, or delete unmerged drafts.',
+    focus: 'branches',
+  },
+  {
+    title: 'Old Snapshot Rules (Important)',
+    body: 'If you edit an older snapshot from the main branch (the current true version), saving creates a new branch from that point. If you edit an older snapshot inside a branch, saving updates that same branch (it does not create another branch by default).',
+    focus: 'canvas',
+  },
+  {
+    title: 'Concrete Example History',
+    body: 'This panel is now showing demo history: one draft merged into main, and another draft branch with multiple commits. Watch lines, badges, and change counters.',
+    focus: 'history',
+    showHistory: true,
+    showDemo: true,
+    useDemoHistory: true,
+  },
+  {
+    title: 'Merge and Revert, In Practice',
+    body: 'Merge promotes a draft to main as a validated result. Revert on a branch deletes newer snapshots after a selected point, so you can keep a stable draft state and discard risky commits.',
+    focus: 'history',
+    showHistory: true,
+    showDemo: true,
+    useDemoHistory: true,
+  },
+  {
+    title: 'Save Snapshot and Continue',
+    body: 'When you are happy with current colors, save a snapshot. Your real history returns right after the tutorial, and you can continue working from your actual data.',
+    focus: 'save',
+  },
+]
+
+const currentTutorial = computed<TutorialStep>(() => {
+  const idx = Math.max(0, Math.min(tutorialStep.value, tutorialSteps.length - 1))
+  return tutorialSteps[idx]!
+})
+const tutorialFocus = computed<TutorialFocus>(() => (showTutorial.value ? currentTutorial.value.focus : null))
+const headerTutorialFocus = computed(() => (tutorialFocus.value === 'canvas' ? null : tutorialFocus.value))
+const showDemoHistory = computed(() => showTutorial.value && !!currentTutorial.value.useDemoHistory)
+const historyForDisplay = computed(() => (showDemoHistory.value ? tutorialDemoHistory : history.value))
+const tutorialCardClass = computed(() => `focus-${currentTutorial.value.focus ?? 'header'}`)
+
+function openTutorial() {
+  previousHistoryOpen.value = historyOpen.value
+  tutorialStep.value = 0
+  showTutorial.value = true
+  if (currentTutorial.value.showHistory) historyOpen.value = true
+}
+
+function closeTutorial() {
+  showTutorial.value = false
+  tutorialStep.value = 0
+  historyOpen.value = previousHistoryOpen.value
+}
+
+function nextTutorialStep() {
+  tutorialStep.value = Math.min(tutorialStep.value + 1, tutorialSteps.length - 1)
+}
+
+function prevTutorialStep() {
+  tutorialStep.value = Math.max(tutorialStep.value - 1, 0)
+}
+
+watch([showTutorial, tutorialStep], ([open]) => {
+  if (!open) return
+  historyOpen.value = currentTutorial.value.showHistory ? true : previousHistoryOpen.value
+})
 
 function requestSave() {
   if (!localStorage.getItem('access_token')) {
@@ -688,7 +1005,7 @@ async function doSave() {
 
     let payload: Parameters<typeof palettesApi.saveSnapshot>[1]
 
-    if (selectedSnapshotCtx.value?.isMain) {
+    if (selectedSnapshotCtx.value?.isMain && !isSelectedLatestMainSnapshot.value) {
       // Fork from historical main snapshot → force new branch
       payload = {
         comment: saveComment.value.trim(),
@@ -728,7 +1045,7 @@ async function doSave() {
 
     const resp = await palettesApi.saveSnapshot(paletteId.value, payload)
 
-    if ((selectedSnapshotCtx.value?.isMain || selectedSnapshotCtx.value?.isMerged || createNewBranch.value) && resp.branch_id !== null) {
+    if ((((selectedSnapshotCtx.value?.isMain && !isSelectedLatestMainSnapshot.value) || selectedSnapshotCtx.value?.isMerged || createNewBranch.value)) && resp.branch_id !== null) {
       currentBranchId.value = resp.branch_id
     }
 
@@ -892,30 +1209,48 @@ function onSelectSnapshot(id: number) {
     return
   }
 
-  // Clicking the latest main commit → just ensure we're on main, no banner
-  if (history.value?.main[0]?.id === id) {
-    selectedSnapshotId.value = null
-    if (currentBranchId.value !== null) switchBranch(null)
-    return
+  // Keep header branch selector in sync with selected snapshot context.
+  // Merged-branch snapshots are treated as main for branch selection.
+  let nextBranchId: number | null = null
+  if (history.value?.main.some(s => s.id === id)) {
+    nextBranchId = null
+  } else {
+    const branch = history.value?.branches.find(b => b.snapshots.some(s => s.id === id))
+    if (branch) nextBranchId = branch.is_merged ? null : branch.id
   }
+  currentBranchId.value = nextBranchId
 
-  // Clicking the latest commit of any branch → silently switch to that branch, no banner
-  for (const branch of (history.value?.branches ?? [])) {
-    if (branch.snapshots[0]?.id === id) {
-      if (branch.is_merged) break
-      selectedSnapshotId.value = null
-      switchBranch(branch.id)
-      return
-    }
-  }
-
-  // Historical snapshot — show banner and load its colors
+  // Any snapshot (including latest) is selectable, so comments can expand consistently.
   selectedSnapshotId.value = id
   const snap = findSnapshot(id)
   if (snap) {
     colors.value = wrapColors(snap.palette_colors)
     savedColorsSig.value = currentColorsSig.value
   }
+}
+
+function onHistorySelectSnapshot(id: number) {
+  if (showDemoHistory.value) return
+  onSelectSnapshot(id)
+}
+
+function onHistorySelectBranch(id: number) {
+  if (showDemoHistory.value) return
+  void switchBranch(id === 0 ? null : id)
+}
+
+function onHistoryDeleteBranch(id: number) {
+  if (showDemoHistory.value) return
+  onDeleteBranchRequest(id)
+}
+
+function onHistoryRevertSnapshot(id: number) {
+  if (showDemoHistory.value) return
+  if (selectedSnapshotId.value !== id) {
+    selectedSnapshotId.value = id
+  }
+  if (!isOwned.value || revertableSnapshotCount.value <= 0) return
+  showRevertModal.value = true
 }
 
 function clearSnapshotSelection() {
@@ -1055,6 +1390,12 @@ watch(
   flex: 1;
   overflow: hidden;
   margin-top: 56px;
+}
+
+.tutorial-focus {
+  position: relative;
+  z-index: 330;
+  box-shadow: 0 0 0 2px rgba(246, 195, 67, 0.8), 0 0 34px rgba(246, 195, 67, 0.25);
 }
 
 /* Snapshot selection banner */
@@ -1372,6 +1713,170 @@ watch(
 
 .required { color: #b410cc; }
 
+/* Tutorial */
+.tutorial-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  pointer-events: none;
+}
+
+.tutorial-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 8, 12, 0.52);
+}
+
+.tutorial-shell.focus-history .tutorial-dim {
+  background: linear-gradient(
+    to left,
+    rgba(7, 8, 12, 0) 0,
+    rgba(7, 8, 12, 0) 420px,
+    rgba(7, 8, 12, 0.52) 420px,
+    rgba(7, 8, 12, 0.52) 100%
+  );
+}
+
+.tutorial-card {
+  position: absolute;
+  right: 22px;
+  top: 76px;
+  width: min(420px, calc(100vw - 28px));
+  background: rgba(16, 17, 24, 0.96);
+  border: 1px solid rgba(255,255,255,0.16);
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.62);
+  padding: 16px 16px 14px;
+  pointer-events: auto;
+}
+
+.tutorial-card.focus-header {
+  top: 72px;
+  right: 22px;
+}
+
+.tutorial-card.focus-branches {
+  top: 72px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.tutorial-card.focus-canvas {
+  top: 72px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.tutorial-card.focus-history {
+  top: 72px;
+  right: 410px;
+}
+
+.tutorial-card.focus-save {
+  top: 72px;
+  right: 22px;
+}
+
+.tutorial-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tutorial-step {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  font-weight: 700;
+}
+
+.tutorial-close {
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.65);
+  font-size: 18px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+.tutorial-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+.tutorial-title {
+  font-size: 22px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.tutorial-body {
+  color: rgba(255,255,255,0.72);
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.tutorial-note {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(14,198,212,0.95);
+  background: rgba(14,198,212,0.12);
+  border: 1px solid rgba(14,198,212,0.38);
+  border-radius: 8px;
+  padding: 8px 10px;
+  line-height: 1.35;
+}
+
+.tutorial-demo {
+  margin-top: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.demo-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.demo-branch { color: #f6c343; }
+
+.demo-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.78);
+}
+
+.demo-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.demo-dot.main { background: #0ec6d4; }
+.demo-dot.draft { background: #f6c343; }
+.demo-dot.revert { background: #ff6b6b; }
+
+.tutorial-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 /* ─── Mobile: vertical color rows ─── */
 @media (max-width: 768px) {
   .columns-area {
@@ -1411,6 +1916,15 @@ watch(
   .history-slide-enter-from,
   .history-slide-leave-to {
     transform: translateY(100%);
+  }
+
+  .tutorial-card {
+    right: 12px;
+    left: 12px;
+    width: auto;
+    top: auto;
+    bottom: 12px;
+    transform: none !important;
   }
 }
 </style>

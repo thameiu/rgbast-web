@@ -253,7 +253,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
 import type { PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
@@ -406,9 +406,11 @@ const draggedIdx = ref<number | null>(null)
 const colsAreaEl = ref<HTMLElement | null>(null)
 const dragPointerStartX = ref<number | null>(null)
 const dragPointerStartY = ref<number | null>(null)
-const dragDeltaX = ref<number>(0)
-const dragDeltaY = ref<number>(0)
-const draggedKey = ref<string | null>(null)
+
+// Ghost element that follows the cursor during drag
+const ghostEl = ref<HTMLDivElement | null>(null)
+const ghostOffsetX = ref(0)
+const ghostOffsetY = ref(0)
 
 function isMobileLayout() {
   return window.matchMedia('(max-width: 768px)').matches
@@ -425,77 +427,33 @@ function getDragUnit(): number {
   return Math.max(1, isMobileLayout() ? rect.height / colors.value.length : rect.width / colors.value.length)
 }
 
-function captureColRects() {
-  const rects = new Map<string, DOMRect>()
-  if (!colsAreaEl.value) return rects
-  const nodes = colsAreaEl.value.querySelectorAll<HTMLElement>('.col[data-col-key]')
-  nodes.forEach((node) => {
-    const key = node.dataset.colKey
-    if (key) rects.set(key, node.getBoundingClientRect())
-  })
-  return rects
-}
-
-async function animateReorderedCols(before: Map<string, DOMRect>) {
-  await nextTick()
-  if (!colsAreaEl.value) return
-  const nodes = colsAreaEl.value.querySelectorAll<HTMLElement>('.col[data-col-key]')
-  nodes.forEach((node) => {
-    const key = node.dataset.colKey
-    if (!key || key === draggedKey.value) return
-    const prev = before.get(key)
-    if (!prev) return
-    const now = node.getBoundingClientRect()
-    const dx = prev.left - now.left
-    const dy = prev.top - now.top
-    if (dx === 0 && dy === 0) return
-
-    node.style.transition = 'none'
-    node.style.transform = `translate(${dx}px, ${dy}px)`
-    node.style.willChange = 'transform'
-
-    requestAnimationFrame(() => {
-      node.style.transition = 'transform 150ms cubic-bezier(0.2, 0.9, 0.2, 1)'
-      node.style.transform = ''
-      const cleanup = () => {
-        node.style.transition = ''
-        node.style.willChange = ''
-        node.removeEventListener('transitionend', cleanup)
-      }
-      node.addEventListener('transitionend', cleanup)
-    })
-  })
-}
-
 function getColStyle(i: number): Record<string, string> {
-  if (draggedIdx.value === null || !colsAreaEl.value) return {}
-  const mobile = isMobileLayout()
-  const d = draggedIdx.value
-  const dragTransform = mobile
-    ? `translateY(${dragDeltaY.value}px)`
-    : `translateX(${dragDeltaX.value}px)`
-
-  if (i === d) {
-    return {
-      transform: dragTransform,
-      transition: 'none',
-      position: 'relative',
-      zIndex: '10',
-      willChange: 'transform',
-    }
-  }
-  return { transition: 'transform 0.12s ease' }
+  if (draggedIdx.value === i) return { opacity: '0' }
+  return {}
 }
 
 function onDragStart(i: number, e: PointerEvent) {
   draggedIdx.value = i
-  draggedKey.value = colors.value[i]?._key ?? null
   dragPointerStartX.value = e.clientX
   dragPointerStartY.value = e.clientY
-  dragDeltaX.value = 0
-  dragDeltaY.value = 0
   ;(e.target as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
   e.preventDefault()
+
+  // Create a ghost div that follows the cursor; the real column becomes invisible
+  const key = colors.value[i]?._key
+  if (key && colsAreaEl.value) {
+    const colEl = colsAreaEl.value.querySelector<HTMLElement>(`.col[data-col-key="${key}"]`)
+    if (colEl) {
+      const rect = colEl.getBoundingClientRect()
+      ghostOffsetX.value = e.clientX - rect.left
+      ghostOffsetY.value = e.clientY - rect.top
+      const ghost = document.createElement('div')
+      ghost.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${rect.width}px;height:${rect.height}px;background:#${colors.value[i]!.hex};z-index:9999;pointer-events:none;opacity:0.92;box-shadow:0 16px 48px rgba(0,0,0,0.55),0 0 0 1px rgba(255,255,255,0.07);`
+      document.body.appendChild(ghost)
+      ghostEl.value = ghost
+    }
+  }
+
   document.addEventListener('pointermove', onPointerMove)
   document.addEventListener('pointercancel', onPointerUp, { once: true })
   document.addEventListener('pointerup', onPointerUp, { once: true })
@@ -505,6 +463,13 @@ function onDragStart(i: number, e: PointerEvent) {
 
 function onPointerMove(e: PointerEvent) {
   if (draggedIdx.value === null) return
+
+  // Ghost follows the cursor exactly
+  if (ghostEl.value) {
+    ghostEl.value.style.left = `${e.clientX - ghostOffsetX.value}px`
+    ghostEl.value.style.top = `${e.clientY - ghostOffsetY.value}px`
+  }
+
   const mobile = isMobileLayout()
   const unit = getDragUnit()
   const pointer = mobile ? e.clientY : e.clientX
@@ -512,28 +477,24 @@ function onPointerMove(e: PointerEvent) {
   let start = mobile ? (dragPointerStartY.value ?? pointer) : (dragPointerStartX.value ?? pointer)
   let delta = pointer - start
 
-  // Reorder in-flight as soon as the pointer crosses half a column/row.
+  // Reorder in-flight when cursor crosses half a column/row
   while (delta > unit / 2 && idx < colors.value.length - 1) {
-    const before = captureColRects()
     const arr = [...colors.value]
     const moved = arr.splice(idx, 1)[0]
     if (!moved) break
     arr.splice(idx + 1, 0, moved)
     colors.value = arr
-    void animateReorderedCols(before)
     idx += 1
     start += unit
     delta -= unit
   }
 
   while (delta < -unit / 2 && idx > 0) {
-    const before = captureColRects()
     const arr = [...colors.value]
     const moved = arr.splice(idx, 1)[0]
     if (!moved) break
     arr.splice(idx - 1, 0, moved)
     colors.value = arr
-    void animateReorderedCols(before)
     idx -= 1
     start -= unit
     delta += unit
@@ -542,16 +503,16 @@ function onPointerMove(e: PointerEvent) {
   draggedIdx.value = idx
   if (mobile) {
     dragPointerStartY.value = start
-    dragDeltaY.value = delta
-    dragDeltaX.value = 0
   } else {
     dragPointerStartX.value = start
-    dragDeltaX.value = delta
-    dragDeltaY.value = 0
   }
 }
 
 function onPointerUp() {
+  if (ghostEl.value) {
+    document.body.removeChild(ghostEl.value)
+    ghostEl.value = null
+  }
   document.removeEventListener('pointermove', onPointerMove)
   document.removeEventListener('pointercancel', onPointerUp)
   document.body.style.userSelect = ''
@@ -559,9 +520,6 @@ function onPointerUp() {
   draggedIdx.value = null
   dragPointerStartX.value = null
   dragPointerStartY.value = null
-  dragDeltaX.value = 0
-  dragDeltaY.value = 0
-  draggedKey.value = null
 }
 
 // Color operations

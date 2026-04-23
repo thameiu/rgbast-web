@@ -2,11 +2,11 @@
   <div class="hg-wrap">
     <!-- Branch filter pill -->
     <div v-if="activeBranchId !== null" class="branch-filter-bar">
-      <span class="filter-label">Showing branch: <strong>{{ activeBranchTitle }}</strong></span>
-      <button class="filter-clear" @click="activeBranchId = null">× all</button>
+      <span class="filter-label">Branch: <strong>{{ activeBranchTitle }}</strong></span>
+      <button class="filter-clear" @click="activeBranchId = null">× clear</button>
     </div>
 
-    <div class="hg-inner" :style="{ height: totalHeight + 'px' }">
+    <div class="hg-inner" :style="{ minHeight: totalHeight + 'px' }">
       <!-- SVG graph lines and dots -->
       <svg
         class="hg-svg"
@@ -20,8 +20,8 @@
           :key="'l' + i"
           :d="line.d"
           :stroke="line.color"
-          :stroke-width="hoveredBranchId === line.branchId && line.branchId !== null ? 3.5 : 1.8"
-          :opacity="activeBranchId !== null && line.branchId !== activeBranchId ? 0.15 : (hoveredBranchId === line.branchId && line.branchId !== null ? 1 : 0.75)"
+          :stroke-width="line.branchId !== null && (hoveredBranchId === line.branchId || activeBranchId === line.branchId) ? 3.5 : 1.8"
+          :opacity="line.branchId !== null && (hoveredBranchId === line.branchId || activeBranchId === line.branchId) ? 1 : 0.75"
           fill="none"
           stroke-linecap="round"
           style="transition: stroke-width 0.15s, opacity 0.15s"
@@ -50,8 +50,6 @@
           :fill="getLaneColor(node.lane)"
           :stroke="node.isMerge ? 'rgba(255,255,255,0.6)' : getLaneColor(node.lane)"
           :stroke-width="node.isMerge ? 2 : 0"
-          :opacity="activeBranchId !== null && node.lane !== 0 && node.branchId !== activeBranchId ? 0.15 : 1"
-          style="transition: opacity 0.15s"
         />
       </svg>
 
@@ -185,12 +183,8 @@ const nodes = computed<CommitNode[]>(() => {
   return all
 })
 
-// Filtered view when a branch is active
-const displayNodes = computed<CommitNode[]>(() => {
-  if (activeBranchId.value === null) return nodes.value
-  return nodes.value.filter(n => n.branchId === activeBranchId.value)
-    .map((n, i) => ({ ...n, rowIndex: i }))
-})
+// Always show all nodes; active branch is highlighted, others dimmed
+const displayNodes = computed<CommitNode[]>(() => nodes.value)
 
 const nodeById = computed(() => {
   const m = new Map<number, CommitNode>()
@@ -216,16 +210,10 @@ interface Line { d: string; color: string; branchId: number | null }
 const lines = computed<Line[]>(() => {
   const result: Line[] = []
 
-  // When filtered, only show lines within the active branch
-  const activeNodes = activeBranchId.value !== null
-    ? new Set(displayNodes.value.map(n => n.id))
-    : null
-
   for (const node of nodes.value) {
     if (node.parent_snapshot_id == null) continue
     const parent = nodeById.value.get(node.parent_snapshot_id)
     if (!parent) continue
-    if (activeNodes && !activeNodes.has(node.id)) continue
 
     let visualParent = parent
     if (branchFirstIds.value.has(node.id) && parent.lane !== 0) {
@@ -235,18 +223,10 @@ const lines = computed<Line[]>(() => {
       if (nearestMain) visualParent = nearestMain
     }
 
-    // Use displayNodes rowIndex when filtered
-    const nodeRow = activeBranchId.value !== null
-      ? (displayNodes.value.find(n => n.id === node.id)?.rowIndex ?? node.rowIndex)
-      : node.rowIndex
-    const parentRow = activeBranchId.value !== null
-      ? (displayNodes.value.find(n => n.id === visualParent.id)?.rowIndex ?? visualParent.rowIndex)
-      : visualParent.rowIndex
-
     const x1 = laneX(node.lane)
-    const y1 = rowY(nodeRow)
+    const y1 = rowY(node.rowIndex)
     const x2 = laneX(visualParent.lane)
-    const y2 = rowY(parentRow)
+    const y2 = rowY(visualParent.rowIndex)
     const color = getLaneColor(node.lane)
 
     let d: string
@@ -260,29 +240,27 @@ const lines = computed<Line[]>(() => {
   }
 
   // Merge convergence lines
-  if (activeBranchId.value === null) {
-    props.history.branches.forEach((branch, bi) => {
-      if (!branch.is_merged || branch.snapshots.length === 0) return
-      const tip = branch.snapshots[0]
-      if (!tip) return
-      const branchTip  = nodeById.value.get(tip.id)
-      const mergeCommit = nodes.value.find(
-        n => n.lane === 0 && (n.comment ?? '') === `Merge branch '${branch.title}'`
-      )
-      if (!branchTip || !mergeCommit) return
+  props.history.branches.forEach((branch, bi) => {
+    if (!branch.is_merged || branch.snapshots.length === 0) return
+    const tip = branch.snapshots[0]
+    if (!tip) return
+    const branchTip   = nodeById.value.get(tip.id)
+    const mergeCommit = nodes.value.find(
+      n => n.lane === 0 && (n.comment ?? '') === `Merge branch '${branch.title}'`
+    )
+    if (!branchTip || !mergeCommit) return
 
-      const x1 = laneX(mergeCommit.lane)
-      const y1 = rowY(mergeCommit.rowIndex)
-      const x2 = laneX(branchTip.lane)
-      const y2 = rowY(branchTip.rowIndex)
-      const dy = y2 - y1
-      result.push({
-        d: `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.6}, ${x2} ${y2 - dy * 0.6}, ${x2} ${y2}`,
-        color: getLaneColor(bi + 1),
-        branchId: branch.id,
-      })
+    const x1 = laneX(mergeCommit.lane)
+    const y1 = rowY(mergeCommit.rowIndex)
+    const x2 = laneX(branchTip.lane)
+    const y2 = rowY(branchTip.rowIndex)
+    const dy = y2 - y1
+    result.push({
+      d: `M ${x1} ${y1} C ${x1} ${y1 + dy * 0.6}, ${x2} ${y2 - dy * 0.6}, ${x2} ${y2}`,
+      color: getLaneColor(bi + 1),
+      branchId: branch.id,
     })
-  }
+  })
 
   return result
 })
@@ -354,7 +332,7 @@ function fmtDate(iso: string) {
 }
 .filter-clear:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
 
-.hg-inner { position: relative; flex: 1; }
+.hg-inner { position: relative; }
 .hg-svg   { position: absolute; top: 0; left: 0; }
 
 .commit-info {
@@ -367,7 +345,7 @@ function fmtDate(iso: string) {
 }
 .commit-info:hover { background: rgba(255,255,255,0.04); }
 .commit-info.selected { background: rgba(180,16,204,0.12); box-shadow: inset 0 0 0 1px rgba(180,16,204,0.3); }
-.commit-info.dimmed { opacity: 0.2; pointer-events: none; }
+.commit-info.dimmed { opacity: 0.25; }
 .commit-info.branch-hovered { background: rgba(255,255,255,0.035); }
 
 .commit-top {

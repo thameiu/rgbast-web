@@ -351,6 +351,8 @@ const dummyHistory: PaletteHistoryGraphResponse = {
 
 .graph-body {
   height: 400px;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 

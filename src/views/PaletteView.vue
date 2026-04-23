@@ -324,7 +324,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
 import type { PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
@@ -973,21 +973,39 @@ function onLeave(el: Element, done: () => void) {
   e.addEventListener('transitionend', done, { once: true })
 }
 
-onMounted(() => {
-  if (isNewPalette.value) {
-    const clonedColors = (window.history.state?.clonedColors ?? []) as PaletteColorSave[]
-    if (Array.isArray(clonedColors) && clonedColors.length > 0) {
-      colors.value = wrapColors(clonedColors)
-    } else {
-      // Start with 5 random colors; no API call until the user saves
-      colors.value = Array.from({ length: 5 }, () => ({ hex: randomHex(), label: null, _key: mkKey() }))
-    }
-    savedColorsSig.value = '' // ensures hasUnsavedChanges = true
-    loading.value = false
+function initNewPaletteDraft() {
+  // Reset any state from a previously opened palette view.
+  history.value = null
+  latestSnapshotId.value = null
+  selectedSnapshotId.value = null
+  currentBranchId.value = null
+  historyOpen.value = false
+  error.value = null
+
+  const clonedColors = (window.history.state?.clonedColors ?? []) as PaletteColorSave[]
+  if (Array.isArray(clonedColors) && clonedColors.length > 0) {
+    colors.value = wrapColors(clonedColors)
   } else {
-    loadHistory()
+    // Start with 5 random colors; no API call until the user saves.
+    colors.value = Array.from({ length: 5 }, () => ({ hex: randomHex(), label: null, _key: mkKey() }))
   }
-})
+
+  // Force unsaved state for drafts/clones so save is immediately enabled.
+  savedColorsSig.value = '__draft__'
+  loading.value = false
+}
+
+watch(
+  () => route.params.id,
+  () => {
+    if (isNewPalette.value) {
+      initNewPaletteDraft()
+    } else {
+      loadHistory()
+    }
+  },
+  { immediate: true },
+)
 </script>
 
 <style scoped>

@@ -110,6 +110,7 @@ export interface PaletteBranchHistoryResponse {
 /** Full history graph: main-branch commits + per-branch commit lists. */
 export interface PaletteHistoryGraphResponse {
   owner_username: string;
+  title: string;
   main: PaletteCommitResponse[];
   branches: PaletteBranchHistoryResponse[];
 }

@@ -368,7 +368,7 @@ const error = ref<string | null>(null)
 
 const paletteTitle = computed(() => {
   if (isNewPalette.value) return pendingTitle.value || 'Untitled palette'
-  return palettesApi.getCachedPalette(paletteId.value)?.title ?? `Palette #${paletteId.value}`
+  return palettesApi.getCachedPalette(paletteId.value)?.title ?? history.value?.title ?? `Palette #${paletteId.value}`
 })
 
 // Working colors (mutable)

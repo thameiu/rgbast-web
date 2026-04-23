@@ -1,16 +1,15 @@
 <template>
   <div
     class="col"
-    :class="{ 'is-dragging': isDragging }"
+    :class="{ 'is-dragging': isDragging, 'swap-selected': swapSelected }"
     :data-col-key="colKey"
     :style="colStyle"
-    @pointerdown="onColPointerDown"
-    @pointerup="cancelLongPress"
-    @pointercancel="cancelLongPress"
-    @pointermove="onLongPressMove"
   >
     <!-- Drag handle -->
-    <div class="drag-handle" aria-hidden="true" @pointerdown.stop="$emit('dragStart', $event)">
+    <div class="drag-handle" aria-hidden="true"
+      @pointerdown.stop="onHandlePointerDown"
+      @click.stop="onHandleClick"
+    >
       <span></span><span></span><span></span>
       <span></span><span></span><span></span>
     </div>
@@ -80,6 +79,7 @@ const props = defineProps<{
   isDragging?: boolean
   dragStyle?: Record<string, string>
   isDragOver?: boolean
+  swapSelected?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -87,6 +87,7 @@ const emit = defineEmits<{
   'update:label': [label: string | null]
   'remove': []
   'dragStart': [e: PointerEvent]
+  'swapTap': []
 }>()
 
 const hovering    = ref(false)
@@ -126,30 +127,14 @@ async function copyHex() {
   } catch {}
 }
 
-// Long-press to drag (mobile only)
-let longPressTimer: ReturnType<typeof setTimeout> | null = null
-let longPressOrigin: { x: number; y: number } | null = null
+function onHandlePointerDown(e: PointerEvent) {
+  if (window.matchMedia('(max-width: 768px)').matches) return
+  emit('dragStart', e)
+}
 
-function onColPointerDown(e: PointerEvent) {
+function onHandleClick() {
   if (!window.matchMedia('(max-width: 768px)').matches) return
-  if ((e.target as HTMLElement).closest('button, input')) return
-  longPressOrigin = { x: e.clientX, y: e.clientY }
-  longPressTimer = setTimeout(() => {
-    longPressOrigin = null
-    emit('dragStart', e)
-  }, 300)
-}
-
-function cancelLongPress() {
-  if (longPressTimer !== null) { clearTimeout(longPressTimer); longPressTimer = null }
-  longPressOrigin = null
-}
-
-function onLongPressMove(e: PointerEvent) {
-  if (!longPressOrigin) return
-  const dx = e.clientX - longPressOrigin.x
-  const dy = e.clientY - longPressOrigin.y
-  if (dx * dx + dy * dy > 64) cancelLongPress()
+  emit('swapTap')
 }
 </script>
 
@@ -256,9 +241,21 @@ function onLongPressMove(e: PointerEvent) {
     height: 100px;
     min-width: unset !important;
     flex-direction: row;
+    padding-left: 30px;
   }
   .col-body { flex: 1; }
-  .drag-handle { display: none; }
+  .drag-handle {
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    opacity: 0.6;
+    pointer-events: all;
+  }
+  .col.swap-selected .drag-handle { opacity: 1; }
+  .col.swap-selected .drag-handle span {
+    background: rgba(180,16,204,0.9);
+    box-shadow: 0 0 0 2.5px rgba(180,16,204,0.35);
+  }
   .remove-btn { top: 8px; right: 8px; opacity: 0.55; }
   .col:hover .remove-btn { opacity: 1; }
   .col-footer {

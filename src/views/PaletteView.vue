@@ -91,10 +91,12 @@
             :colKey="col._key"
             :isDragging="draggedIdx === i"
             :dragStyle="getColStyle(i)"
+            :swapSelected="swapSourceIdx === i"
             @update:hex="hex => updateHex(i, hex)"
             @update:label="lbl => updateLabel(i, lbl)"
             @remove="removeColor(i)"
             @dragStart="e => onDragStart(i, e)"
+            @swapTap="onSwapTap(i)"
           />
         </TransitionGroup>
 
@@ -787,6 +789,24 @@ function onColsMouseMove(e: MouseEvent) {
   if (!colsAreaEl.value) return
   const rect = colsAreaEl.value.getBoundingClientRect()
   showAddBtn.value = e.clientX > rect.right - 72
+}
+
+// Tap-to-swap (mobile only)
+const swapSourceIdx = ref<number | null>(null)
+
+function onSwapTap(i: number) {
+  if (swapSourceIdx.value === null) {
+    swapSourceIdx.value = i
+  } else if (swapSourceIdx.value === i) {
+    swapSourceIdx.value = null
+  } else {
+    const arr = [...colors.value]
+    const tmp = arr[swapSourceIdx.value]!
+    arr[swapSourceIdx.value] = arr[i]!
+    arr[i] = tmp
+    colors.value = arr
+    swapSourceIdx.value = null
+  }
 }
 
 // Drag and drop (pointer-based, horizontal-only)

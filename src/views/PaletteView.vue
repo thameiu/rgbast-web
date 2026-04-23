@@ -1551,7 +1551,7 @@ watch(
 }
 
 .col-move {
-  transition: transform 0.16s cubic-bezier(0.2, 0.9, 0.2, 1);
+  transition: transform 0.29s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
 /* Add color button — floating bubble on hover */
@@ -2001,13 +2001,53 @@ watch(
     transform: translateY(100%);
   }
 
-  .tutorial-card {
-    right: 12px;
-    left: 12px;
-    width: auto;
-    top: auto;
-    bottom: 12px;
+  /* Tutorial: override ALL focus variants to a full-width bottom sheet.
+     The desktop focus rules (.tutorial-card.focus-*) are more specific,
+     so we must list them all here to win the cascade. */
+  .tutorial-card,
+  .tutorial-card.focus-header,
+  .tutorial-card.focus-branches,
+  .tutorial-card.focus-canvas,
+  .tutorial-card.focus-save {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100% !important;
     transform: none !important;
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 20px 20px 36px;
+  }
+
+  /* History steps: sheet sits flush above the bottom history panel */
+  .tutorial-card.focus-history {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 60vh !important;
+    top: auto !important;
+    width: 100% !important;
+    transform: none !important;
+    max-height: calc(40vh - 60px);
+    overflow-y: auto;
+    border-radius: 14px 14px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 20px 20px 16px;
+  }
+
+  /* Dim: opaque over canvas, transparent over history panel */
+  .tutorial-shell.focus-history .tutorial-dim {
+    background: linear-gradient(
+      to bottom,
+      rgba(7, 8, 12, 0.52) 0%,
+      rgba(7, 8, 12, 0.52) 40%,
+      rgba(7, 8, 12, 0) 40%,
+      rgba(7, 8, 12, 0) 100%
+    );
   }
 }
 </style>

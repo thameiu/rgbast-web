@@ -30,6 +30,9 @@
           <RouterLink to="/login" class="btn-ghost">
             <span class="font-mono">→</span> Sign in
           </RouterLink>
+          <RouterLink to="/color/B410CC" class="btn-ghost btn-ghost--color">
+            <span class="color-dot" aria-hidden="true"></span> Color Explorer
+          </RouterLink>
         </div>
 
         <dl class="stats">
@@ -100,6 +103,15 @@
             Find a palette you like and clone it in one click. Start from
             inspiration — commit it as your own.
           </p>
+        </article>
+        <article class="feat feat--color">
+          <span class="feat-num font-mono">F.05</span>
+          <h3 class="feat-title font-display">Color&nbsp;Explorer</h3>
+          <p class="feat-body">
+            Inspect any hex: color spaces, accessibility ratings, contrast checker,
+            and color blindness simulations — all in one place.
+          </p>
+          <RouterLink to="/color/B410CC" class="feat-link font-mono">Try it →</RouterLink>
         </article>
       </div>
     </section>
@@ -281,6 +293,15 @@ const dummyHistory: PaletteHistoryGraphResponse = {
 }
 .btn-ghost:hover { color: var(--magenta); border-color: var(--magenta); }
 
+.color-dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  background: #b410cc;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.btn-ghost--color:hover { border-color: #b410cc; color: #b410cc; }
+
 .stats {
   margin-top: 64px;
   display: grid;
@@ -388,13 +409,16 @@ const dummyHistory: PaletteHistoryGraphResponse = {
 }
 .features-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 40px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 32px;
 }
-@media (max-width: 960px) {
-  .features-row { grid-template-columns: repeat(2, 1fr); gap: 32px; }
+@media (max-width: 1100px) {
+  .features-row { grid-template-columns: repeat(3, 1fr); gap: 28px; }
 }
-@media (max-width: 560px) {
+@media (max-width: 720px) {
+  .features-row { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+}
+@media (max-width: 460px) {
   .features-row { grid-template-columns: 1fr; }
 }
 .feat {
@@ -420,6 +444,17 @@ const dummyHistory: PaletteHistoryGraphResponse = {
   line-height: 1.55;
   color: var(--ink-2);
 }
+.feat--color { border-top-color: #b410cc; }
+.feat-link {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: #b410cc;
+  text-decoration: none;
+  transition: opacity .2s;
+}
+.feat-link:hover { opacity: 0.7; }
 
 /* ============ Footer ============ */
 .foot {

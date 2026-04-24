@@ -179,6 +179,18 @@ export interface PaletteByUsernameResponse {
   palettes: PaletteByUsernameItemResponse[];
 }
 
+// ── Color contrast check ──────────────────────────────────────────────────────
+
+export interface ColorContrastCheckResponse {
+  hex1: string
+  hex2: string
+  ratio: number
+  aa_normal: boolean
+  aa_large: boolean
+  aaa_normal: boolean
+  aaa_large: boolean
+}
+
 // ── Color info ────────────────────────────────────────────────────────────────
 
 export interface ColorInfoRGB { r: number; g: number; b: number }

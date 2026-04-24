@@ -2,6 +2,15 @@
   <div class="color-view">
     <SiteHeader />
 
+    <!-- Loading overlay (refetch / color change — skeleton handles first load) -->
+    <Teleport to="body">
+      <Transition name="overlay-fade">
+        <div v-if="loading && colorInfo" class="color-loading-overlay">
+          <AppLoader message="Loading color information" />
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- Hero swatch -->
     <div class="hero-swatch" :style="{ background: '#' + displayHex }">
       <div class="swatch-inner">
@@ -107,6 +116,25 @@
               <div v-for="i in 10" :key="i" class="skel" style="height:54px;border-radius:10px;"></div>
             </div>
           </div>
+          <!-- Contrast check skeleton -->
+          <div class="card">
+            <span class="skel" style="width:110px;height:10px;"></span>
+            <div class="cc-pair">
+              <div class="skel" style="flex:1;height:64px;border-radius:10px;"></div>
+              <div class="skel" style="width:28px;height:16px;border-radius:6px;align-self:center;"></div>
+              <div class="skel" style="flex:1;height:64px;border-radius:10px;"></div>
+            </div>
+            <div class="skel" style="height:36px;border-radius:8px;"></div>
+            <div style="display:flex;gap:8px;">
+              <span class="skel" style="width:80px;height:28px;border-radius:8px;"></span>
+              <div style="display:flex;gap:5px;margin-left:auto;">
+                <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
+                <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
+              </div>
+            </div>
+          </div>
           <!-- Accessibility skeleton -->
           <div class="card">
             <span class="skel" style="width:90px;height:10px;"></span>
@@ -184,6 +212,83 @@
             </div>
           </div>
 
+          <!-- Contrast Check -->
+          <div class="card">
+            <span class="card-label">Contrast Check</span>
+
+            <!-- Paired swatch preview -->
+            <div class="cc-pair">
+              <!-- Left: current color (static) -->
+              <div class="cc-swatch" :style="{ background: '#' + displayHex }">
+                <span class="cc-swatch-hex" :style="{ color: swatchTextColor }">#{{ displayHex.toUpperCase() }}</span>
+              </div>
+
+              <span class="cc-vs">vs</span>
+
+              <!-- Right: comparison color — inactive until picked, picker opens on click -->
+              <div
+                ref="contrastSwatchEl"
+                class="cc-swatch cc-swatch--compare"
+                :class="{ 'cc-swatch--inactive': !contrastPicked }"
+                :style="contrastPicked ? { background: '#' + contrastHex } : {}"
+                @click="openContrastPicker"
+              >
+                <template v-if="contrastPicked">
+                  <span class="cc-swatch-hex" :style="{ color: compareSwatchTextColor }">#{{ contrastHex.toUpperCase() }}</span>
+                </template>
+                <template v-else>
+                  <span class="cc-pick-hint">+ pick color</span>
+                </template>
+              </div>
+            </div>
+
+            <!-- ColorPicker popover (same as palette view) -->
+            <ColorPicker
+              v-if="contrastPickerOpen"
+              :modelValue="contrastHex"
+              :anchorRect="contrastAnchorRect ?? undefined"
+              @update:modelValue="onContrastPickerUpdate"
+              @close="contrastPickerOpen = false"
+            />
+
+            <!-- Result (only once a color has been picked) -->
+            <template v-if="contrastPicked">
+              <div v-if="contrastInfo && !contrastLoading" class="cc-result">
+                <div class="cc-ratio-row">
+                  <span class="cc-ratio">{{ contrastInfo.ratio.toFixed(2) }}:1</span>
+                  <span class="cc-ratio-label">contrast ratio</span>
+                </div>
+                <div class="cc-badge-groups">
+                  <div class="cc-badge-group">
+                    <span class="cc-badge-scope">Normal</span>
+                    <span class="badge" :class="contrastInfo.aa_normal ? 'badge--pass' : 'badge--fail'">AA</span>
+                    <span class="badge" :class="contrastInfo.aaa_normal ? 'badge--pass' : 'badge--fail'">AAA</span>
+                  </div>
+                  <div class="cc-badge-group">
+                    <span class="cc-badge-scope">Large text</span>
+                    <span class="badge" :class="contrastInfo.aa_large ? 'badge--pass' : 'badge--fail'">AA</span>
+                    <span class="badge" :class="contrastInfo.aaa_large ? 'badge--pass' : 'badge--fail'">AAA</span>
+                  </div>
+                </div>
+              </div>
+              <div v-else-if="contrastLoading" class="cc-result cc-result--loading">
+                <span class="skel" style="width:80px;height:28px;border-radius:8px;"></span>
+                <div class="cc-badge-groups">
+                  <div class="cc-badge-group">
+                    <span class="skel" style="width:36px;height:9px;border-radius:4px;"></span>
+                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                  </div>
+                  <div class="cc-badge-group">
+                    <span class="skel" style="width:52px;height:9px;border-radius:4px;"></span>
+                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                  </div>
+                </div>
+              </div>
+            </template>
+          </div>
+
           <!-- Accessibility -->
           <div class="card">
             <span class="card-label">Accessibility</span>
@@ -191,7 +296,7 @@
               <div class="contrast-row">
                 <div class="contrast-preview contrast-preview--white">
                   <span class="contrast-quote" :style="{ color: '#' + displayHex }">
-                    "{{ currentQuote() }}"
+                    "{{ currentQuote }}"
                   </span>
                 </div>
                 <div class="contrast-meta">
@@ -208,7 +313,7 @@
               <div class="contrast-row">
                 <div class="contrast-preview contrast-preview--black">
                   <span class="contrast-quote" :style="{ color: '#' + displayHex }">
-                    "{{ currentQuote() }}"
+                    "{{ currentQuote }}"
                   </span>
                 </div>
                 <div class="contrast-meta">
@@ -257,8 +362,10 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SiteHeader from '@/components/SiteHeader.vue'
+import AppLoader from '@/components/AppLoader.vue'
+import ColorPicker from '@/components/ColorPicker.vue'
 import { colorApi } from '@/api/color'
-import type { ColorInfoResponse } from '@/api/types'
+import type { ColorInfoResponse, ColorContrastCheckResponse } from '@/api/types'
 
 const route  = useRoute()
 const router = useRouter()
@@ -296,7 +403,6 @@ const hsv = ref<HSV>(rgbToHsv(...hexToRgb(initHex)))
 const displayHex  = computed(() => rgbToHex(...hsvToRgb(...hsv.value)))
 const pickerRgb   = computed<RGB>(() => hsvToRgb(...hsv.value))
 
-// Swatch text color (contrast-aware)
 const swatchTextColor = computed(() => {
   const [r,g,b] = hexToRgb(displayHex.value)
   const lum = (0.299*r + 0.587*g + 0.114*b) / 255
@@ -310,6 +416,34 @@ const loading    = ref(false)
 const error      = ref<string | null>(null)
 const copied     = ref(false)
 const copiedSpace = ref<string | null>(null)
+
+// ── Contrast check state ──────────────────────────────────────────────────────
+
+const contrastHex        = ref('FFFFFF')
+const contrastInfo       = ref<ColorContrastCheckResponse | null>(null)
+const contrastLoading    = ref(false)
+const contrastPicked     = ref(false)
+const contrastPickerOpen = ref(false)
+const contrastSwatchEl   = ref<HTMLElement | null>(null)
+const contrastAnchorRect = ref<DOMRect | null>(null)
+
+const compareSwatchTextColor = computed(() => {
+  const [r,g,b] = hexToRgb(contrastHex.value)
+  const lum = (0.299*r + 0.587*g + 0.114*b) / 255
+  return lum > 0.5 ? 'rgba(0,0,0,0.75)' : 'rgba(255,255,255,0.9)'
+})
+
+function openContrastPicker() {
+  contrastAnchorRect.value = contrastSwatchEl.value?.getBoundingClientRect() ?? null
+  contrastPickerOpen.value = true
+}
+
+function onContrastPickerUpdate(hex: string) {
+  contrastHex.value = hex
+  if (!contrastPicked.value) contrastPicked.value = true
+}
+
+// ── Derived display ───────────────────────────────────────────────────────────
 
 const labelDisplay = computed(() => {
   if (!colorInfo.value) return ''
@@ -377,6 +511,11 @@ const sharkTaleQuotes = [
   "Keep it real, keep it real.",
   "You are so beautiful!",
   "Sykes, you beautiful fish!",
+  "Sorry, pop. Lenny had a little accident. He was born!",
+  "You live in a billboard? And I thought I was crazy!",
+  "You coming at me like that? You come at the O like that?",
+  'No, I said "What, what?" as in "What, what?',
+  "Well, for your information, I am the Sharkslayer. That's what they're callin' me.",
   "That's what I'm talking about!",
   "You're killing me, Smalls!",
   "Just keep swimming, keep swimming.",
@@ -419,20 +558,35 @@ const sharkTaleQuotes = [
   "That's a certified banger right there.",
 ]
 
-function currentQuote(): string {
-  const n = parseInt(displayHex.value.slice(0, 4), 16)
+// Quote keyed to the last fetched hex — only updates when request is done
+const currentQuote = computed(() => {
+  const hex = colorInfo.value?.normalized_hex ?? displayHex.value
+  const n = parseInt(hex.slice(0, 4), 16)
   return sharkTaleQuotes[n % sharkTaleQuotes.length] ?? ''
-}
+})
 
 // ── Fetch ─────────────────────────────────────────────────────────────────────
 
 let fetchTimer: ReturnType<typeof setTimeout> | null = null
+
+async function fetchContrastInfo() {
+  if (!colorInfo.value) return
+  contrastLoading.value = true
+  try {
+    contrastInfo.value = await colorApi.getContrastCheck(displayHex.value, contrastHex.value)
+  } catch {
+    contrastInfo.value = null
+  } finally {
+    contrastLoading.value = false
+  }
+}
 
 async function fetchColorInfo(hex: string) {
   loading.value = true
   error.value = null
   try {
     colorInfo.value = await colorApi.getColorInfo(hex)
+    if (contrastPicked.value) fetchContrastInfo()
   } catch (e: unknown) {
     error.value = e instanceof Error ? e.message : 'Failed to load colour info.'
     colorInfo.value = null
@@ -449,12 +603,19 @@ function scheduleUpdate(hex: string) {
   }, 280)
 }
 
-// Picker changes → debounce fetch + URL
+let contrastTimer: ReturnType<typeof setTimeout> | null = null
+
+function scheduleContrastUpdate() {
+  if (contrastTimer) clearTimeout(contrastTimer)
+  contrastTimer = setTimeout(fetchContrastInfo, 300)
+}
+
 watch(displayHex, (hex) => {
   scheduleUpdate(hex)
 })
 
-// External navigation (e.g. browser back/forward)
+watch(contrastHex, () => { if (contrastPicked.value) scheduleContrastUpdate() })
+
 watch(() => route.params.hex as string, (raw) => {
   const hex = normalizeHex(raw || '')
   if (hex !== displayHex.value) {
@@ -535,6 +696,7 @@ async function copyHex() {
     setTimeout(() => { copied.value = false }, 1500)
   } catch {}
 }
+
 </script>
 
 <style scoped>
@@ -542,6 +704,23 @@ async function copyHex() {
   min-height: 100vh;
   color: var(--ink);
 }
+
+/* ── Loading overlay ──────────────────────────────── */
+.color-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.overlay-fade-enter-active,
+.overlay-fade-leave-active { transition: opacity 0.22s ease; }
+.overlay-fade-enter-from,
+.overlay-fade-leave-to { opacity: 0; }
 
 /* ── Skeleton shimmer ─────────────────────────────── */
 @keyframes skel-wave {
@@ -753,9 +932,6 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
   grid-template-columns: repeat(2, 1fr);
   gap: 6px;
 }
-@media (min-width: 900px) {
-  .spaces-grid { grid-template-columns: repeat(2, 1fr); }
-}
 
 .space-cell {
   display: flex;
@@ -804,6 +980,104 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
   font-size: 11px;
   font-weight: 700;
   color: #2a9d60;
+}
+
+/* ── Contrast Check card ─────────────────────────────── */
+.cc-pair {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+.cc-swatch {
+  flex: 1;
+  min-height: 72px;
+  border-radius: 10px;
+  display: flex;
+  align-items: flex-end;
+  padding: 8px 10px;
+  border: 1px solid rgba(0,0,0,0.08);
+  transition: background 0.15s;
+}
+.cc-swatch-hex {
+  font-family: 'Sora', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.cc-swatch--compare {
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s, border-color 0.15s;
+}
+.cc-swatch--compare:hover { opacity: 0.85; }
+.cc-swatch--inactive {
+  background: var(--paper) !important;
+  border: 2px dashed rgba(0,0,0,0.15);
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.cc-pick-hint {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--ink-3);
+}
+.cc-vs {
+  align-self: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+
+.cc-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cc-result--loading { align-items: center; }
+.cc-ratio-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cc-ratio {
+  font-family: 'Sora', monospace;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  line-height: 1;
+}
+.cc-ratio-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+.cc-badge-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cc-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.cc-badge-scope {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  min-width: 52px;
 }
 
 /* ── Accessibility ───────────────────────────────────── */

@@ -67,8 +67,9 @@ withDefaults(defineProps<{ message?: string }>(), { message: 'Loading…' })
 
 .loader-msg {
   font-size: 13px;
-  color: rgba(255,255,255,0.35);
+  color: #fff;
   font-family: 'Sora', sans-serif;
   letter-spacing: 0.04em;
+  text-shadow: 0 1px 6px rgba(0,0,0,0.7), 0 0 20px rgba(0,0,0,0.4);
 }
 </style>

@@ -11,6 +11,7 @@
       <template v-if="isOnLanding">
         <a href="#features" class="nav-link">Features</a>
       </template>
+      <RouterLink to="/color/B410CC" class="nav-link" :class="{ 'nav-link--active': isOnColor }">Colors</RouterLink>
       <template v-if="isLoggedIn">
         <span v-if="user" class="user-chip font-mono">
           <span class="chip-label">user</span>
@@ -58,6 +59,8 @@
           <a href="#features" class="mob-link" @click="closeSidebar">Features</a>
         </template>
 
+        <RouterLink to="/color/B410CC" class="mob-link" @click="closeSidebar">Colors</RouterLink>
+
         <template v-if="isLoggedIn">
           <span v-if="user" class="mob-user font-mono">{{ user.username }}</span>
           <RouterLink v-if="!isOnDashboard" to="/dashboard" class="mob-link" @click="closeSidebar">Dashboard</RouterLink>
@@ -88,6 +91,7 @@ const router = useRouter()
 
 const isOnLanding   = computed(() => route.path === '/')
 const isOnDashboard = computed(() => route.path === '/dashboard')
+const isOnColor     = computed(() => route.path.startsWith('/color'))
 const isLoggedIn    = computed(() => !!props.user || !!localStorage.getItem('access_token'))
 
 const mobileOpen = ref(false)
@@ -173,6 +177,7 @@ function handleLogout() {
   transition: color 0.18s;
 }
 .nav-link:hover { color: var(--magenta); }
+.nav-link--active { color: var(--magenta); }
 .nav-cta {
   display: inline-flex;
   align-items: center;

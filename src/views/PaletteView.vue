@@ -13,6 +13,7 @@
       :isOwned="isOwned"
       :canDelete="isOwned && !isNewPalette"
       :tutorialFocus="headerTutorialFocus"
+      :mobileMenuOpen="mobileSidebarOpen"
       @back="router.push('/dashboard')"
       @save="requestSave"
       @clone="clonePalette"
@@ -21,6 +22,7 @@
       @merge="confirmMerge"
       @deletePalette="showDeletePaletteModal = true"
       @openTutorial="openTutorial"
+      @hamburgerClick="mobileSidebarOpen = !mobileSidebarOpen"
     />
 
     <!-- Loading state -->
@@ -377,6 +379,132 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Mobile sidebar -->
+    <Teleport to="body">
+      <Transition name="sidebar-overlay">
+        <div v-if="mobileSidebarOpen" class="msb-overlay" @click="mobileSidebarOpen = false"></div>
+      </Transition>
+      <Transition name="sidebar-panel">
+        <div v-if="mobileSidebarOpen" class="msb-panel">
+
+          <!-- Sidebar header -->
+          <div class="msb-top">
+            <span class="msb-title font-display">Menu</span>
+            <button class="msb-close" @click="mobileSidebarOpen = false">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="msb-body">
+
+            <!-- Branch section -->
+            <div class="msb-section-label">Branch</div>
+            <div class="msb-branches">
+              <button
+                class="msb-branch-opt"
+                :class="{ active: currentBranchId === null }"
+                @click="switchBranch(null); mobileSidebarOpen = false"
+              >
+                <span class="msb-dot msb-dot-main"></span>
+                <span class="msb-branch-name">main</span>
+                <span v-if="currentBranchId === null" class="msb-check">✓</span>
+              </button>
+              <template v-for="(br, idx) in mobileSidebarActiveBranches" :key="br.id">
+                <button
+                  class="msb-branch-opt"
+                  :class="{ active: currentBranchId === br.id }"
+                  @click="switchBranch(br.id); mobileSidebarOpen = false"
+                >
+                  <span class="msb-dot" :style="{ background: mobileBranchColor(idx) }"></span>
+                  <span class="msb-branch-name">{{ br.title }}</span>
+                  <span v-if="currentBranchId === br.id" class="msb-check">✓</span>
+                </button>
+                <button
+                  v-if="currentBranchId === br.id"
+                  class="msb-merge-btn"
+                  @click.stop="confirmMerge(br.id); mobileSidebarOpen = false"
+                >
+                  ↩ Merge into main
+                </button>
+              </template>
+            </div>
+
+            <div v-if="snapshotCommitHint" class="msb-hint">{{ snapshotCommitHint }}</div>
+
+            <div class="msb-divider"></div>
+
+            <!-- Actions -->
+            <div class="msb-actions">
+              <button class="msb-action" @click="openTutorial(); mobileSidebarOpen = false">
+                <span class="msb-help-glyph">?</span>
+                How it works
+              </button>
+              <button
+                v-if="isOwned"
+                class="msb-action msb-action-primary"
+                :disabled="isSaving || !hasUnsavedChanges"
+                @click="requestSave(); mobileSidebarOpen = false"
+              >
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                  <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M2 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                {{ isSaving ? 'Saving…' : 'Save snapshot' }}
+              </button>
+              <button
+                v-else
+                class="msb-action msb-action-clone"
+                @click="clonePalette(); mobileSidebarOpen = false"
+              >
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                  <rect x="1" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+                  <path d="M5 1h7a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                </svg>
+                Clone palette
+              </button>
+              <button
+                v-if="isOwned && !isNewPalette"
+                class="msb-action msb-action-danger"
+                @click="showDeletePaletteModal = true; mobileSidebarOpen = false"
+              >
+                <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Delete palette
+              </button>
+            </div>
+
+            <div class="msb-divider"></div>
+
+            <!-- History section -->
+            <div class="msb-section-label msb-history-label">
+              <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+                <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              History
+            </div>
+            <div class="msb-history-body">
+              <HistoryGraph
+                v-if="historyForDisplay"
+                :history="historyForDisplay"
+                :selectedId="showDemoHistory ? null : selectedSnapshotId"
+                :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
+                @selectSnapshot="onHistorySelectSnapshot"
+                @selectBranch="onHistorySelectBranch"
+                @deleteBranch="onHistoryDeleteBranch"
+                @revertSnapshot="onHistoryRevertSnapshot"
+              />
+              <div v-else class="msb-history-empty">No history yet.</div>
+            </div>
+
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -390,6 +518,7 @@ import ColorColumn from '@/components/ColorColumn.vue'
 import HistoryGraph from '@/components/HistoryGraph.vue'
 import AppLoader from '@/components/AppLoader.vue'
 import AuthModal from '@/components/AuthModal.vue'
+import { getBranchColor } from '@/utils/branchColors'
 
 const route = useRoute()
 const router = useRouter()
@@ -515,8 +644,17 @@ const hasUnsavedChanges = computed(() => currentColorsSig.value !== savedColorsS
 
 // UI state
 const historyOpen = ref(false)
+const mobileSidebarOpen = ref(false)
 const showSaveModal = ref(false)
 const showAuthModal = ref(false)
+
+const mobileSidebarActiveBranches = computed(() =>
+  allBranches.value.filter(b => !b.is_merged)
+)
+
+function mobileBranchColor(idx: number): string {
+  return getBranchColor(idx)
+}
 
 type TutorialFocus = 'header' | 'branches' | 'canvas' | 'history' | 'save' | null
 interface TutorialStep {
@@ -1989,16 +2127,7 @@ watch(
     backdrop-filter: none;
   }
   .history-panel {
-    width: 100%;
-    height: 60vh;
-    top: auto;
-    bottom: 0;
-    border-left: none;
-    border-top: 1px solid rgba(255,255,255,0.1);
-  }
-  .history-slide-enter-from,
-  .history-slide-leave-to {
-    transform: translateY(100%);
+    display: none;
   }
 
   /* Tutorial: override ALL focus variants to a full-width bottom sheet.
@@ -2008,7 +2137,8 @@ watch(
   .tutorial-card.focus-header,
   .tutorial-card.focus-branches,
   .tutorial-card.focus-canvas,
-  .tutorial-card.focus-save {
+  .tutorial-card.focus-save,
+  .tutorial-card.focus-history {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
@@ -2020,34 +2150,259 @@ watch(
     border-right: none;
     border-bottom: none;
     padding: 20px 20px 36px;
-  }
-
-  /* History steps: sheet sits flush above the bottom history panel */
-  .tutorial-card.focus-history {
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 60vh !important;
-    top: auto !important;
-    width: 100% !important;
-    transform: none !important;
-    max-height: calc(40vh - 60px);
+    max-height: 60vh;
     overflow-y: auto;
-    border-radius: 14px 14px 0 0;
-    border-left: none;
-    border-right: none;
-    border-bottom: none;
-    padding: 20px 20px 16px;
-  }
-
-  /* Dim: opaque over canvas, transparent over history panel */
-  .tutorial-shell.focus-history .tutorial-dim {
-    background: linear-gradient(
-      to bottom,
-      rgba(7, 8, 12, 0.52) 0%,
-      rgba(7, 8, 12, 0.52) 40%,
-      rgba(7, 8, 12, 0) 40%,
-      rgba(7, 8, 12, 0) 100%
-    );
   }
 }
+
+/* ─── Mobile sidebar (Teleport, always present in DOM) ─── */
+.msb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(2px);
+}
+
+.msb-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 201;
+  width: min(88vw, 380px);
+  background: #0e0e14;
+  border-left: 1px solid rgba(255, 255, 255, 0.09);
+  display: flex;
+  flex-direction: column;
+  box-shadow: -24px 0 64px rgba(0, 0, 0, 0.65);
+  overflow: hidden;
+}
+
+.msb-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 56px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.msb-title {
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+  text-transform: uppercase;
+  color: #fff;
+}
+
+.msb-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.msb-close:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+.msb-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.msb-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+  margin-bottom: 8px;
+  padding: 0 4px;
+}
+
+.msb-history-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 0;
+  padding: 12px 4px 10px;
+  border-top: none;
+}
+
+.msb-branches {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 4px;
+}
+
+.msb-branch-opt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+}
+.msb-branch-opt:hover { background: rgba(255, 255, 255, 0.07); color: #fff; border-color: rgba(255, 255, 255, 0.12); }
+.msb-branch-opt.active { color: #fff; background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1); }
+
+.msb-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.msb-dot-main { background: rgba(255, 255, 255, 0.7); }
+
+.msb-branch-name { flex: 1; }
+
+.msb-check {
+  font-size: 12px;
+  color: #b410cc;
+  margin-left: auto;
+}
+
+.msb-merge-btn {
+  display: block;
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border: none;
+  background: transparent;
+  color: #0ec6d4;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 7px;
+  text-align: left;
+  transition: background 0.12s;
+}
+.msb-merge-btn:hover { background: rgba(14, 198, 212, 0.08); }
+
+.msb-hint {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 8px 4px 4px;
+  line-height: 1.45;
+}
+
+.msb-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 12px 0;
+}
+
+.msb-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.msb-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.14s, color 0.14s, border-color 0.14s;
+}
+.msb-action:hover { background: rgba(255, 255, 255, 0.07); color: #fff; border-color: rgba(255, 255, 255, 0.13); }
+
+.msb-help-glyph {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.65);
+  flex-shrink: 0;
+}
+
+.msb-action-primary {
+  background: rgba(180, 16, 204, 0.15) !important;
+  border-color: rgba(180, 16, 204, 0.35) !important;
+  color: #e070f5 !important;
+  font-weight: 600;
+}
+.msb-action-primary:hover:not(:disabled) {
+  background: rgba(180, 16, 204, 0.25) !important;
+  border-color: rgba(180, 16, 204, 0.5) !important;
+  color: #fff !important;
+}
+.msb-action-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+
+.msb-action-clone {
+  background: rgba(14, 198, 212, 0.08) !important;
+  border-color: rgba(14, 198, 212, 0.25) !important;
+  color: #0ec6d4 !important;
+}
+.msb-action-clone:hover {
+  background: rgba(14, 198, 212, 0.16) !important;
+  border-color: rgba(14, 198, 212, 0.4) !important;
+  color: #fff !important;
+}
+
+.msb-action-danger {
+  background: transparent !important;
+  border-color: rgba(255, 80, 80, 0.15) !important;
+  color: rgba(255, 100, 100, 0.55) !important;
+}
+.msb-action-danger:hover {
+  background: rgba(255, 80, 80, 0.08) !important;
+  border-color: rgba(255, 80, 80, 0.35) !important;
+  color: rgba(255, 130, 130, 0.9) !important;
+}
+
+.msb-history-body {
+  min-height: 120px;
+}
+
+.msb-history-empty {
+  padding: 24px 0;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Sidebar transitions */
+.sidebar-overlay-enter-active { transition: opacity 0.25s ease; }
+.sidebar-overlay-leave-active { transition: opacity 0.2s ease; }
+.sidebar-overlay-enter-from,
+.sidebar-overlay-leave-to { opacity: 0; }
+
+.sidebar-panel-enter-active { transition: transform 0.28s cubic-bezier(0.2, 0.9, 0.2, 1); }
+.sidebar-panel-leave-active { transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1); }
+.sidebar-panel-enter-from,
+.sidebar-panel-leave-to { transform: translateX(100%); }
 </style>

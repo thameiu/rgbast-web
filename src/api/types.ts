@@ -179,6 +179,42 @@ export interface PaletteByUsernameResponse {
   palettes: PaletteByUsernameItemResponse[];
 }
 
+// ── Color info ────────────────────────────────────────────────────────────────
+
+export interface ColorInfoRGB { r: number; g: number; b: number }
+
+export interface ColorInfoResponse {
+  input_hex: string
+  normalized_hex: string
+  closest_name: string | null
+  label_is_approximate: boolean
+  rgb: ColorInfoRGB
+  hsl: { h: number; s: number; l: number }
+  cmyk: { c: number; m: number; y: number; k: number }
+  hsb: { h: number; s: number; b: number }
+  lab: { l: number; a: number; b: number }
+  xyz: { x: number; y: number; z: number }
+  lch: { l: number; c: number; h: number }
+  luv: { l: number; u: number; v: number }
+  hwb: { h: number; w: number; b: number }
+  accessibility: {
+    color_blindness: {
+      protanopia:   { rgb: ColorInfoRGB; hex: string }
+      deuteranopia: { rgb: ColorInfoRGB; hex: string }
+      tritanopia:   { rgb: ColorInfoRGB; hex: string }
+    }
+    contrast: {
+      on_white: number
+      on_black: number
+      aa_on_white_normal_text: boolean
+      aa_on_black_normal_text: boolean
+      aaa_on_white_normal_text: boolean
+      aaa_on_black_normal_text: boolean
+    }
+  }
+  bast_score: number
+}
+
 // ── Local cache (localStorage) ────────────────────────────────────────────────
 
 /** Minimal palette shape stored in localStorage for offline title/color preview. */

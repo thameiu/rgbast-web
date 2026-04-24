@@ -5,6 +5,7 @@ import LoginView from '@/views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import DashboardView from '@/views/DashboardView.vue'
 import PaletteView from '@/views/PaletteView.vue'
+import ColorView from '@/views/ColorView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -36,6 +37,11 @@ const router = createRouter({
       path: '/palette/:id',
       name: 'palette',
       component: PaletteView,
+    },
+    {
+      path: '/color/:hex',
+      name: 'color',
+      component: ColorView,
     },
     {
       path: '/:pathMatch(.*)*',

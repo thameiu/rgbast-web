@@ -5,8 +5,18 @@
     <span class="regmark regmark-bl" aria-hidden="true"></span>
     <span class="regmark regmark-br" aria-hidden="true"></span>
 
-    <!-- Left panel: editorial composition -->
+    <!-- Left panel -->
     <aside class="panel">
+      <!-- Large concentric rings — full-panel background -->
+      <div class="rings" aria-hidden="true">
+        <span class="ring r1"></span>
+        <span class="ring r2"></span>
+        <span class="ring r3"></span>
+        <span class="ring r4"></span>
+        <span class="ring r5"></span>
+        <span class="ring r6"></span>
+      </div>
+
       <div class="panel-inner">
         <RouterLink to="/" class="brand">
           <RgbastLogo size="32px" />
@@ -15,7 +25,7 @@
 
         <div class="panel-lede">
           <p class="eyebrow font-mono">
-            <span class="eyebrow-bullet"></span>
+            <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
             Atelier · new designer
           </p>
           <h1 class="panel-title font-display">
@@ -27,33 +37,68 @@
           </p>
         </div>
 
+        <!-- Scattered palette cards -->
         <div class="panel-art" aria-hidden="true">
-          <div class="rings">
-            <span class="ring r1"></span>
-            <span class="ring r2"></span>
-            <span class="ring r3"></span>
+
+          <!-- PlanMyAsso — top-left, small -->
+          <div class="pc" style="left:3%;top:5%;transform:rotate(10deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#FFFFFF"></span>
+              <span class="pc-col" style="background:#D2D6CE"></span>
+              <span class="pc-col" style="background:#A9B299"></span>
+              <span class="pc-col" style="background:#627356"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">PlanMyAsso</span></div>
           </div>
-          <div class="grid">
-            <span class="g" style="--c:#0e0e10"></span>
-            <span class="g" style="--c:#2b2035"></span>
-            <span class="g" style="--c:#b410cc"></span>
-            <span class="g" style="--c:#f6c343"></span>
-            <span class="g" style="--c:#0ec6d4"></span>
-            <span class="g" style="--c:#f4efe6"></span>
+
+          <!-- Spendly — top-right, small -->
+          <div class="pc" style="right:2%;top:7%;transform:rotate(-8deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#F6EDFF"></span>
+              <span class="pc-col" style="background:#F1D4F4"></span>
+              <span class="pc-col" style="background:#C3A6E8"></span>
+              <span class="pc-col" style="background:#7C6CB3"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">Spendly</span></div>
           </div>
-          <div class="ticket font-mono">
-            <span class="ticket-row"><span>branch</span><strong>main</strong></span>
-            <span class="ticket-row"><span>commits</span><strong>0</strong></span>
-            <span class="ticket-row"><span>status</span><strong class="new">initializing</strong></span>
+
+          <!-- Kwester — center, biggest -->
+          <div class="pc pc--big" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(3deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#FFA62B"></span>
+              <span class="pc-col" style="background:#16697B"></span>
+              <span class="pc-col" style="background:#001C3E"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">Kwester</span></div>
           </div>
+
+          <!-- GGPS — bottom-left, small -->
+          <div class="pc" style="left:4%;bottom:7%;transform:rotate(-6deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#BD0000"></span>
+              <span class="pc-col" style="background:#393938"></span>
+              <span class="pc-col" style="background:#030303"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">GGPS</span></div>
+          </div>
+
+          <!-- Roadica — bottom-right, small -->
+          <div class="pc" style="right:3%;bottom:10%;transform:rotate(9deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#002232"></span>
+              <span class="pc-col" style="background:#1F2937"></span>
+              <span class="pc-col" style="background:#FFFFFF"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">Roadica</span></div>
+          </div>
+
         </div>
 
-        <RouterLink to="/" class="back-link font-mono">
-          ← Back to index
-        </RouterLink>
+        <RouterLink to="/" class="back-link font-mono">← Back to index</RouterLink>
       </div>
     </aside>
 
+    <!-- Right: form -->
     <section class="form-col">
       <div class="form-inner">
         <RouterLink to="/" class="brand brand-mobile">
@@ -124,11 +169,7 @@
 
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
 
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="submit"
-          >
+          <button type="submit" :disabled="isSubmitting" class="submit">
             <span>{{ isSubmitting ? 'Creating…' : 'Create account' }}</span>
             <span aria-hidden="true">→</span>
           </button>
@@ -158,7 +199,6 @@ const errorMessage = ref('')
 async function handleRegister() {
   isSubmitting.value = true
   errorMessage.value = ''
-
   try {
     await usersApi.create({
       username: form.value.username,
@@ -168,12 +208,10 @@ async function handleRegister() {
       lastname: form.value.lastname || null,
       birthdate: form.value.birthdate || null,
     })
-
     const loginResponse = await authApi.login({
       username: form.value.username,
       password: form.value.password,
     })
-
     localStorage.setItem('access_token', loginResponse.access_token)
     router.push('/dashboard')
   } catch (error: unknown) {
@@ -198,6 +236,7 @@ async function handleRegister() {
   .auth { grid-template-columns: 1fr; }
 }
 
+/* ===== Registration marks ===== */
 .regmark {
   position: absolute;
   width: 22px; height: 22px;
@@ -218,6 +257,7 @@ async function handleRegister() {
 .regmark-bl { bottom: 20px; left: 20px; }
 .regmark-br { bottom: 20px; right: 20px; }
 
+/* ===== Left panel ===== */
 .panel {
   position: relative;
   background: #DCDCDC;
@@ -235,17 +275,45 @@ async function handleRegister() {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 1px 1px, rgba(14, 14, 16, 0.08) 1px, transparent 0) 0 0 / 24px 24px;
+  background: radial-gradient(circle at 1px 1px, rgba(14, 14, 16, 0.06) 1px, transparent 0) 0 0 / 24px 24px;
   pointer-events: none;
-  opacity: 0.8;
+  z-index: 0;
 }
 
+/* ===== Concentric rings (large, vertically centered) ===== */
+
+/* ===== Concentric rings (large, vertically centered) ===== */
+.rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(600px, 130%, 1000px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: none;
+  border: none;
+}
+.r1 { border: 1.5px solid #B410CC; opacity: 0.22; }
+.r2 { inset: 14%; border: 1.5px solid #D56A88; opacity: 0.14; }
+.r3 { inset: 27%; border: 1.5px solid #F6C343; opacity: 0.16; }
+.r4 { inset: 40%; border: 1.5px solid #82C58C; opacity: 0.18; }
+.r5 { inset: 53%; border: 1.5px solid #0EC6D4; opacity: 0.18; }
+.r6 { inset: 66%; border: 1.5px solid #616BD0; opacity: 0.16; }
+
+/* ===== Panel inner content ===== */
 .panel-inner {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
   height: 100%;
 }
 
@@ -268,22 +336,17 @@ async function handleRegister() {
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-2);
 }
-.eyebrow-bullet {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--magenta);
-  box-shadow: 0 0 0 4px rgba(180, 16, 204, 0.15);
-}
+.eyebrow-logo { flex-shrink: 0; }
+
 .panel-title {
   margin-top: 18px;
-  font-size: clamp(48px, 5.5vw, 80px);
+  font-size: clamp(44px, 5vw, 76px);
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: -0.02em;
@@ -293,95 +356,60 @@ async function handleRegister() {
   color: var(--magenta-ink);
 }
 .panel-copy {
-  margin-top: 18px;
-  font-size: 16px;
+  margin-top: 16px;
+  font-size: 15px;
   line-height: 1.55;
   color: var(--ink-2);
   max-width: 40ch;
 }
 
+/* ===== Scattered palette cards ===== */
 .panel-art {
   position: relative;
   flex: 1;
-  min-height: 280px;
-  display: grid;
-  place-items: center;
-}
-.rings {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(340px, 70%);
-  aspect-ratio: 1 / 1;
-  transform: translate(-50%, -50%);
-}
-.ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(14, 14, 16, 0.18);
-}
-.r2 { inset: 14%; border-color: rgba(180, 16, 204, 0.28); }
-.r3 { inset: 30%; border: 1px dashed rgba(14, 14, 16, 0.2); animation: spin 100s linear infinite; }
-
-.grid {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  display: grid;
-  grid-template-columns: repeat(3, 44px);
-  grid-template-rows: repeat(2, 44px);
-  gap: 6px;
-}
-.g {
-  background: var(--c);
-  border-radius: 6px;
-  box-shadow: 0 1px 0 rgba(14, 14, 16, 0.08), 0 8px 18px -14px rgba(14, 14, 16, 0.4);
-  animation: bob 5s ease-in-out infinite;
-}
-.g:nth-child(1) { animation-delay: 0s; }
-.g:nth-child(2) { animation-delay: 0.15s; }
-.g:nth-child(3) { animation-delay: 0.3s; }
-.g:nth-child(4) { animation-delay: 0.45s; }
-.g:nth-child(5) { animation-delay: 0.6s; }
-.g:nth-child(6) { animation-delay: 0.75s; }
-
-@keyframes bob {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-3px); }
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  min-height: 360px;
 }
 
-.ticket {
+.pc {
   position: absolute;
-  right: 8%;
-  bottom: 8%;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  padding: 10px 14px;
-  border-radius: 8px;
+  width: 148px;
+  background: #faf7f0;
+  border: 1px solid rgba(14, 14, 16, 0.12);
+  border-radius: 11px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(14, 14, 16, 0.18);
+}
+.pc--med  { width: 172px; }
+.pc--big  { width: 228px; }
+
+.pc-strip {
+  display: flex;
+  height: 54px;
+}
+.pc--big .pc-strip  { height: 74px; }
+.pc--med .pc-strip  { height: 62px; }
+
+.pc-col { flex: 1; }
+
+.pc-foot {
+  padding: 7px 10px 9px;
+  background: #faf7f0;
+}
+.pc--big .pc-foot { padding: 9px 12px 11px; }
+
+.pc-name {
+  display: block;
+  font-family: var(--font-display);
   font-size: 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 170px;
-  box-shadow: 0 6px 18px -10px rgba(14, 14, 16, 0.2);
-}
-.ticket-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  color: var(--ink-3);
-}
-.ticket-row strong {
+  font-weight: 900;
+  letter-spacing: -0.01em;
   color: var(--ink);
-  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.ticket-row .new { color: var(--magenta); }
+.pc--big .pc-name  { font-size: 14px; }
+.pc--med .pc-name  { font-size: 12px; }
 
 .back-link {
   font-size: 11px;
@@ -393,6 +421,7 @@ async function handleRegister() {
 }
 .back-link:hover { color: var(--magenta); }
 
+/* ===== Right form column ===== */
 .form-col {
   display: flex;
   align-items: center;

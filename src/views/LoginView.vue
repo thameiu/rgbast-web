@@ -1,13 +1,22 @@
 <template>
   <main class="auth">
-    <!-- Corner registration marks -->
     <span class="regmark regmark-tl" aria-hidden="true"></span>
     <span class="regmark regmark-tr" aria-hidden="true"></span>
     <span class="regmark regmark-bl" aria-hidden="true"></span>
     <span class="regmark regmark-br" aria-hidden="true"></span>
 
-    <!-- Left panel: composed editorial still life -->
+    <!-- Left panel -->
     <aside class="panel">
+      <!-- Large concentric rings — full-panel background -->
+      <div class="rings" aria-hidden="true">
+        <span class="ring r1"></span>
+        <span class="ring r2"></span>
+        <span class="ring r3"></span>
+        <span class="ring r4"></span>
+        <span class="ring r5"></span>
+        <span class="ring r6"></span>
+      </div>
+
       <div class="panel-inner">
         <RouterLink to="/" class="brand">
           <RgbastLogo size="32px" />
@@ -16,7 +25,7 @@
 
         <div class="panel-lede">
           <p class="eyebrow font-mono">
-            <span class="eyebrow-bullet"></span>
+            <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
             Atelier · returning designer
           </p>
           <h1 class="panel-title font-display">
@@ -28,30 +37,69 @@
           </p>
         </div>
 
-        <!-- Rings + swatch stack composition -->
+        <!-- Scattered palette cards -->
         <div class="panel-art" aria-hidden="true">
-          <div class="rings">
-            <span class="ring r1"></span>
-            <span class="ring r2"></span>
-            <span class="ring r3"></span>
+
+          <!-- 2clock — top-left, small -->
+          <div class="pc" style="left:3%;top:4%;transform:rotate(11deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#FF331E"></span>
+              <span class="pc-col" style="background:#FF6758"></span>
+              <span class="pc-col" style="background:#27314F"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">2clock</span></div>
           </div>
-          <div class="stack">
-            <span class="s s1"></span>
-            <span class="s s2"></span>
-            <span class="s s3"></span>
-            <span class="s s4"></span>
-            <span class="s s5"></span>
+
+          <!-- gmanagr — top-right, small -->
+          <div class="pc" style="right:2%;top:6%;transform:rotate(-9deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#CDD5F4"></span>
+              <span class="pc-col" style="background:#CAA6F6"></span>
+              <span class="pc-col" style="background:#90B2F8"></span>
+              <span class="pc-col" style="background:#A6E3A1"></span>
+              <span class="pc-col" style="background:#1F1F2F"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">gmanagr</span></div>
           </div>
-          <div class="ticket font-mono">
-            <span class="ticket-row"><span>branch</span><strong>main</strong></span>
-            <span class="ticket-row"><span>commit</span><strong>a91f4e2</strong></span>
-            <span class="ticket-row"><span>status</span><strong class="ok">clean</strong></span>
+
+          <!-- ErgoSix — center, biggest -->
+          <div class="pc pc--big" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(-3deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#FBFFFB"></span>
+              <span class="pc-col" style="background:#D3FCB6"></span>
+              <span class="pc-col" style="background:#339936"></span>
+              <span class="pc-col" style="background:#3C3C9C"></span>
+              <span class="pc-col" style="background:#1F1F3F"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">ErgoSix</span></div>
           </div>
+
+          <!-- RGBAST — bottom-left, medium -->
+          <div class="pc pc--med" style="left:2%;bottom:6%;transform:rotate(7deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#B410CC"></span>
+              <span class="pc-col" style="background:#D56A88"></span>
+              <span class="pc-col" style="background:#F6C343"></span>
+              <span class="pc-col" style="background:#82C58C"></span>
+              <span class="pc-col" style="background:#0EC6D4"></span>
+              <span class="pc-col" style="background:#616BD0"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">RGBAST</span></div>
+          </div>
+
+          <!-- E-Tron 3D — bottom-right, small -->
+          <div class="pc" style="right:3%;bottom:9%;transform:rotate(-12deg)">
+            <div class="pc-strip">
+              <span class="pc-col" style="background:#1CF1FF"></span>
+              <span class="pc-col" style="background:#D90584"></span>
+              <span class="pc-col" style="background:#0E1F2F"></span>
+            </div>
+            <div class="pc-foot"><span class="pc-name">E-Tron 3D</span></div>
+          </div>
+
         </div>
 
-        <RouterLink to="/" class="back-link font-mono">
-          ← Back to index
-        </RouterLink>
+        <RouterLink to="/" class="back-link font-mono">← Back to index</RouterLink>
       </div>
     </aside>
 
@@ -94,11 +142,7 @@
 
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
 
-          <button
-            type="submit"
-            :disabled="isSubmitting"
-            class="submit"
-          >
+          <button type="submit" :disabled="isSubmitting" class="submit">
             <span>{{ isSubmitting ? 'Signing in…' : 'Sign in' }}</span>
             <span aria-hidden="true">→</span>
           </button>
@@ -128,7 +172,6 @@ const errorMessage = ref('')
 async function handleLogin() {
   isSubmitting.value = true
   errorMessage.value = ''
-
   try {
     const response = await authApi.login({
       username: form.value.username,
@@ -161,8 +204,7 @@ async function handleLogin() {
 /* ===== Registration marks ===== */
 .regmark {
   position: absolute;
-  width: 22px;
-  height: 22px;
+  width: 22px; height: 22px;
   z-index: 3;
   pointer-events: none;
 }
@@ -194,22 +236,47 @@ async function handleLogin() {
 @media (max-width: 960px) {
   .panel { display: none; }
 }
-/* Subtle dot grid inside panel */
 .panel::before {
   content: "";
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 1px 1px, rgba(14, 14, 16, 0.08) 1px, transparent 0) 0 0 / 24px 24px;
+  background: radial-gradient(circle at 1px 1px, rgba(14, 14, 16, 0.06) 1px, transparent 0) 0 0 / 24px 24px;
   pointer-events: none;
-  opacity: 0.8;
+  z-index: 0;
 }
 
+/* ===== Concentric rings (large, vertically centered) ===== */
+.rings {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(600px, 130%, 1000px);
+  aspect-ratio: 1 / 1;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: none;
+  border: none;
+}
+.r1 { border: 1.5px solid #B410CC; opacity: 0.22; }
+.r2 { inset: 14%; border: 1.5px solid #D56A88; opacity: 0.14; }
+.r3 { inset: 27%; border: 1.5px solid #F6C343; opacity: 0.16; }
+.r4 { inset: 40%; border: 1.5px solid #82C58C; opacity: 0.18; }
+.r5 { inset: 53%; border: 1.5px solid #0EC6D4; opacity: 0.18; }
+.r6 { inset: 66%; border: 1.5px solid #616BD0; opacity: 0.16; }
+
+/* ===== Panel inner content ===== */
 .panel-inner {
   position: relative;
   z-index: 1;
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 28px;
   height: 100%;
 }
 
@@ -232,22 +299,17 @@ async function handleLogin() {
 .eyebrow {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-2);
 }
-.eyebrow-bullet {
-  display: inline-block;
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--magenta);
-  box-shadow: 0 0 0 4px rgba(180, 16, 204, 0.15);
-}
+.eyebrow-logo { flex-shrink: 0; }
+
 .panel-title {
   margin-top: 18px;
-  font-size: clamp(48px, 5.5vw, 80px);
+  font-size: clamp(44px, 5vw, 76px);
   font-weight: 900;
   line-height: 0.95;
   letter-spacing: -0.02em;
@@ -257,94 +319,61 @@ async function handleLogin() {
   color: var(--magenta-ink);
 }
 .panel-copy {
-  margin-top: 18px;
-  font-size: 16px;
+  margin-top: 16px;
+  font-size: 15px;
   line-height: 1.55;
   color: var(--ink-2);
   max-width: 40ch;
 }
 
-/* ===== Editorial composition ===== */
+/* ===== Scattered palette cards ===== */
 .panel-art {
   position: relative;
   flex: 1;
-  min-height: 280px;
-  display: grid;
-  place-items: center;
+  min-height: 360px;
 }
-.rings {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(340px, 70%);
-  aspect-ratio: 1 / 1;
-  transform: translate(-50%, -50%);
-}
-.ring {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 1px solid rgba(14, 14, 16, 0.18);
-}
-.r2 { inset: 14%; border-color: rgba(180, 16, 204, 0.28); }
-.r3 { inset: 30%; border: 1px dashed rgba(14, 14, 16, 0.2); animation: spin 100s linear infinite; }
 
-.stack {
+/* Mini palette card */
+.pc {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-6deg);
+  width: 148px;
+  background: #faf7f0;
+  border: 1px solid rgba(14, 14, 16, 0.12);
+  border-radius: 11px;
+  overflow: hidden;
+  box-shadow: 0 4px 18px rgba(14, 14, 16, 0.18);
+}
+.pc--med  { width: 172px; }
+.pc--big  { width: 228px; }
+
+.pc-strip {
   display: flex;
-  gap: 4px;
+  height: 54px;
 }
-.s {
-  width: 42px;
-  height: 72px;
-  border-radius: 6px;
-  box-shadow: 0 1px 0 rgba(14, 14, 16, 0.08), 0 10px 20px -12px rgba(14, 14, 16, 0.3);
-  animation: drift 6s ease-in-out infinite;
-}
-.s1 { background: #0e0e10; animation-delay: 0s; }
-.s2 { background: #2b2035; animation-delay: 0.2s; }
-.s3 { background: #b410cc; animation-delay: 0.4s; }
-.s4 { background: #f4efe6; animation-delay: 0.6s; }
-.s5 { background: #f6c343; animation-delay: 0.8s; }
+.pc--big .pc-strip  { height: 74px; }
+.pc--med .pc-strip  { height: 62px; }
 
-@keyframes drift {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-4px); }
-}
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
-}
+.pc-col { flex: 1; }
 
-.ticket {
-  position: absolute;
-  right: 8%;
-  bottom: 8%;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  padding: 10px 14px;
-  border-radius: 8px;
+.pc-foot {
+  padding: 7px 10px 9px;
+  background: #faf7f0;
+}
+.pc--big .pc-foot { padding: 9px 12px 11px; }
+
+.pc-name {
+  display: block;
+  font-family: var(--font-display);
   font-size: 11px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 160px;
-  box-shadow: 0 6px 18px -10px rgba(14, 14, 16, 0.2);
-}
-.ticket-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 14px;
-  color: var(--ink-3);
-}
-.ticket-row strong {
+  font-weight: 900;
+  letter-spacing: -0.01em;
   color: var(--ink);
-  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.ticket-row .ok { color: #1f7a2e; }
+.pc--big .pc-name  { font-size: 14px; }
+.pc--med .pc-name  { font-size: 12px; }
 
 .back-link {
   font-size: 11px;

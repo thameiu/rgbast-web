@@ -256,6 +256,7 @@ const dummyHistory: PaletteHistoryGraphResponse = {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex-wrap: wrap;
   animation: riseIn .9s cubic-bezier(.2,.9,.2,1) .35s backwards;
 }
 .btn-primary {
@@ -313,6 +314,20 @@ const dummyHistory: PaletteHistoryGraphResponse = {
 }
 @media (max-width: 640px) {
   .stats { grid-template-columns: 1fr; gap: 20px; }
+  .cta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .btn-primary,
+  .btn-ghost {
+    padding: 15px 22px;
+    font-size: 14px;
+    justify-content: center;
+  }
+  .hero {
+    padding-top: calc(68px + 32px);
+  }
 }
 .stat dt {
   font-size: 11px;

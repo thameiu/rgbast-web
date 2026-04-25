@@ -122,9 +122,20 @@
       </button>
     </div>
 
-    <!-- Mobile right: unsaved indicator + hamburger -->
+    <!-- Mobile right: unsaved indicator + history + hamburger -->
     <div class="mobile-right">
       <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
+      <button
+        class="history-mobile-btn"
+        :class="{ active: historyOpen }"
+        aria-label="Toggle history"
+        @click="$emit('toggleHistory')"
+      >
+        <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <button
         class="hamburger-btn"
         :class="{ open: mobileMenuOpen }"
@@ -464,13 +475,29 @@ const dropdownStyle = ref({
   color: rgba(255,120,120,0.9);
 }
 
-/* ─── Mobile hamburger button ─────────────────── */
+/* ─── Mobile history + hamburger buttons ─────────────────── */
 .mobile-right {
   display: none;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-shrink: 0;
 }
+
+.history-mobile-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.65);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+.history-mobile-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
+.history-mobile-btn.active { background: rgba(180,16,204,0.14); border-color: rgba(180,16,204,0.4); color: rgba(255,255,255,0.9); }
 
 .hamburger-btn {
   width: 36px;

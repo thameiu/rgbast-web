@@ -110,6 +110,9 @@
         </button>
       </div>
 
+      <!-- History panel mobile backdrop -->
+      <div v-if="historyOpen" class="history-mobile-backdrop" @click="historyOpen = false"></div>
+
       <!-- History panel -->
       <Transition name="history-slide">
         <aside v-if="historyOpen" class="history-panel" :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
@@ -347,10 +350,6 @@
 
           <h3 class="tutorial-title font-display">{{ currentTutorial.title }}</h3>
           <p class="tutorial-body">{{ currentTutorial.body }}</p>
-
-          <p v-if="showDemoHistory" class="tutorial-note">
-            Demo mode: the History panel is currently showing example data. Your real history is restored when the tutorial closes.
-          </p>
 
           <div v-if="currentTutorial.showDemo" class="tutorial-demo">
             <div class="demo-header">
@@ -2039,15 +2038,8 @@ watch(
   font-size: 13px;
 }
 
-.tutorial-note {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(14,198,212,0.95);
-  background: rgba(14,198,212,0.12);
-  border: 1px solid rgba(14,198,212,0.38);
-  border-radius: 8px;
-  padding: 8px 10px;
-  line-height: 1.35;
+.history-mobile-backdrop {
+  display: none;
 }
 
 .tutorial-demo {
@@ -2126,19 +2118,51 @@ watch(
     flex-shrink: 0;
     backdrop-filter: none;
   }
+
+  /* History panel: bottom sheet on mobile */
+  .history-mobile-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 49;
+    background: rgba(0,0,0,0.55);
+  }
   .history-panel {
-    display: none;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 56vh;
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-top: 1px solid rgba(255,255,255,0.09);
+    z-index: 50;
+  }
+  .history-slide-enter-from,
+  .history-slide-leave-to {
+    transform: translateY(100%);
   }
 
-  /* Tutorial: override ALL focus variants to a full-width bottom sheet.
+  /* Tutorial dim: clear the bottom area where the history panel sits */
+  .tutorial-shell.focus-history .tutorial-dim {
+    background: linear-gradient(
+      to bottom,
+      rgba(7, 8, 12, 0.52) 0,
+      rgba(7, 8, 12, 0.52) calc(44vh + 56px),
+      rgba(7, 8, 12, 0) calc(44vh + 56px)
+    );
+  }
+
+  /* Tutorial: override ALL non-history focus variants to a full-width bottom sheet.
      The desktop focus rules (.tutorial-card.focus-*) are more specific,
      so we must list them all here to win the cascade. */
   .tutorial-card,
   .tutorial-card.focus-header,
   .tutorial-card.focus-branches,
   .tutorial-card.focus-canvas,
-  .tutorial-card.focus-save,
-  .tutorial-card.focus-history {
+  .tutorial-card.focus-save {
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
@@ -2150,7 +2174,22 @@ watch(
     border-right: none;
     border-bottom: none;
     padding: 20px 20px 36px;
-    max-height: 60vh;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+
+  /* When history is shown: pin tutorial card just below the header so it
+     doesn't overlap the bottom-sheet history panel */
+  .tutorial-card.focus-history {
+    left: 12px !important;
+    right: 12px !important;
+    top: 68px !important;
+    bottom: auto !important;
+    width: auto !important;
+    transform: none !important;
+    border-radius: 14px;
+    padding: 16px 16px 18px;
+    max-height: calc(44vh - 20px);
     overflow-y: auto;
   }
 }

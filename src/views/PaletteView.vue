@@ -220,12 +220,12 @@
               @keydown.enter="!createNewBranch && doSave()"
             />
 
-            <label class="check-row">
+            <label v-if="currentBranchId === null" class="check-row">
               <input type="checkbox" v-model="createNewBranch" />
               <span>Save as a new branch</span>
             </label>
 
-            <div v-if="createNewBranch" class="field-group">
+            <div v-if="createNewBranch && currentBranchId === null" class="field-group">
               <label class="field-label">Branch name</label>
               <input
                 v-model="newBranchName"
@@ -647,6 +647,10 @@ const mobileSidebarOpen = ref(false)
 const showSaveModal = ref(false)
 const showAuthModal = ref(false)
 
+// Tracks which branch was active before snapshot selection so it can be restored on deselect.
+// undefined = no snapshot currently selected (distinct from null = main branch)
+const branchBeforeSelection = ref<number | null | undefined>(undefined)
+
 const mobileSidebarActiveBranches = computed(() =>
   allBranches.value.filter(b => !b.is_merged)
 )
@@ -898,6 +902,8 @@ watch([showTutorial, tutorialStep], ([open]) => {
 })
 
 function requestSave() {
+  // Can't create a new branch while already on a branch — reset stale checkbox state
+  if (currentBranchId.value !== null) createNewBranch.value = false
   if (!localStorage.getItem('access_token')) {
     showAuthModal.value = true
   } else {
@@ -1192,6 +1198,9 @@ function applyBranchState() {
 }
 
 async function switchBranch(id: number | null) {
+  // Clear any snapshot selection so the stale hint doesn't persist after switching branches
+  selectedSnapshotId.value = null
+  branchBeforeSelection.value = undefined
   currentBranchId.value = id
   applyBranchState()
 }
@@ -1429,6 +1438,13 @@ function onSelectSnapshot(id: number) {
     return
   }
 
+  // Save the current branch the first time the user selects a snapshot so we can restore
+  // it when they deselect. Without this, currentBranchId stays pointing at the snapshot's
+  // branch even after deselection, causing wrong parent context on the next save.
+  if (branchBeforeSelection.value === undefined) {
+    branchBeforeSelection.value = currentBranchId.value
+  }
+
   // Keep header branch selector in sync with selected snapshot context.
   // Merged-branch snapshots are treated as main for branch selection.
   let nextBranchId: number | null = null
@@ -1475,6 +1491,11 @@ function onHistoryRevertSnapshot(id: number) {
 
 function clearSnapshotSelection() {
   selectedSnapshotId.value = null
+  // Restore the branch the user was on before they selected the snapshot
+  if (branchBeforeSelection.value !== undefined) {
+    currentBranchId.value = branchBeforeSelection.value
+    branchBeforeSelection.value = undefined
+  }
   applyBranchState()
 }
 

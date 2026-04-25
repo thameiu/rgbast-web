@@ -17,7 +17,7 @@
       <form @submit.prevent="handleSubmit" class="space-y-5 relative z-10">
         <!-- Error Message -->
         <div v-if="errorMsg" class="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl font-medium">
-          {{ errorMsg }}
+          <p v-for="(line, i) in errorMsg.split('\n')" :key="i">{{ line }}</p>
         </div>
 
         <div>

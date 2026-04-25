@@ -55,7 +55,15 @@ export class ApiClient {
   private static async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      throw new Error(error.detail || `HTTP error ${response.status}`);
+      let message: string;
+      if (Array.isArray(error.detail)) {
+        message = error.detail
+          .map((e: any) => (e.msg ?? 'Validation error').replace(/^Value error,\s*/i, ''))
+          .join('\n');
+      } else {
+        message = error.detail || `HTTP error ${response.status}`;
+      }
+      throw new Error(message);
     }
     if (response.status === 204) {
       return undefined as T;

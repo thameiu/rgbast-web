@@ -19,7 +19,7 @@
       <form @submit.prevent="handleSubmit" class="space-y-5 relative z-10">
         <!-- Error Message -->
         <div v-if="errorMsg" class="p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl font-medium">
-          {{ errorMsg }}
+          <p v-for="(line, i) in errorMsg.split('\n')" :key="i">{{ line }}</p>
         </div>
         
         <!-- Success Message -->
@@ -56,15 +56,22 @@
 
         <div>
            <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-           <input 
-             type="password" 
-             id="password" 
+           <input
+             type="password"
+             id="password"
              v-model="form.password"
              required
              class="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-gray-900 focus:bg-white focus:ring-2 focus:ring-[#B410CC]/20 focus:border-[#B410CC] transition-all"
              placeholder="••••••••"
            />
-           <p class="mt-2 text-xs text-gray-500 leading-relaxed">
+           <div v-if="form.password" class="mt-2 space-y-1">
+             <div class="flex gap-1">
+               <div v-for="i in 5" :key="i" class="h-1 flex-1 rounded-full transition-colors duration-200"
+                 :class="i <= passwordScore ? strengthColor : 'bg-gray-200'"></div>
+             </div>
+             <p class="text-xs" :class="strengthTextColor">{{ strengthLabel }}</p>
+           </div>
+           <p v-else class="mt-2 text-xs text-gray-500 leading-relaxed">
              Must contain at least 8 characters, one uppercase, one lowercase, one number and one special character.
            </p>
         </div>
@@ -87,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { usersApi } from '@/api';
 
 const emit = defineEmits(['navigate']);
@@ -97,18 +104,54 @@ const loading = ref(false);
 const errorMsg = ref('');
 const successMsg = ref('');
 
+const PASSWORD_REGEX = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[#?!@$%^&*\-.]).{8,255}$/;
+
+const passwordScore = computed(() => {
+  const p = form.value.password;
+  if (!p) return 0;
+  let score = 0;
+  if (p.length >= 8) score++;
+  if (/[A-Z]/.test(p)) score++;
+  if (/[a-z]/.test(p)) score++;
+  if (/\d/.test(p)) score++;
+  if (/[#?!@$%^&*\-.]/.test(p)) score++;
+  return score;
+});
+
+const strengthColor = computed(() => {
+  if (passwordScore.value <= 2) return 'bg-red-400';
+  if (passwordScore.value <= 4) return 'bg-yellow-400';
+  return 'bg-green-500';
+});
+
+const strengthTextColor = computed(() => {
+  if (passwordScore.value <= 2) return 'text-red-500';
+  if (passwordScore.value <= 4) return 'text-yellow-600';
+  return 'text-green-600';
+});
+
+const strengthLabel = computed(() => {
+  if (passwordScore.value <= 2) return 'Weak — add uppercase, lowercase, number and special character (#?!@$%^&*-.)';
+  if (passwordScore.value <= 4) return 'Almost there — keep going';
+  return 'Strong password';
+});
+
 const handleSubmit = async () => {
+  if (!PASSWORD_REGEX.test(form.value.password)) {
+    errorMsg.value = 'Password is too weak.';
+    return;
+  }
   loading.value = true;
   errorMsg.value = '';
   successMsg.value = '';
-  
+
   try {
-    await usersApi.create({ 
+    await usersApi.create({
       username: form.value.username,
       email: form.value.email,
-      password: form.value.password 
+      password: form.value.password
     });
-    
+
     successMsg.value = 'Registration successful! Redirecting...';
     setTimeout(() => {
       emit('navigate', 'login');

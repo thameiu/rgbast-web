@@ -49,7 +49,7 @@
       <div class="mob-top">
         <RouterLink to="/" class="mob-brand" @click="closeSidebar">
           <RgbastLogo size="28px" />
-          <span class="mob-brand-name">RGBAST</span>
+          <span class="mob-brand-name"><span style="color:#B410CC">R</span><span style="color:#D56A88">G</span><span style="color:#F6C343">B</span><span style="color:#82C58C">A</span><span style="color:#0EC6D4">S</span><span style="color:#616BD0">T</span></span>
         </RouterLink>
         <button class="mob-close" @click="closeSidebar" aria-label="Close">×</button>
       </div>
@@ -149,9 +149,9 @@ function handleLogout() {
 .brand-name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 20px;
-  letter-spacing: -0.03em;
-  font-variation-settings: "opsz" 144, "SOFT" 0, "WONK" 0;
+  font-size: 28px;
+  line-height: 1;
+  padding-top: 3px;
 }
 .brand-meta {
   padding-left: 12px;
@@ -265,8 +265,9 @@ function handleLogout() {
 .mob-brand-name {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 18px;
-  letter-spacing: -0.03em;
+  font-size: 26px;
+  line-height: 1;
+  padding-top: 3px;
   color: #fff;
 }
 .mob-close {

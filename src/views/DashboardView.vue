@@ -243,7 +243,7 @@ async function doDeletePalette() {
   font-weight: 700;
   font-size: 35px;
   line-height: 1;
-  padding-bottom: 2px;
+  padding-top: 4px;
   border-radius: 16px;
 }
 .sidebar-name { margin-top: 18px; font-size: 30px; font-weight: 700; }

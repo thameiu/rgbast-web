@@ -123,9 +123,8 @@
         <!-- History panel -->
         <Transition name="history-slide">
           <aside v-if="historyOpen" class="history-panel"
-                 :style="{ '--panel-w': historyWidth + 'px' }"
                  :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
-            <div class="history-resize-handle" @mousedown.prevent="onHistoryResizeDown" />
+            <div class="history-resize-handle"/>
             <div class="history-header">
               <h2 class="history-title font-display">History</h2>
               <button class="close-btn" @click="historyOpen = false">×</button>

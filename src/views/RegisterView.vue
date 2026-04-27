@@ -329,7 +329,6 @@ async function handleRegister() {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 22px;
-  letter-spacing: -0.03em;
 }
 
 .panel-lede { max-width: 440px; }
@@ -347,9 +346,8 @@ async function handleRegister() {
 .panel-title {
   margin-top: 18px;
   font-size: clamp(44px, 5vw, 76px);
-  font-weight: 900;
+  font-weight: 700;
   line-height: 0.95;
-  letter-spacing: -0.02em;
 }
 .panel-title em {
   font-style: italic;
@@ -400,16 +398,16 @@ async function handleRegister() {
 .pc-name {
   display: block;
   font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 900;
-  letter-spacing: -0.01em;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.pc--big .pc-name  { font-size: 14px; }
-.pc--med .pc-name  { font-size: 12px; }
+.pc--big .pc-name  { font-size: 22px; }
+.pc--med .pc-name  { font-size: 19px; }
 
 .back-link {
   font-size: 11px;
@@ -449,9 +447,8 @@ async function handleRegister() {
 .form-title {
   margin-top: 6px;
   font-size: clamp(40px, 4vw, 56px);
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.01em;
   color: var(--ink);
 }
 .form-copy {

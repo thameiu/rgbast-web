@@ -1774,10 +1774,9 @@ watch(
 }
 
 .history-title {
-  font-family: 'Big Shoulders Display', sans-serif;
-  font-weight: 900;
-  font-size: 18px;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
   text-transform: uppercase;
   color: #fff;
 }
@@ -1833,11 +1832,10 @@ watch(
 }
 
 .modal-title {
-  font-family: 'Big Shoulders Display', sans-serif;
-  font-weight: 900;
-  font-size: 22px;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 33px;
   text-transform: uppercase;
-  letter-spacing: -0.02em;
   color: #fff;
   margin-bottom: 6px;
 }
@@ -2048,7 +2046,7 @@ watch(
 .tutorial-close:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
 .tutorial-title {
-  font-size: 22px;
+  font-size: 33px;
   margin-bottom: 8px;
   color: #ffffff;
 }
@@ -2250,10 +2248,9 @@ watch(
 }
 
 .msb-title {
-  font-family: 'Big Shoulders Display', sans-serif;
-  font-weight: 900;
-  font-size: 18px;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 28px;
   text-transform: uppercase;
   color: #fff;
 }

@@ -14,9 +14,7 @@
         <AppLoader v-if="loading" message="Loading palettes…" />
 
         <template v-else-if="user">
-          <div class="avatar">
-            {{ user.username?.charAt(0)?.toUpperCase() }}
-          </div>
+          <div class="avatar">{{ user.username?.charAt(0)?.toUpperCase() }}</div>
           <p class="sidebar-name font-display">{{ user.username }}</p>
           <p v-if="user.firstname || user.lastname" class="sidebar-fullname">
             {{ [user.firstname, user.lastname].filter(Boolean).join(' ') }}
@@ -242,12 +240,13 @@ async function doDeletePalette() {
   align-items: center;
   justify-content: center;
   font-family: var(--font-display);
-  font-weight: 900;
-  font-size: 28px;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  font-size: 35px;
+  line-height: 1;
+  padding-bottom: 2px;
   border-radius: 16px;
 }
-.sidebar-name { margin-top: 18px; font-size: 24px; font-weight: 900; letter-spacing: -0.02em; }
+.sidebar-name { margin-top: 18px; font-size: 30px; font-weight: 700; }
 .sidebar-fullname { margin-top: 3px; font-size: 14px; color: var(--ink-2); font-weight: 500; }
 .sidebar-email { margin-top: 4px; font-size: 12px; color: var(--ink-3); }
 .sidebar-stats {
@@ -257,7 +256,7 @@ async function doDeletePalette() {
 }
 .sidebar-stats div { display: flex; align-items: baseline; justify-content: space-between; }
 .sidebar-stats dt { font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
-.sidebar-stats dd { font-size: 20px; font-family: var(--font-display); font-weight: 900; color: var(--ink); letter-spacing: -0.02em; }
+.sidebar-stats dd { font-size: 25px; font-family: var(--font-display); font-weight: 700; color: var(--ink); }
 .muted { font-size: 13px; color: var(--ink-3); }
 .err { padding: 10px 12px; border: 1px solid rgba(179,32,50,.3); border-radius: 10px; background: rgba(179,32,50,.08); color: #862028; font-size: 13px; }
 
@@ -282,10 +281,9 @@ async function doDeletePalette() {
 }
 .content-title {
   margin-top: 14px;
-  font-size: clamp(40px, 5vw, 64px);
-  font-weight: 900;
+  font-size: clamp(50px, 6.25vw, 80px);
+  font-weight: 700;
   line-height: 1;
-  letter-spacing: -0.035em;
 }
 .content-title em { font-style: italic; color: var(--magenta-ink); }
 
@@ -297,9 +295,8 @@ async function doDeletePalette() {
   justify-content: space-between;
 }
 .section-title {
-  font-size: clamp(22px, 2.5vw, 28px);
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-size: clamp(28px, 3.1vw, 35px);
+  font-weight: 700;
 }
 .new-palette-btn {
   display: inline-flex;
@@ -400,7 +397,7 @@ async function doDeletePalette() {
 }
 
 .card-body { padding: 14px 16px 16px; }
-.card-title { font-size: 16px; font-weight: 900; letter-spacing: -0.01em; color: var(--ink); }
+.card-title { font-size: 20px; font-weight: 700; color: var(--ink); }
 .card-desc { margin-top: 4px; font-size: 12.5px; color: var(--ink-2); line-height: 1.4; }
 .card-meta { margin-top: 8px; font-size: 11px; color: var(--ink-3); }
 
@@ -430,9 +427,8 @@ async function doDeletePalette() {
   to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 .modal-title {
-  font-size: 22px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-size: 28px;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--ink);
   margin-bottom: 20px;

@@ -302,10 +302,9 @@ const dropdownStyle = ref({
 }
 
 .palette-name {
-  font-family: 'Big Shoulders Display', sans-serif;
-  font-weight: 900;
-  font-size: 17px;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
   text-transform: uppercase;
   color: #fff;
   overflow: hidden;

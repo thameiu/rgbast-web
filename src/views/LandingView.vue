@@ -227,10 +227,9 @@ const dummyHistory: PaletteHistoryGraphResponse = {
 
 .headline {
   margin-top: 24px;
-  font-weight: 900;
-  font-size: clamp(52px, 8vw, 112px);
-  line-height: 0.92;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  font-size: clamp(75px, 11.25vw, 160px);
+  line-height: 0.88;
   color: var(--ink);
   animation: riseIn .9s cubic-bezier(.2,.9,.2,1) .12s backwards;
 }
@@ -448,9 +447,8 @@ const dummyHistory: PaletteHistoryGraphResponse = {
 }
 .feat-title {
   margin-top: 10px;
-  font-size: 24px;
-  font-weight: 400;
-  letter-spacing: -0.03em;
+  font-size: 35px;
+  font-weight: 700;
   color: var(--ink);
 }
 .feat-body {

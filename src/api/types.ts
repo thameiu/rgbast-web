@@ -179,6 +179,26 @@ export interface PaletteByUsernameResponse {
   palettes: PaletteByUsernameItemResponse[];
 }
 
+// ── Palette generator ─────────────────────────────────────────────────────────
+
+export type PaletteHarmony =
+  | 'random' | 'analogous' | 'complementary'
+  | 'triadic' | 'split_complementary' | 'tetradic'
+
+export interface PaletteGenerateRequest {
+  count?: number          // 2–8, default 5
+  base_colors?: string[]  // 0–3 hex values (without #)
+  contrast?: number       // 1–10, default 5
+  include_shades?: boolean
+  harmony?: PaletteHarmony
+}
+
+export interface GeneratedColor { hex: string }
+
+export interface PaletteGenerateResponse {
+  colors: GeneratedColor[]
+}
+
 // ── Color contrast check ──────────────────────────────────────────────────────
 
 export interface ColorContrastCheckResponse {

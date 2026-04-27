@@ -1,5 +1,5 @@
 import { ApiClient } from './client'
-import type { ColorContrastCheckResponse, ColorInfoResponse } from './types'
+import type { ColorContrastCheckResponse, ColorInfoResponse, PaletteGenerateRequest, PaletteGenerateResponse } from './types'
 
 export const colorApi = {
   async getColorInfo(hex: string): Promise<ColorInfoResponse> {
@@ -10,5 +10,9 @@ export const colorApi = {
     return ApiClient.get<ColorContrastCheckResponse>(
       `/color/${hex1.replace('#', '')}/contrast/${hex2.replace('#', '')}`
     )
+  },
+
+  async generatePalette(request: PaletteGenerateRequest): Promise<PaletteGenerateResponse> {
+    return ApiClient.post<PaletteGenerateResponse>('/palette/generate', request)
   },
 }

@@ -85,6 +85,32 @@
           <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+      <!-- Undo / Redo arrows -->
+      <div class="undo-redo-group">
+        <button
+          class="undo-redo-btn"
+          :disabled="!canUndo"
+          title="Undo (Ctrl+Z)"
+          @click="$emit('undo')"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2.5 5H8a3 3 0 010 6H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4.5 2.5L2 5l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button
+          class="undo-redo-btn"
+          :disabled="!canRedo"
+          title="Redo (Ctrl+Y)"
+          @click="$emit('redo')"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M10.5 5H5a3 3 0 000 6h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.5 2.5L11 5l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
       <button
         class="action-btn secondary"
         @click="$emit('toggleHistory')"
@@ -96,6 +122,23 @@
         </svg>
         History
       </button>
+      <!-- Generate split-button -->
+      <div class="gen-btn-group">
+        <button class="gen-instant-btn" @click="$emit('generate')" title="Generate palette (Space)">
+          <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
+            <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+            <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+          </svg>
+          Generate
+        </button>
+        <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" title="Generate settings (Alt+Space)">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <circle cx="6" cy="6" r="1.8" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M6 1v1.2M6 9.8V11M1 6h1.2M9.8 6H11M2.2 2.2l.85.85M8.95 8.95l.85.85M9.8 2.2l-.85.85M3.05 8.95l-.85.85" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
       <button
         v-if="isOwned"
         class="action-btn primary"
@@ -122,9 +165,19 @@
       </button>
     </div>
 
-    <!-- Mobile right: unsaved indicator + history + hamburger -->
+    <!-- Mobile right: unsaved indicator + generate + history + hamburger -->
     <div class="mobile-right">
       <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
+      <button
+        class="gen-mobile-btn"
+        title="Generate (Space)"
+        @click="$emit('generate')"
+      >
+        <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+          <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+          <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+        </svg>
+      </button>
       <button
         class="history-mobile-btn"
         :class="{ active: historyOpen }"
@@ -169,6 +222,8 @@ const props = defineProps<{
   canDelete?: boolean
   tutorialFocus?: 'header' | 'branches' | 'save' | 'history' | null
   mobileMenuOpen?: boolean
+  canUndo?: boolean
+  canRedo?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -181,6 +236,10 @@ const emit = defineEmits<{
   deletePalette: []
   openTutorial: []
   hamburgerClick: []
+  generate: []
+  openGenerateSettings: []
+  undo: []
+  redo: []
 }>()
 
 const branchOpen = ref(false)
@@ -528,12 +587,103 @@ const dropdownStyle = ref({
 .hamburger-btn.open span:nth-child(2) { opacity: 0; width: 0; }
 .hamburger-btn.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
 
+/* Undo / redo */
+.undo-redo-group {
+  display: inline-flex;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.undo-redo-btn {
+  width: 30px;
+  height: 30px;
+  background: rgba(255,255,255,0.04);
+  border: none;
+  color: rgba(255,255,255,0.55);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.14s, color 0.14s;
+  flex-shrink: 0;
+}
+.undo-redo-btn + .undo-redo-btn {
+  border-left: 1px solid rgba(255,255,255,0.08);
+}
+.undo-redo-btn:not(:disabled):hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+.undo-redo-btn:disabled {
+  opacity: 0.22;
+  cursor: not-allowed;
+}
+
+/* Generate split-button */
+.gen-btn-group {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 8px;
+  border: 1px solid rgba(180, 16, 204, 0.32);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.gen-instant-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(180, 16, 204, 0.1);
+  border: none;
+  color: #d060e8;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+  white-space: nowrap;
+}
+.gen-instant-btn:hover { background: rgba(180, 16, 204, 0.22); color: #fff; }
+
+.gen-settings-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 8px;
+  background: rgba(180, 16, 204, 0.06);
+  border: none;
+  border-left: 1px solid rgba(180, 16, 204, 0.22);
+  color: rgba(208, 96, 232, 0.6);
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.gen-settings-btn:hover { background: rgba(180, 16, 204, 0.18); color: #d060e8; }
+
+/* Mobile generate icon */
+.gen-mobile-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid rgba(180, 16, 204, 0.28);
+  background: rgba(180, 16, 204, 0.08);
+  color: #d060e8;
+  cursor: pointer;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+.gen-mobile-btn:hover { background: rgba(180, 16, 204, 0.2); }
+
 /* ─── Mobile breakpoint ───────────────────────── */
 @media (max-width: 768px) {
   .center-group { display: none; }
   .right-group  { display: none; }
   .mobile-right { display: flex; }
   .left-group   { flex: 1; min-width: 0; }
-  .palette-name { max-width: calc(100vw - 140px); }
+  .palette-name { max-width: calc(100vw - 160px); }
+  .gen-mobile-btn { display: flex; }
 }
 </style>

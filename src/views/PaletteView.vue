@@ -14,6 +14,8 @@
       :canDelete="isOwned && !isNewPalette"
       :tutorialFocus="headerTutorialFocus"
       :mobileMenuOpen="mobileSidebarOpen"
+      :canUndo="canUndo"
+      :canRedo="canRedo"
       @back="router.push('/dashboard')"
       @save="requestSave"
       @clone="clonePalette"
@@ -23,6 +25,10 @@
       @deletePalette="showDeletePaletteModal = true"
       @openTutorial="openTutorial"
       @hamburgerClick="mobileSidebarOpen = !mobileSidebarOpen"
+      @generate="doGenerate"
+      @openGenerateSettings="generateOpen = true"
+      @undo="doUndo"
+      @redo="doRedo"
     />
 
     <!-- Loading state -->
@@ -69,70 +75,75 @@
         </div>
       </Transition>
 
-      <!-- Color columns -->
-      <div
-        ref="colsAreaEl"
-        class="columns-area"
-        :class="{ 'tutorial-focus': tutorialFocus === 'canvas' }"
-        @mousemove="onColsMouseMove"
-        @mouseleave="showAddBtn = false"
-      >
-        <TransitionGroup
-          tag="div"
-          class="cols-tg"
-          name="col"
-          move-class="col-move"
-          @before-enter="onBeforeEnter"
-          @enter="onEnter"
-          @leave="onLeave"
+        <!-- Color columns -->
+        <div
+          ref="colsAreaEl"
+          class="columns-area"
+          :class="{ 'tutorial-focus': tutorialFocus === 'canvas' }"
+          @mousemove="onColsMouseMove"
+          @mouseleave="showAddBtn = false"
         >
-          <ColorColumn
-            v-for="(col, i) in colors"
-            :key="col._key"
-            :modelValue="col"
-            :colKey="col._key"
-            :isDragging="draggedIdx === i"
-            :dragStyle="getColStyle(i)"
-            :swapSelected="swapSourceIdx === i"
-            @update:hex="hex => updateHex(i, hex)"
-            @update:label="lbl => updateLabel(i, lbl)"
-            @remove="removeColor(i)"
-            @dragStart="e => onDragStart(i, e)"
-            @swapTap="onSwapTap(i)"
-          />
-        </TransitionGroup>
+          <TransitionGroup
+            tag="div"
+            class="cols-tg"
+            name="col"
+            move-class="col-move"
+            @before-enter="onBeforeEnter"
+            @enter="onEnter"
+            @leave="onLeave"
+          >
+            <ColorColumn
+              v-for="(col, i) in colors"
+              :key="col._key"
+              :modelValue="col"
+              :colKey="col._key"
+              :isDragging="draggedIdx === i"
+              :dragStyle="getColStyle(i)"
+              :swapSelected="swapSourceIdx === i"
+              @update:hex="hex => updateHex(i, hex)"
+              @update:label="lbl => updateLabel(i, lbl)"
+              @remove="removeColor(i)"
+              @dragStart="e => onDragStart(i, e)"
+              @swapTap="onSwapTap(i)"
+            />
+          </TransitionGroup>
 
-        <!-- Add color button — only visible when near right edge -->
-        <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="addColor" title="Add color">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
+          <!-- Add color button — only visible when near right edge -->
+          <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="addColor" title="Add color">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </button>
 
-      <!-- History panel mobile backdrop -->
-      <div v-if="historyOpen" class="history-mobile-backdrop" @click="historyOpen = false"></div>
+        </div>
 
-      <!-- History panel -->
-      <Transition name="history-slide">
-        <aside v-if="historyOpen" class="history-panel" :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
-          <div class="history-header">
-            <h2 class="history-title font-display">History</h2>
-            <button class="close-btn" @click="historyOpen = false">×</button>
-          </div>
-          <HistoryGraph
-            v-if="historyForDisplay"
-            :history="historyForDisplay"
-            :selectedId="showDemoHistory ? null : selectedSnapshotId"
-            :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
-            @selectSnapshot="onHistorySelectSnapshot"
-            @selectBranch="onHistorySelectBranch"
-            @deleteBranch="onHistoryDeleteBranch"
-            @revertSnapshot="onHistoryRevertSnapshot"
-          />
-          <div v-else class="history-empty">No history yet.</div>
-        </aside>
-      </Transition>
+        <!-- History panel mobile backdrop -->
+        <div v-if="historyOpen" class="history-mobile-backdrop" @click="historyOpen = false"></div>
+
+        <!-- History panel -->
+        <Transition name="history-slide">
+          <aside v-if="historyOpen" class="history-panel"
+                 :style="{ '--panel-w': historyWidth + 'px' }"
+                 :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
+            <div class="history-resize-handle" @mousedown.prevent="onHistoryResizeDown" />
+            <div class="history-header">
+              <h2 class="history-title font-display">History</h2>
+              <button class="close-btn" @click="historyOpen = false">×</button>
+            </div>
+            <HistoryGraph
+              v-if="historyForDisplay"
+              :history="historyForDisplay"
+              :selectedId="showDemoHistory ? null : selectedSnapshotId"
+              :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
+              @selectSnapshot="onHistorySelectSnapshot"
+              @selectBranch="onHistorySelectBranch"
+              @deleteBranch="onHistoryDeleteBranch"
+              @revertSnapshot="onHistoryRevertSnapshot"
+            />
+            <div v-else class="history-empty">No history yet.</div>
+          </aside>
+        </Transition>
+
     </div>
 
     <!-- Save snapshot modal -->
@@ -338,6 +349,121 @@
       </div>
     </Teleport>
 
+    <!-- Generate palette modal -->
+    <Teleport to="body">
+      <div v-if="generateOpen" class="modal-overlay" @click.self="generateOpen = false">
+        <div class="modal gen-modal">
+          <h3 class="modal-title font-display">Generate</h3>
+
+          <label class="field-label">Colors — {{ genCount }}</label>
+          <input type="range" v-model.number="genCount" min="2" max="8" step="1" class="gen-range" />
+
+          <label class="field-label">Contrast — {{ genContrast }}</label>
+          <input type="range" v-model.number="genContrast" min="1" max="10" step="1" class="gen-range" />
+
+          <label class="field-label">Harmony</label>
+          <div class="gen-harmony-wrap">
+            <button ref="harmonyTriggerEl" class="gen-harmony-trigger" @click="toggleHarmonyDropdown()">
+              <span>{{ harmonyLabel }}</span>
+              <svg class="gen-dd-chevron" :class="{ rotated: harmonyOpen }" width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
+          <label class="field-label">Base colors (up to 3) — included in output</label>
+          <div class="gen-base-colors">
+            <div v-for="(_, i) in genBaseColors" :key="i" class="gen-base-row">
+              <div
+                class="gen-base-swatch gen-base-swatch--click"
+                :style="{ background: isValidHex(genBaseColors[i] ?? '') ? '#' + genBaseColors[i] : 'rgba(255,255,255,0.06)' }"
+                title="Pick color"
+                @click="openGenPicker(i, $event)"
+              ></div>
+              <input
+                :value="genBaseColors[i]"
+                class="modal-input gen-hex-input"
+                placeholder="e.g. FF6B35"
+                maxlength="7"
+                spellcheck="false"
+                @input="onBaseColorInput(i, $event)"
+              />
+              <!-- Palette color dropdown -->
+              <div class="gen-palette-dd-wrap">
+                <button
+                  class="gen-palette-dd-btn"
+                  :class="{ open: genPaletteDropIdx === i }"
+                  title="Select from palette"
+                  @click.stop="toggleGenPaletteDrop(i, $event)"
+                >
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                    <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <button class="gen-base-remove" @click="genBaseColors.splice(i, 1)">×</button>
+            </div>
+            <button v-if="genBaseColors.length < 3" class="gen-add-base" @click="genBaseColors.push('')">
+              + Add base color
+            </button>
+          </div>
+
+          <p v-if="generateError" class="modal-error">{{ generateError }}</p>
+
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="generateOpen = false">Cancel</button>
+            <button class="modal-btn confirm" :disabled="generateLoading" @click="doGenerate">
+              {{ generateLoading ? 'Generating…' : 'Generate' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Palette color dropdown for base colors (teleported above modal) -->
+      <div v-if="genPaletteDropIdx !== null" class="gen-palette-overlay" @click="genPaletteDropIdx = null"></div>
+      <div v-if="genPaletteDropIdx !== null" class="gen-palette-dropdown" :style="genPaletteDropStyle">
+        <div class="gen-palette-heading">Palette colors</div>
+        <button
+          v-for="col in colors"
+          :key="col._key"
+          class="gen-palette-opt"
+          @click="genBaseColors[genPaletteDropIdx!] = col.hex; genPaletteDropIdx = null"
+        >
+          <span class="gen-palette-dot" :style="{ background: '#' + col.hex }"></span>
+          <span class="gen-palette-hex">#{{ col.hex.toUpperCase() }}</span>
+          <span v-if="col.label" class="gen-palette-lbl">{{ col.label }}</span>
+        </button>
+        <div v-if="colors.length === 0" class="gen-palette-empty">No colors yet</div>
+      </div>
+
+      <!-- Color picker for base color swatch -->
+      <ColorPicker
+        v-if="genPickerOpenIdx !== null"
+        :modelValue="isValidHex(genBaseColors[genPickerOpenIdx!] ?? '') ? (genBaseColors[genPickerOpenIdx!] ?? 'FF6B35') : 'FF6B35'"
+        :anchorRect="genPickerAnchorRect ?? undefined"
+        @update:modelValue="hex => { if (genPickerOpenIdx !== null) genBaseColors[genPickerOpenIdx] = hex }"
+        @close="genPickerOpenIdx = null; genPickerAnchorRect = null"
+      />
+
+      <!-- Harmony custom dropdown (teleported to escape modal stacking context) -->
+      <div v-if="harmonyOpen" class="gen-harmony-overlay" @click="harmonyOpen = false"></div>
+      <Transition name="gen-dd-anim">
+        <div v-if="harmonyOpen" class="gen-harmony-menu" :style="harmonyDropStyle">
+          <button
+            v-for="opt in harmonyOptions"
+            :key="opt.value"
+            class="gen-harmony-opt"
+            :class="{ active: genHarmony === opt.value }"
+            @click="genHarmony = opt.value; harmonyOpen = false"
+          >
+            <span class="gen-harmony-label">{{ opt.label }}</span>
+            <span class="gen-harmony-desc">{{ opt.desc }}</span>
+            <span v-if="genHarmony === opt.value" class="gen-harmony-check">✓</span>
+          </button>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- Tutorial overlay -->
     <Teleport to="body">
       <div v-if="showTutorial" class="tutorial-shell" :class="{ 'focus-history': tutorialFocus === 'history' }">
@@ -508,15 +634,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
-import type { PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
+import { colorApi } from '@/api/color'
+import type { PaletteHistoryGraphResponse, PaletteColorSave, PaletteHarmony } from '@/api/types'
 import PaletteAppHeader from '@/components/PaletteAppHeader.vue'
 import ColorColumn from '@/components/ColorColumn.vue'
 import HistoryGraph from '@/components/HistoryGraph.vue'
 import AppLoader from '@/components/AppLoader.vue'
 import AuthModal from '@/components/AuthModal.vue'
+import ColorPicker from '@/components/ColorPicker.vue'
 import { getBranchColor } from '@/utils/branchColors'
 
 const route = useRoute()
@@ -943,6 +1071,7 @@ function onSwapTap(i: number) {
   } else if (swapSourceIdx.value === i) {
     swapSourceIdx.value = null
   } else {
+    captureForUndo()
     const arr = [...colors.value]
     const tmp = arr[swapSourceIdx.value]!
     arr[swapSourceIdx.value] = arr[i]!
@@ -984,6 +1113,7 @@ function getColStyle(i: number): Record<string, string> {
 }
 
 function onDragStart(i: number, e: PointerEvent) {
+  captureForUndo()
   // Clone the column BEFORE marking it as dragging so the clone captures the fully-visible state
   const key = colors.value[i]?._key
   if (key && colsAreaEl.value) {
@@ -1136,20 +1266,97 @@ async function onPointerUp() {
   }
 }
 
+// ── Frontend edit history (undo / redo) ───────────────────────────────────────
+interface HistorySnapshot {
+  colors: WorkingColor[]
+  selectedSnapshotId: number | null
+  currentBranchId: number | null
+  savedColorsSig: string
+}
+const undoPast = ref<HistorySnapshot[]>([])
+const undoFuture = ref<HistorySnapshot[]>([])
+const canUndo = computed(() => undoPast.value.length > 0)
+const canRedo = computed(() => undoFuture.value.length > 0)
+
+function captureForUndo() {
+  undoPast.value.push({
+    colors: colors.value.map(c => ({ ...c })),
+    selectedSnapshotId: selectedSnapshotId.value,
+    currentBranchId: currentBranchId.value,
+    savedColorsSig: savedColorsSig.value,
+  })
+  undoFuture.value = []
+  if (undoPast.value.length > 60) undoPast.value.shift()
+}
+
+function restoreHistorySnapshot(snap: HistorySnapshot) {
+  colors.value = snap.colors.map(c => ({ ...c }))
+  selectedSnapshotId.value = snap.selectedSnapshotId
+  currentBranchId.value = snap.currentBranchId
+  savedColorsSig.value = snap.savedColorsSig
+}
+
+function doUndo() {
+  if (!canUndo.value) return
+  undoFuture.value.push({
+    colors: colors.value.map(c => ({ ...c })),
+    selectedSnapshotId: selectedSnapshotId.value,
+    currentBranchId: currentBranchId.value,
+    savedColorsSig: savedColorsSig.value,
+  })
+  restoreHistorySnapshot(undoPast.value.pop()!)
+}
+
+function doRedo() {
+  if (!canRedo.value) return
+  undoPast.value.push({
+    colors: colors.value.map(c => ({ ...c })),
+    selectedSnapshotId: selectedSnapshotId.value,
+    currentBranchId: currentBranchId.value,
+    savedColorsSig: savedColorsSig.value,
+  })
+  restoreHistorySnapshot(undoFuture.value.pop()!)
+}
+
+function clearHistory() {
+  undoPast.value = []
+  undoFuture.value = []
+}
+
+// Debounce hex/label edits so typing doesn't create per-keystroke history entries
+let hexLabelEditing = false
+let hexLabelEditTimer: ReturnType<typeof setTimeout> | null = null
+
+function startHexLabelEdit() {
+  if (!hexLabelEditing) {
+    hexLabelEditing = true
+    captureForUndo()
+  }
+  if (hexLabelEditTimer) clearTimeout(hexLabelEditTimer)
+  hexLabelEditTimer = setTimeout(() => {
+    hexLabelEditing = false
+    hexLabelEditTimer = null
+  }, 1500)
+}
+
 // Color operations
 function updateHex(i: number, hex: string) {
+  startHexLabelEdit()
   const c = colors.value[i]
   if (c) colors.value[i] = { ...c, hex }
 }
 function updateLabel(i: number, label: string | null) {
+  startHexLabelEdit()
   const c = colors.value[i]
   if (c) colors.value[i] = { ...c, label }
 }
 function removeColor(i: number) {
   if (colors.value.length <= 1) return
+  captureForUndo()
   colors.value.splice(i, 1)
 }
 function addColor() {
+  captureForUndo()
   colors.value.push({ hex: randomHex(), label: null, _key: mkKey() })
 }
 function randomHex() {
@@ -1160,6 +1367,7 @@ function randomHex() {
 async function loadHistory() {
   loading.value = true
   error.value = null
+  clearHistory()
   try {
     history.value = await palettesApi.getHistory(paletteId.value)
     applyBranchState()
@@ -1198,7 +1406,7 @@ function applyBranchState() {
 }
 
 async function switchBranch(id: number | null) {
-  // Clear any snapshot selection so the stale hint doesn't persist after switching branches
+  captureForUndo()
   selectedSnapshotId.value = null
   branchBeforeSelection.value = undefined
   currentBranchId.value = id
@@ -1284,6 +1492,7 @@ async function doSave() {
     saveComment.value = ''
     createNewBranch.value = false
     newBranchName.value = ''
+    clearHistory()
   } catch (e: any) {
     saveError.value = e.message ?? 'Save failed'
   } finally {
@@ -1467,6 +1676,7 @@ function onSelectSnapshot(id: number) {
 
 function onHistorySelectSnapshot(id: number) {
   if (showDemoHistory.value) return
+  captureForUndo()
   onSelectSnapshot(id)
 }
 
@@ -1490,8 +1700,8 @@ function onHistoryRevertSnapshot(id: number) {
 }
 
 function clearSnapshotSelection() {
+  captureForUndo()
   selectedSnapshotId.value = null
-  // Restore the branch the user was on before they selected the snapshot
   if (branchBeforeSelection.value !== undefined) {
     currentBranchId.value = branchBeforeSelection.value
     branchBeforeSelection.value = undefined
@@ -1549,8 +1759,187 @@ function onLeave(el: Element, done: () => void) {
   e.addEventListener('transitionend', done, { once: true })
 }
 
+// ── Generator base-color picker & palette dropdown ───────────────────────────
+const genPickerOpenIdx = ref<number | null>(null)
+const genPickerAnchorRect = ref<DOMRect | null>(null)
+const genPaletteDropIdx = ref<number | null>(null)
+const genPaletteDropRect = ref<DOMRect | null>(null)
+
+const genPaletteDropStyle = computed(() => {
+  const r = genPaletteDropRect.value
+  if (!r) return {}
+  return { position: 'fixed' as const, top: `${r.bottom + 4}px`, left: `${r.left}px`, zIndex: '9999' }
+})
+
+function openGenPicker(i: number, e: MouseEvent) {
+  genPickerAnchorRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect()
+  genPickerOpenIdx.value = i
+  genPaletteDropIdx.value = null
+}
+
+function toggleGenPaletteDrop(i: number, e: MouseEvent) {
+  if (genPaletteDropIdx.value === i) {
+    genPaletteDropIdx.value = null
+  } else {
+    genPaletteDropRect.value = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    genPaletteDropIdx.value = i
+    genPickerOpenIdx.value = null
+  }
+}
+
+// ── Palette generator ─────────────────────────────────────────────────────────
+const generateOpen = ref(false)
+const generateLoading = ref(false)
+const generateError = ref('')
+const genCount = ref(5)
+const genContrast = ref(5)
+type GenHarmony = PaletteHarmony | 'shades'
+const genHarmony = ref<GenHarmony>('random')
+const genBaseColors = ref<string[]>([])
+
+// Harmony custom dropdown
+const harmonyOpen = ref(false)
+const harmonyTriggerEl = ref<HTMLButtonElement | null>(null)
+const harmonyDropStyle = ref<Record<string, string>>({})
+
+const harmonyOptions: Array<{ value: GenHarmony; label: string; desc: string }> = [
+  { value: 'random',             label: 'Random',             desc: 'Evenly spread hues' },
+  { value: 'analogous',          label: 'Analogous',          desc: 'Adjacent hues' },
+  { value: 'complementary',      label: 'Complementary',      desc: 'Opposite hues' },
+  { value: 'triadic',            label: 'Triadic',            desc: '3 equidistant hues' },
+  { value: 'split_complementary', label: 'Split compl.',      desc: 'Near-opposite pair' },
+  { value: 'tetradic',           label: 'Tetradic',           desc: '4 equidistant hues' },
+  { value: 'shades',             label: 'Shades',             desc: 'Tone families' },
+]
+
+const harmonyLabel = computed(() =>
+  harmonyOptions.find(o => o.value === genHarmony.value)?.label ?? 'Random'
+)
+
+function openHarmonyDropdown() {
+  if (!harmonyTriggerEl.value) return
+  const rect = harmonyTriggerEl.value.getBoundingClientRect()
+  harmonyDropStyle.value = {
+    position: 'fixed',
+    top:   `${rect.bottom + 5}px`,
+    left:  `${rect.left}px`,
+    width: `${rect.width}px`,
+    zIndex: '9999',
+  }
+  harmonyOpen.value = true
+}
+
+function toggleHarmonyDropdown() {
+  if (harmonyOpen.value) { harmonyOpen.value = false } else { openHarmonyDropdown() }
+}
+
+watch(generateOpen, open => {
+  if (!open) {
+    harmonyOpen.value = false
+    genPaletteDropIdx.value = null
+    genPickerOpenIdx.value = null
+  }
+})
+
+function isValidHex(hex: string): boolean {
+  return /^[0-9a-fA-F]{6}$/.test(hex)
+}
+
+function onBaseColorInput(i: number, e: Event) {
+  const val = (e.target as HTMLInputElement).value.replace('#', '').toUpperCase().slice(0, 6)
+  genBaseColors.value[i] = val
+}
+
+let lastGenerateMs = 0
+
+async function doGenerate() {
+  const now = Date.now()
+  if (now - lastGenerateMs < 1000) return
+  lastGenerateMs = now
+  generateLoading.value = true
+  generateError.value = ''
+  try {
+    const isShades = genHarmony.value === 'shades'
+    const result = await colorApi.generatePalette({
+      count: genCount.value,
+      contrast: genContrast.value,
+      harmony: isShades ? 'random' : (genHarmony.value as PaletteHarmony),
+      base_colors: genBaseColors.value.filter(h => isValidHex(h)),
+      include_shades: isShades,
+    })
+    captureForUndo()
+    colors.value = result.colors.map(c => ({ hex: c.hex, label: null, _key: mkKey() }))
+    generateOpen.value = false
+  } catch (e: any) {
+    generateError.value = e.message ?? 'Generation failed'
+  } finally {
+    generateLoading.value = false
+  }
+}
+
+// Keyboard shortcuts: Ctrl+Z/Y = undo/redo; Space = generate; Alt/Shift+Space = open settings
+// Strategy: keydown sets pending flags + blocks browser defaults; keyup fires the action.
+// This survives Ctrl-before-Z release order (e.ctrlKey is false on Z keyup if Ctrl released first).
+// Alt+Space on keyup handles Windows OS interception of the Space keydown.
+let altHeld = false
+let undoPending = false
+let redoPending = false
+
+function onKeydown(e: KeyboardEvent) {
+  if (e.key === 'Alt') { altHeld = true; return }
+
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey) {
+    e.preventDefault(); e.stopImmediatePropagation(); undoPending = true; return
+  }
+  if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey))) {
+    e.preventDefault(); e.stopImmediatePropagation(); redoPending = true; return
+  }
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
+    e.preventDefault(); e.stopImmediatePropagation(); requestSave(); return
+  }
+
+  const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
+  if (['input', 'textarea', 'select'].includes(tag) || (e.target as HTMLElement)?.isContentEditable) return
+
+  if (e.code !== 'Space') return
+  e.preventDefault(); e.stopImmediatePropagation()
+  if (!e.altKey && !e.shiftKey && !altHeld && !e.ctrlKey && !e.metaKey && !generateOpen.value) {
+    doGenerate()
+  }
+}
+
+function onKeyup(e: KeyboardEvent) {
+  if (e.key === 'Alt') { altHeld = false; return }
+
+  // Fire pending undo/redo when the key is released — Ctrl may already be up by now
+  if (e.code === 'KeyZ' && undoPending) {
+    undoPending = false; doUndo(); return
+  }
+  if ((e.code === 'KeyZ' || e.code === 'KeyY') && redoPending) {
+    redoPending = false; doRedo(); return
+  }
+
+  if (e.code !== 'Space') return
+  const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
+  if (['input', 'textarea', 'select'].includes(tag) || (e.target as HTMLElement)?.isContentEditable) return
+  if (e.altKey || e.shiftKey || altHeld) {
+    e.preventDefault(); e.stopImmediatePropagation()
+    generateOpen.value = true
+    altHeld = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onKeydown, { capture: true })
+  document.addEventListener('keyup', onKeyup, { capture: true })
+})
+onUnmounted(() => {
+  document.removeEventListener('keydown', onKeydown, { capture: true })
+  document.removeEventListener('keyup', onKeyup, { capture: true })
+})
+
 function initNewPaletteDraft() {
-  // Reset any state from a previously opened palette view.
+  clearHistory()
   history.value = null
   latestSnapshotId.value = null
   selectedSnapshotId.value = null
@@ -2462,4 +2851,252 @@ watch(
 .sidebar-panel-leave-active { transition: transform 0.22s cubic-bezier(0.4, 0, 1, 1); }
 .sidebar-panel-enter-from,
 .sidebar-panel-leave-to { transform: translateX(100%); }
+
+/* ─── Generate modal extras ─── */
+.gen-range {
+  display: block;
+  width: 100%;
+  accent-color: #b410cc;
+  margin-bottom: 18px;
+  cursor: pointer;
+  height: 4px;
+}
+
+/* Harmony custom dropdown */
+.gen-harmony-wrap {
+  position: relative;
+  margin-bottom: 16px;
+}
+
+.gen-harmony-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #fff;
+  font-size: 14px;
+  font-family: 'Sora', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  text-align: left;
+}
+.gen-harmony-trigger:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.07); }
+
+.gen-dd-chevron {
+  color: rgba(255,255,255,0.4);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.gen-dd-chevron.rotated { transform: rotate(180deg); }
+
+/* Teleported overlay */
+.gen-harmony-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+
+/* Teleported menu */
+.gen-harmony-menu {
+  background: #18181f;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.7);
+  overflow: hidden;
+}
+
+.gen-harmony-opt {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  padding: 9px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.gen-harmony-opt:hover { background: rgba(255,255,255,0.06); }
+.gen-harmony-opt.active { background: rgba(180, 16, 204, 0.12); }
+
+.gen-harmony-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  flex: 1;
+}
+.gen-harmony-desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.35);
+  margin-right: 8px;
+}
+.gen-harmony-check {
+  font-size: 11px;
+  color: #b410cc;
+  flex-shrink: 0;
+}
+
+.gen-dd-anim-enter-active { transition: opacity 0.15s ease, transform 0.15s cubic-bezier(0.2,0.9,0.2,1); }
+.gen-dd-anim-leave-active { transition: opacity 0.1s ease, transform 0.1s ease; }
+.gen-dd-anim-enter-from   { opacity: 0; transform: translateY(-6px); }
+.gen-dd-anim-leave-to     { opacity: 0; transform: translateY(-4px); }
+
+.gen-base-colors {
+  margin-bottom: 16px;
+}
+
+.gen-base-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.gen-base-swatch {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  flex-shrink: 0;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.gen-base-swatch--click {
+  cursor: pointer;
+}
+.gen-base-swatch--click:hover {
+  border-color: rgba(255,255,255,0.3);
+  box-shadow: 0 0 0 2px rgba(180,16,204,0.25);
+}
+
+/* Palette color dropdown button */
+.gen-palette-dd-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.gen-palette-dd-btn {
+  width: 28px;
+  height: 30px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  color: rgba(255,255,255,0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.13s, border-color 0.13s, color 0.13s;
+  flex-shrink: 0;
+}
+.gen-palette-dd-btn:hover,
+.gen-palette-dd-btn.open {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.22);
+  color: rgba(255,255,255,0.8);
+}
+
+/* Teleported palette dropdown */
+.gen-palette-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+}
+.gen-palette-dropdown {
+  background: #18181f;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 5px;
+  min-width: 200px;
+  max-width: 260px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.75);
+  z-index: 9999;
+  overflow: hidden;
+}
+.gen-palette-heading {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  padding: 5px 8px 7px;
+}
+.gen-palette-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.gen-palette-opt:hover { background: rgba(255,255,255,0.07); }
+.gen-palette-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.gen-palette-hex {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  font-family: monospace;
+  letter-spacing: 0.02em;
+}
+.gen-palette-lbl {
+  font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  text-align: right;
+}
+.gen-palette-empty {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  padding: 10px 8px;
+  text-align: center;
+}
+
+.gen-hex-input {
+  flex: 1;
+  margin-bottom: 0 !important;
+}
+
+.gen-base-remove {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.15s;
+  flex-shrink: 0;
+}
+.gen-base-remove:hover { color: rgba(255, 90, 90, 0.85); }
+
+.gen-add-base {
+  width: 100%;
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: rgba(255,255,255,0.35);
+  font-size: 12px;
+  padding: 7px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.gen-add-base:hover { border-color: rgba(255,255,255,0.3); color: rgba(255,255,255,0.65); }
 </style>

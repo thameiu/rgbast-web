@@ -151,9 +151,9 @@ async function doRegister() {
 }
 .auth-headline {
   flex: 1;
-  font-size: 17px;
-  font-weight: 900;
-  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+  font-size: 33px;
+  font-weight: 700;
   text-transform: uppercase;
   color: #fff;
 }

@@ -12,9 +12,8 @@
         </p>
 
         <h1 class="headline font-display">
-          Color, <em>committed.</em>
-          <span class="headline-line">Branch, merge, revert</span>
-          <span class="headline-line">your palette&nbsp;like code.</span>
+          Commit, branch, merge
+          <span class="headline-line">your <em>colors.</em></span>
         </h1>
 
         <p class="lede">

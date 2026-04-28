@@ -1,0 +1,186 @@
+.tutorial-shell {
+  position: fixed;
+  inset: 0;
+  z-index: 320;
+  pointer-events: none;
+}
+
+.tutorial-dim {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 8, 12, 0.52);
+}
+
+.tutorial-shell.focus-history .tutorial-dim {
+  background: linear-gradient(
+    to left,
+    rgba(7, 8, 12, 0) 0,
+    rgba(7, 8, 12, 0) 420px,
+    rgba(7, 8, 12, 0.52) 420px,
+    rgba(7, 8, 12, 0.52) 100%
+  );
+}
+
+.tutorial-card {
+  position: absolute;
+  right: 22px;
+  top: 76px;
+  width: min(420px, calc(100vw - 28px));
+  background: rgba(16, 17, 24, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.62);
+  padding: 16px 16px 14px;
+  pointer-events: auto;
+}
+
+.tutorial-card.focus-header {
+  top: 72px;
+  right: 22px;
+}
+
+.tutorial-card.focus-branches,
+.tutorial-card.focus-canvas {
+  top: 72px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+}
+
+.tutorial-card.focus-history {
+  top: 72px;
+  right: 410px;
+}
+
+.tutorial-card.focus-save {
+  top: 72px;
+  right: 22px;
+}
+
+.tutorial-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.tutorial-step {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 700;
+}
+
+.tutorial-close {
+  border: none;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 18px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+}
+
+.tutorial-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tutorial-title {
+  font-size: 33px;
+  margin-bottom: 8px;
+  color: #ffffff;
+}
+
+.tutorial-body {
+  color: rgba(255, 255, 255, 0.72);
+  line-height: 1.5;
+  font-size: 13px;
+}
+
+.tutorial-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.modal-btn.cancel {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.modal-btn.cancel:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.modal-btn.confirm {
+  background: #b410cc;
+  border: 1px solid transparent;
+  color: #fff;
+}
+
+.modal-btn.confirm:hover:not(:disabled) {
+  background: #9a0db0;
+}
+
+.modal-btn.confirm:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .tutorial-shell.focus-history .tutorial-dim {
+    background: linear-gradient(
+      to bottom,
+      rgba(7, 8, 12, 0.52) 0,
+      rgba(7, 8, 12, 0.52) calc(44vh + 56px),
+      rgba(7, 8, 12, 0) calc(44vh + 56px)
+    );
+  }
+
+  .tutorial-card,
+  .tutorial-card.focus-header,
+  .tutorial-card.focus-branches,
+  .tutorial-card.focus-canvas,
+  .tutorial-card.focus-save {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    top: auto !important;
+    width: 100% !important;
+    transform: none !important;
+    border-radius: 18px 18px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    padding: 20px 20px 36px;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
+
+  .tutorial-card.focus-history {
+    left: 12px !important;
+    right: 12px !important;
+    top: 68px !important;
+    bottom: auto !important;
+    width: auto !important;
+    transform: none !important;
+    border-radius: 14px;
+    padding: 16px 16px 18px;
+    max-height: calc(44vh - 20px);
+    overflow-y: auto;
+  }
+}

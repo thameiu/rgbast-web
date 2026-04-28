@@ -1,0 +1,180 @@
+.hg-wrap {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Branch filter bar */
+.branch-filter-bar {
+  position: sticky;
+  top: 0;
+  z-index: 7;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  background: #171720;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  font-size: 11px;
+  color: rgba(255,255,255,0.72);
+}
+.branch-filter-bar strong { color: #ffffff; }
+.filter-actions { display: flex; align-items: center; gap: 6px; }
+.filter-delete {
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.2);
+  border-radius: 5px;
+  color: rgba(255,100,100,0.55);
+  display: flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s, background 0.12s;
+}
+.filter-delete:hover { color: rgba(255,120,120,0.9); border-color: rgba(255,80,80,0.5); background: rgba(255,80,80,0.08); }
+.filter-clear {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 5px;
+  color: rgba(255,255,255,0.45);
+  font-size: 10px;
+  padding: 2px 7px;
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+.filter-clear:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
+
+.hg-inner { position: relative; }
+.hg-svg   { position: absolute; top: 0; left: 0; }
+
+.commit-info {
+  position: absolute; right: 0; height: 80px;
+  display: flex; flex-direction: column; justify-content: center; gap: 3px;
+  padding: 0 80px 0 12px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.12s, opacity 0.15s;
+}
+.commit-info:hover { background: rgba(255,255,255,0.04); }
+.commit-info.selected {
+  background: rgba(180,16,204,0.12);
+  box-shadow: inset 0 0 0 1px rgba(180,16,204,0.3);
+  z-index: 4;
+}
+.commit-info.dimmed { opacity: 0.25; }
+.commit-info.branch-hovered { background: rgba(255,255,255,0.035); }
+
+.commit-top {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 20px;
+  margin-top: 3px;
+}
+
+/* Change indicator — top-right of each commit row */
+.change-corner {
+  position: absolute;
+  top: 10px; right: 12px;
+  display: flex; align-items: center; gap: 5px;
+}
+.change-summary {
+  display: flex; gap: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 9.5px; font-weight: 700; letter-spacing: 0.04em;
+}
+.cs-add  { color: #2faa45; }
+.cs-del  { color: #e04444; }
+.cs-mod  { color: #4d96ff; }
+
+.change-badge {
+  width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0;
+}
+.dot-init { background: rgba(255,255,255,0.18); }
+.dot-add  { background: #2faa45; box-shadow: 0 0 0 2px rgba(47,170,69,0.25); }
+.dot-del  {
+  background: #e04444;
+  box-shadow: 0 0 0 2px rgba(224,68,68,0.25);
+  position: relative; overflow: hidden;
+}
+.dot-del::after {
+  content: '';
+  position: absolute; inset: -1px;
+  background: linear-gradient(
+    45deg,
+    transparent 40%,
+    rgba(255,255,255,0.75) 40%, rgba(255,255,255,0.75) 60%,
+    transparent 60%
+  );
+}
+.dot-edit { background: #4d96ff; box-shadow: 0 0 0 2px rgba(77,150,255,0.25); }
+
+.cubes-row {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.more-cubes { font-size: 10px; color: rgba(255,255,255,0.4); }
+
+.badge {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; padding: 2px 6px; border-radius: 4px; border: 1px solid;
+  flex-shrink: 0;
+}
+.merge-badge  { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.45); }
+.branch-badge {
+  border-color: currentColor;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.commit-msg  {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.commit-msg.expanded {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+  max-width: 300px;
+  line-height: 1.3;
+  word-break: break-word;
+}
+.commit-time { font-size: 10px; color: rgba(255,255,255,0.3); letter-spacing: 0.03em; }
+
+.node-revert {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  background: transparent;
+  border: 1px solid rgba(255,80,80,0.35);
+  color: rgba(255,120,120,0.95);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.node-revert:hover {
+  border-color: rgba(255,80,80,0.6);
+  background: rgba(255,80,80,0.12);
+  color: rgba(255,150,150,1);
+}

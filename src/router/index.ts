@@ -1,11 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import LandingView from '@/views/LandingView.vue'
-import LoginView from '@/views/LoginView.vue'
-import RegisterView from '@/views/RegisterView.vue'
-import DashboardView from '@/views/DashboardView.vue'
-import PaletteView from '@/views/PaletteView.vue'
-import ColorView from '@/views/ColorView.vue'
+import LandingView from '@/views/landing/LandingView.vue'
+import LoginView from '@/views/auth/LoginView.vue'
+import RegisterView from '@/views/auth/RegisterView.vue'
+import DashboardView from '@/views/dashboard/DashboardView.vue'
+import PaletteView from '@/views/palette/PaletteView.vue'
+import ColorView from '@/views/color/ColorView.vue'
 
 const router = createRouter({
   history: createWebHistory(),

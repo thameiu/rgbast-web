@@ -75,74 +75,71 @@
         </div>
       </Transition>
 
-        <!-- Color columns -->
-        <div
-          ref="colsAreaEl"
-          class="columns-area"
-          :class="{ 'tutorial-focus': tutorialFocus === 'canvas' }"
-          @mousemove="onColsMouseMove"
-          @mouseleave="showAddBtn = false"
+      <!-- Color columns -->
+      <div
+        ref="colsAreaEl"
+        class="columns-area"
+        :class="{ 'tutorial-focus': tutorialFocus === 'canvas' }"
+        @mousemove="onColsMouseMove"
+        @mouseleave="showAddBtn = false"
+      >
+        <TransitionGroup
+          tag="div"
+          class="cols-tg"
+          name="col"
+          move-class="col-move"
+          @before-enter="onBeforeEnter"
+          @enter="onEnter"
+          @leave="onLeave"
         >
-          <TransitionGroup
-            tag="div"
-            class="cols-tg"
-            name="col"
-            move-class="col-move"
-            @before-enter="onBeforeEnter"
-            @enter="onEnter"
-            @leave="onLeave"
-          >
-            <ColorColumn
-              v-for="(col, i) in colors"
-              :key="col._key"
-              :modelValue="col"
-              :colKey="col._key"
-              :isDragging="draggedIdx === i"
-              :dragStyle="getColStyle(i)"
-              :swapSelected="swapSourceIdx === i"
-              @update:hex="hex => updateHex(i, hex)"
-              @update:label="lbl => updateLabel(i, lbl)"
-              @remove="removeColor(i)"
-              @dragStart="e => onDragStart(i, e)"
-              @swapTap="onSwapTap(i)"
-            />
-          </TransitionGroup>
+          <ColorColumn
+            v-for="(col, i) in colors"
+            :key="col._key"
+            :modelValue="col"
+            :colKey="col._key"
+            :isDragging="draggedIdx === i"
+            :dragStyle="getColStyle(i)"
+            :swapSelected="swapSourceIdx === i"
+            @update:hex="hex => updateHex(i, hex)"
+            @update:label="lbl => updateLabel(i, lbl)"
+            @remove="removeColor(i)"
+            @dragStart="e => onDragStart(i, e)"
+            @swapTap="onSwapTap(i)"
+          />
+        </TransitionGroup>
 
-          <!-- Add color button — only visible when near right edge -->
-          <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="addColor" title="Add color">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </button>
+        <!-- Add color button — only visible when near right edge -->
+        <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="addColor" title="Add color">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
 
-        </div>
+      </div>
 
-        <!-- History panel mobile backdrop -->
-        <div v-if="historyOpen" class="history-mobile-backdrop" @click="historyOpen = false"></div>
+      <!-- History panel mobile backdrop -->
+      <div v-if="historyOpen" class="history-mobile-backdrop" @click="historyOpen = false"></div>
 
-        <!-- History panel -->
-        <Transition name="history-slide">
-          <aside v-if="historyOpen" class="history-panel"
-                 :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
-            <div class="history-resize-handle"/>
-            <div class="history-header">
-              <h2 class="history-title font-display">History</h2>
-              <button class="close-btn" @click="historyOpen = false">×</button>
-            </div>
-            <HistoryGraph
-              v-if="historyForDisplay"
-              :history="historyForDisplay"
-              :selectedId="showDemoHistory ? null : selectedSnapshotId"
-              :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
-              @selectSnapshot="onHistorySelectSnapshot"
-              @selectBranch="onHistorySelectBranch"
-              @deleteBranch="onHistoryDeleteBranch"
-              @revertSnapshot="onHistoryRevertSnapshot"
-            />
-            <div v-else class="history-empty">No history yet.</div>
-          </aside>
-        </Transition>
-
+      <!-- History panel -->
+      <Transition name="history-slide">
+        <aside v-if="historyOpen" class="history-panel" :class="{ 'tutorial-focus': tutorialFocus === 'history' }">
+          <div class="history-header">
+            <h2 class="history-title font-display">History</h2>
+            <button class="close-btn" @click="historyOpen = false">×</button>
+          </div>
+          <HistoryGraph
+            v-if="historyForDisplay"
+            :history="historyForDisplay"
+            :selectedId="showDemoHistory ? null : selectedSnapshotId"
+            :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
+            @selectSnapshot="onHistorySelectSnapshot"
+            @selectBranch="onHistorySelectBranch"
+            @deleteBranch="onHistoryDeleteBranch"
+            @revertSnapshot="onHistoryRevertSnapshot"
+          />
+          <div v-else class="history-empty">No history yet.</div>
+        </aside>
+      </Transition>
     </div>
 
     <!-- Save snapshot modal -->
@@ -475,25 +472,6 @@
 
           <h3 class="tutorial-title font-display">{{ currentTutorial.title }}</h3>
           <p class="tutorial-body">{{ currentTutorial.body }}</p>
-
-          <div v-if="currentTutorial.showDemo" class="tutorial-demo">
-            <div class="demo-header">
-              <span>main</span>
-              <span class="demo-branch">draft/warm-variant</span>
-            </div>
-            <div class="demo-row">
-              <span class="demo-dot main"></span>
-              <span>main: Approved baseline palette</span>
-            </div>
-            <div class="demo-row">
-              <span class="demo-dot draft"></span>
-              <span>branch: A draft you can merge, park, or delete</span>
-            </div>
-            <div class="demo-row">
-              <span class="demo-dot revert"></span>
-              <span>revert: Keep one snapshot and drop newer draft commits</span>
-            </div>
-          </div>
 
           <div class="tutorial-actions">
             <button class="modal-btn cancel" :disabled="tutorialStep === 0" @click="prevTutorialStep">Back</button>
@@ -955,30 +933,25 @@ const tutorialDemoHistory: PaletteHistoryGraphResponse = {
 
 const tutorialSteps: TutorialStep[] = [
   {
-    title: 'Palette Basics: Main + Snapshots',
-    body: 'Your palette is a timeline of snapshots. A snapshot stores the full visible color state at save time, plus a commit message. Main is the main branch: the current true version of the palette.',
+    title: 'Snapshots',
+    body: 'Your palette is a timeline of snapshots. Each save stores the full color state plus a commit message.',
     focus: 'header',
   },
   {
-    title: 'Branches = Draft Tracks',
-    body: 'Treat branches as drafts. You can explore ideas without touching main, then merge when validated, keep them parked, or delete unmerged drafts.',
+    title: 'Branches',
+    body: 'Branches are draft tracks. Explore ideas without touching main, then merge when happy or discard.',
     focus: 'branches',
   },
   {
-    title: 'Old Snapshot Rules (Important)',
-    body: 'If you edit an older snapshot from the main branch (the current true version), saving creates a new branch from that point. If you edit an older snapshot inside a branch, saving updates that same branch (it does not create another branch by default).',
-    focus: 'canvas',
-  },
-  {
-    title: 'Concrete Example History',
-    body: 'This panel is now showing demo history: one draft merged into main, and another draft branch with multiple commits. Watch lines, badges, and change counters.',
+    title: 'Example History',
+    body: 'Demo history: one draft merged into main, another branch with multiple commits. Watch the lines, badges, and change counters.',
     focus: 'history',
     showHistory: true,
     showDemo: true,
     useDemoHistory: true,
   },
   {
-    title: 'Merge and Revert, In Practice',
+    title: 'Merge and Revert',
     body: 'Merge promotes a draft to main as a validated result. Revert on a branch deletes newer snapshots after a selected point, so you can keep a stable draft state and discard risky commits.',
     focus: 'history',
     showHistory: true,
@@ -986,8 +959,13 @@ const tutorialSteps: TutorialStep[] = [
     useDemoHistory: true,
   },
   {
-    title: 'Save Snapshot and Continue',
-    body: 'When you are happy with current colors, save a snapshot. Your real history returns right after the tutorial, and you can continue working from your actual data.',
+    title: 'Old Snapshot Rules (Important)',
+    body: 'If you edit an older snapshot from the main branch (the current true version), saving creates a new branch from that point. If you edit an older snapshot inside a branch, saving updates that same branch (it does not create another branch by default).',
+    focus: 'canvas',
+  },
+  {
+    title: 'Save and Continue',
+    body: 'When happy with the current colors, save a snapshot. Your real history returns right after the tutorial.',
     focus: 'save',
   },
 ]
@@ -1899,6 +1877,10 @@ function onKeydown(e: KeyboardEvent) {
 
   const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
   if (['input', 'textarea', 'select'].includes(tag) || (e.target as HTMLElement)?.isContentEditable) return
+
+  if (e.code === 'KeyH' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    historyOpen.value = !historyOpen.value; return
+  }
 
   if (e.code !== 'Space') return
   e.preventDefault(); e.stopImmediatePropagation()

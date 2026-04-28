@@ -191,12 +191,13 @@
  * Right panel: username/email/password form with optional identity fields.
  * On success, auto-logs in and redirects to /dashboard.
  */
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { authApi, usersApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 
 const router = useRouter()
+onMounted(() => { document.title = 'Create account - RGBAST' })
 
 /** All form field values including optional identity details. */
 const form = ref({ username: '', email: '', password: '', firstname: '', lastname: '', birthdate: '' })

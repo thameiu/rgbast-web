@@ -155,6 +155,7 @@ async function loadDashboard() {
 }
 
 onMounted(() => {
+  document.title = 'Dashboard - RGBAST'
   void loadDashboard()
 })
 

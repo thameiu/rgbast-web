@@ -163,12 +163,13 @@
  * Left panel: decorative scattered palette cards with concentric rings.
  * Right panel: username/password form that calls authApi.login and redirects to /dashboard.
  */
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 
 const router = useRouter()
+onMounted(() => { document.title = 'Sign in - RGBAST' })
 
 /** Form field values. */
 const form = ref({ username: '', password: '' })

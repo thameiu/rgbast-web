@@ -7,17 +7,17 @@
         </template>
         <template v-else-if="ctx?.isMain">
           <template v-if="!isSelectedLatestMainSnapshot">
-            Viewing a past snapshot -- saving will create a <strong>new branch</strong> from this point.
+            Viewing a past snapshot - saving will create a <strong>new branch</strong> from this point.
           </template>
           <template v-else>
             Viewing the latest snapshot.
           </template>
         </template>
         <template v-else-if="ctx?.isMerged">
-          Viewing a past snapshot from a merged branch -- saving will create a <strong>new branch</strong> from this point.
+          Viewing a past snapshot from a merged branch - saving will create a <strong>new branch</strong> from this point.
         </template>
         <template v-else>
-          Viewing a past snapshot -- saving will create a new commit on branch <strong>{{ ctx?.branchTitle }}</strong>.
+          Viewing a past snapshot - saving will create a new commit on branch <strong>{{ ctx?.branchTitle }}</strong>.
         </template>
       </span>
       <div class="banner-actions">

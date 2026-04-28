@@ -4,7 +4,7 @@
       <div class="modal gen-modal">
         <h3 class="modal-title font-display">Generate</h3>
 
-        <label class="field-label">Colors -- {{ genCount }}</label>
+        <label class="field-label">Colors - {{ genCount }}</label>
         <input
           type="range"
           :value="genCount"
@@ -15,7 +15,7 @@
           @input="$emit('update:genCount', Number(($event.target as HTMLInputElement).value))"
         />
 
-        <label class="field-label">Contrast -- {{ genContrast }}</label>
+        <label class="field-label">Contrast - {{ genContrast }}</label>
         <input
           type="range"
           :value="genContrast"
@@ -36,7 +36,7 @@
           </button>
         </div>
 
-        <label class="field-label">Base colors (up to 3) -- included in output</label>
+        <label class="field-label">Base colors (up to 3) - included in output</label>
         <div class="gen-base-colors">
           <div v-for="(_, i) in genBaseColors" :key="i" class="gen-base-row">
             <div

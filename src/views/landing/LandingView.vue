@@ -120,6 +120,7 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import RgbBackground from '@/components/layout/RgbBackground.vue'
@@ -128,6 +129,8 @@ import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
 
 // LandingView component: marketing home page with a demo history graph.
+onMounted(() => { document.title = 'RGBAST — version control for color' })
+
 const now = Date.now()
 const dummyHistory: PaletteHistoryGraphResponse = {
   owner_username: 'demo-user',

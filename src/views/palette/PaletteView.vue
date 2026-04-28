@@ -237,6 +237,7 @@ import PaletteRevertModal from './components/modals/PaletteRevertModal.vue'
 import PaletteGenerateModal from './components/modals/PaletteGenerateModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
+import { watch } from 'vue'
 import { usePaletteContext } from './composables/usePaletteContext'
 import { usePaletteUndo } from './composables/usePaletteUndo'
 import { usePaletteInteractions } from './composables/usePaletteInteractions'
@@ -327,6 +328,22 @@ function setGenPickerOpenIdx(value: number | null): void {
 function setGenPickerAnchorRect(value: DOMRect | null): void {
   generator.genPickerAnchorRect.value = value
 }
+
+// Update the browser tab title whenever the palette name or owner changes.
+watch(
+  [ctx.paletteTitle, () => ctx.history.value?.owner_username, ctx.isNewPalette],
+  () => {
+    if (ctx.isNewPalette.value) {
+      document.title = 'New palette - RGBAST'
+    } else {
+      const owner = ctx.history.value?.owner_username
+      document.title = owner
+        ? `${ctx.paletteTitle.value} by ${owner} - RGBAST`
+        : `${ctx.paletteTitle.value} - RGBAST`
+    }
+  },
+  { immediate: true },
+)
 
 // Initialize palette loading when the route changes.
 ctx.startRouteWatch(undo.clearHistory)

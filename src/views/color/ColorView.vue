@@ -359,6 +359,7 @@
 </template>
 
 <script setup lang="ts">
+import { watch } from 'vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
@@ -402,6 +403,8 @@ const {
   copyHex,
   copySpace,
 } = view
+
+watch(displayHex, hex => { document.title = `#${hex.toUpperCase()} - RGBAST` }, { immediate: true })
 </script>
 
 <style src="./ColorView.css" scoped></style>

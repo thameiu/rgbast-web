@@ -12,7 +12,6 @@
 }
 
 .tutorial-focus {
-  position: relative;
   z-index: 330;
   box-shadow: 0 0 0 2px rgba(246, 195, 67, 0.8), 0 0 34px rgba(246, 195, 67, 0.25);
 }

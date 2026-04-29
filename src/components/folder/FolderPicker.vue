@@ -1,5 +1,5 @@
 <template>
-  <div class="fp">
+  <div class="fp" :class="`fp--${props.theme}`">
     <div class="fp-selected font-mono">
       <span class="fp-selected-label">{{ selectedLabel }}</span>
     </div>
@@ -7,9 +7,10 @@
       <FolderTree
         :folders="folders"
         :modelValue="modelValue"
-        theme="dark"
+        :theme="props.theme"
         mode="picker"
         @update:modelValue="emit('update:modelValue', typeof $event === 'number' ? $event : null)"
+        @createFolder="emit('createFolder', $event)"
       />
     </div>
   </div>
@@ -20,13 +21,15 @@ import { computed } from 'vue'
 import type { FolderResponse } from '@/api/types'
 import FolderTree from './FolderTree.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   folders: FolderResponse[]
   modelValue: number | null
-}>()
+  theme?: 'light' | 'dark'
+}>(), { theme: 'dark' })
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: number | null): void
+  (e: 'createFolder', payload: { name: string; parentId: number | null }): void
 }>()
 
 const selectedLabel = computed(() => {

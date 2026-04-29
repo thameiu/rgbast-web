@@ -30,6 +30,7 @@
             :folders="folders"
             :modelValue="pendingFolderId"
             @update:modelValue="$emit('update:pendingFolderId', $event)"
+            @createFolder="$emit('createFolder', $event)"
           />
         </template>
 
@@ -166,7 +167,7 @@ defineProps<{
   isSelectedLatestMainSnapshot: boolean
 }>()
 
-// Emits: close, save, and field updates for the save flow.
+// Emits: close, save, field updates for the save flow, and folder creation.
 defineEmits<{
   (e: 'close'): void
   (e: 'save'): void
@@ -176,6 +177,7 @@ defineEmits<{
   (e: 'update:saveComment', value: string): void
   (e: 'update:createNewBranch', value: boolean): void
   (e: 'update:newBranchName', value: string): void
+  (e: 'createFolder', payload: { name: string; parentId: number | null }): void
 }>()
 </script>
 

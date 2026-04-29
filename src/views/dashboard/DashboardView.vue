@@ -179,9 +179,12 @@
           </div>
           <div class="edit-field">
             <label class="edit-label">Folder</label>
-            <div class="edit-folder-wrap">
-              <FolderPicker :folders="folders" v-model="editDraftFolderId" />
-            </div>
+            <FolderPicker
+              :folders="folders"
+              v-model="editDraftFolderId"
+              theme="light"
+              @createFolder="onCreateFolder"
+            />
           </div>
           <p v-if="editError" class="modal-error">{{ editError }}</p>
           <div class="modal-actions">

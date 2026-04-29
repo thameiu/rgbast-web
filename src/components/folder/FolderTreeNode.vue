@@ -52,11 +52,11 @@ export default { name: 'FolderTreeNode' }
       <span v-else class="ftn-label">{{ folder.name }}</span>
 
       <span v-if="state.mode === 'navigation'" class="ftn-count">{{ state.paletteCounts[folder.id] ?? 0 }}</span>
-      <span v-if="state.mode === 'navigation'" class="ftn-btns">
+      <span v-if="state.mode === 'navigation' || state.mode === 'picker'" class="ftn-btns">
         <button class="ftn-btn" title="New subfolder" @click.stop="state.startInlineCreate(folder.id)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 1v6M1 4h6" /></svg>
         </button>
-        <button class="ftn-btn ftn-btn--del" title="Delete" @click.stop="state.onDeleteFolder(folder)">
+        <button v-if="state.mode === 'navigation'" class="ftn-btn ftn-btn--del" title="Delete" @click.stop="state.onDeleteFolder(folder)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l6 6M7 1L1 7" /></svg>
         </button>
       </span>

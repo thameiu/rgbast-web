@@ -29,6 +29,7 @@
           :folders="folders"
           :modelValue="folderId"
           @update:modelValue="$emit('update:folderId', $event)"
+          @createFolder="$emit('createFolder', $event)"
         />
 
         <p v-if="error" class="modal-error">{{ error }}</p>
@@ -64,6 +65,7 @@ defineEmits<{
   (e: 'update:title', value: string): void
   (e: 'update:description', value: string): void
   (e: 'update:folderId', value: number | null): void
+  (e: 'createFolder', payload: { name: string; parentId: number | null }): void
 }>()
 </script>
 

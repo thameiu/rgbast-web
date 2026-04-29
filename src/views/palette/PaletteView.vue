@@ -112,6 +112,7 @@
       @update:saveComment="save.saveComment.value = $event"
       @update:createNewBranch="save.createNewBranch.value = $event"
       @update:newBranchName="save.newBranchName.value = $event"
+      @createFolder="handleCreateFolder"
     />
 
     <PaletteEditModal
@@ -127,6 +128,7 @@
       @update:title="save.editTitle.value = $event"
       @update:description="save.editDescription.value = $event"
       @update:folderId="save.editFolderId.value = $event"
+      @createFolder="handleCreateFolder"
     />
 
     <AuthModal
@@ -260,6 +262,7 @@ import PaletteGenerateModal from './components/modals/PaletteGenerateModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
 import { watch } from 'vue'
+import { foldersApi } from '@/api/folders'
 import { usePaletteContext } from './composables/usePaletteContext'
 import { usePaletteUndo } from './composables/usePaletteUndo'
 import { usePaletteInteractions } from './composables/usePaletteInteractions'
@@ -339,6 +342,13 @@ function clearSnapshotSelectionWithUndo(): void {
 // Update the generator palette dropdown index from the modal component.
 function setGenPaletteDropIdx(value: number | null): void {
   generator.genPaletteDropIdx.value = value
+}
+
+async function handleCreateFolder(payload: { name: string; parentId: number | null }) {
+  try {
+    await foldersApi.create({ name: payload.name, parent_folder_id: payload.parentId })
+    await ctx.loadFolders()
+  } catch {}
 }
 
 // Update the generator picker index from the modal component.

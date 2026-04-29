@@ -102,14 +102,40 @@
       </div>
     </template>
 
-    <!-- Picker mode: folder tree directly -->
+    <!-- Picker mode: folder tree directly + root-level inline create -->
     <template v-if="mode === 'picker'">
       <FolderTreeNode v-for="folder in rootFolders" :key="folder.id" :folder="folder" :depth="1" />
+
+      <!-- Root-level inline create input (picker mode) -->
+      <div
+        v-if="inlineCreate?.parentId === null"
+        class="ft-item ft-item--new"
+        :class="`ft-item--${theme}`"
+        style="padding-left: 28px; flex-direction: column; align-items: stretch; gap: 0"
+      >
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <span class="ft-gap" />
+          <svg class="ft-sicon" width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+            <path d="M1 3.5C1 2.67 1.67 2 2.5 2H5l1.5 1.5H11.5C12.33 3.5 13 4.17 13 5v4.5C13 10.33 12.33 11 11.5 11h-9C1.67 11 1 10.33 1 9.5V3.5Z" />
+          </svg>
+          <input
+            ref="rootCreateRef"
+            class="ft-inline-input"
+            :class="{ 'ft-inline-input--error': !!rootCreateError }"
+            :value="inlineValue"
+            placeholder="Folder name…"
+            @input="inlineValue = ($event.target as HTMLInputElement).value"
+            @keydown.enter="!rootCreateError && commitInlineCreate(null)"
+            @keydown.escape="cancelInline()"
+          />
+        </div>
+        <span v-if="rootCreateError" class="ft-name-error">{{ rootCreateError }}</span>
+      </div>
     </template>
 
-    <!-- New folder button (navigation mode, root expanded or no folders yet) -->
+    <!-- New folder button (both modes) -->
     <button
-      v-if="mode === 'navigation' && !inlineCreate"
+      v-if="!inlineCreate"
       class="ft-add-btn"
       :class="`ft-add-btn--${theme}`"
       @click="startInlineCreate(null)"

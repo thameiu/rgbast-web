@@ -374,12 +374,6 @@
 .modal-btn.primary:disabled { opacity: 0.35; cursor: not-allowed; }
 
 /* Edit palette modal fields */
-.edit-folder-wrap {
-  background: #1a1a22;
-  border-radius: 10px;
-  padding: 8px;
-}
-
 .edit-field { margin-bottom: 16px; }
 .edit-label {
   display: block;

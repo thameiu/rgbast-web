@@ -86,6 +86,30 @@
             </button>
           </div>
 
+          <div class="sort-bar font-mono">
+            <span class="sort-label">Sort</span>
+            <button
+              class="sort-btn"
+              :class="{ 'sort-btn--active': sortField === 'name' }"
+              @click="sortField === 'name' ? sortDir = sortDir === 'asc' ? 'desc' : 'asc' : (sortField = 'name', sortDir = 'asc')"
+            >
+              Name
+              <svg v-if="sortField === 'name'" class="sort-arrow" :class="{ 'sort-arrow--down': sortDir === 'desc' }" width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M4.5 1.5v6M1.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button
+              class="sort-btn"
+              :class="{ 'sort-btn--active': sortField === 'date' }"
+              @click="sortField === 'date' ? sortDir = sortDir === 'asc' ? 'desc' : 'asc' : (sortField = 'date', sortDir = 'desc')"
+            >
+              Last edit
+              <svg v-if="sortField === 'date'" class="sort-arrow" :class="{ 'sort-arrow--down': sortDir === 'desc' }" width="9" height="9" viewBox="0 0 9 9" fill="none">
+                <path d="M4.5 1.5v6M1.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+
           <div v-if="filteredPalettes.length === 0" class="empty-state">
             <div class="empty-icon">◐</div>
             <p>{{ activeFolderKey === 'all' ? 'No palettes yet.' : 'No palettes in this folder.' }}</p>
@@ -121,11 +145,11 @@
                   <div v-if="p.palette_colors.length === 0" class="strip-empty">No colors</div>
                 </div>
                 <div class="card-body">
-                  <p v-if="(p.folder_path?.length)" class="card-path font-mono">
-                    {{ p.folder_path.join(' / ') }}
+                  <p class="card-path font-mono">
+                    {{ p.folder_path?.length ? '/ ' + p.folder_path.join(' / ') : '/' }}
                   </p>
                   <h3 class="card-title font-display">{{ p.title }}</h3>
-                  <p class="card-meta font-mono">{{ fmtDate(p.created_at) }}</p>
+                  <p class="card-meta font-mono">{{ fmtDate(p.last_snapshot_at ?? p.created_at) }}</p>
                 </div>
                 <button class="card-edit-btn" title="Edit palette" @click.stop="openEditPalette(p)">
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
@@ -237,6 +261,8 @@ const user = ref<any>(null)
 const palettes = ref<PaletteCache[]>([])
 const folders = ref<FolderResponse[]>([])
 const activeFolderKey = ref<'all' | 'root' | number>('all')
+const sortField = ref<'name' | 'date'>('date')
+const sortDir = ref<'asc' | 'desc'>('desc')
 const draggingId = ref<number | null>(null)
 const deleteTarget = ref<PaletteCache | null>(null)
 const isDeleting = ref(false)
@@ -265,9 +291,19 @@ const folderCounts = computed(() => {
 const rootPaletteCount = computed(() => palettes.value.filter(p => p.folder_id == null).length)
 
 const filteredPalettes = computed(() => {
-  if (activeFolderKey.value === 'all') return palettes.value
-  if (activeFolderKey.value === 'root') return palettes.value.filter(p => p.folder_id == null)
-  return palettes.value.filter(p => p.folder_id === activeFolderKey.value)
+  let list: PaletteCache[]
+  if (activeFolderKey.value === 'all') list = [...palettes.value]
+  else if (activeFolderKey.value === 'root') list = palettes.value.filter(p => p.folder_id == null)
+  else list = palettes.value.filter(p => p.folder_id === activeFolderKey.value)
+
+  const dir = sortDir.value === 'asc' ? 1 : -1
+  list.sort((a, b) => {
+    if (sortField.value === 'name') return dir * a.title.localeCompare(b.title)
+    const da = new Date(a.last_snapshot_at ?? a.created_at).getTime()
+    const db = new Date(b.last_snapshot_at ?? b.created_at).getTime()
+    return dir * (da - db)
+  })
+  return list
 })
 
 const emptyCta = computed(() => {
@@ -324,6 +360,7 @@ async function loadDashboard() {
         folder_id: p.folder_id ?? null,
         folder_path: p.folder_path ?? [],
         created_at: p.created_at,
+        last_snapshot_at: p.latest_main_snapshot?.created_at,
         palette_colors: p.latest_main_snapshot?.palette_colors ?? [],
       }
       palettesApi.cachePalette(cached)

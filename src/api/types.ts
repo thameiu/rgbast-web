@@ -292,5 +292,6 @@ export interface PaletteCache {
   folder_id?: number | null;
   folder_path?: string[];
   created_at: string;
+  last_snapshot_at?: string;
   palette_colors: PaletteColorSave[];
 }

@@ -2,7 +2,8 @@ import { ref, computed, watch } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
-import type { PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
+import { foldersApi } from '@/api/folders'
+import type { FolderResponse, PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
 import { getBranchColor } from '@/utils/branchColors'
 
 export interface WorkingColor {
@@ -22,10 +23,19 @@ export interface PaletteContext {
   route: ReturnType<typeof useRoute>
   router: ReturnType<typeof useRouter>
   isNewPalette: ComputedRef<boolean>
-  paletteId: ComputedRef<number>
+  paletteId: Ref<number | null>
+  username: ComputedRef<string>
+  paletteName: ComputedRef<string>
+  folderPath: ComputedRef<string[]>
+  palettePath: ComputedRef<string>
   isOwned: ComputedRef<boolean>
   pendingTitle: Ref<string>
+  pendingDescription: Ref<string>
+  pendingFolderId: Ref<number | null>
   history: Ref<PaletteHistoryGraphResponse | null>
+  folders: Ref<FolderResponse[]>
+  folderOptions: ComputedRef<Array<{ id: number; label: string }>>
+  historyFolderId: ComputedRef<number | null>
   loading: Ref<boolean>
   error: Ref<string | null>
   paletteTitle: ComputedRef<string>
@@ -52,6 +62,7 @@ export interface PaletteContext {
   wrapColors: (cols: PaletteColorSave[]) => WorkingColor[]
   mobileBranchColor: (idx: number) => string
   loadHistory: () => Promise<void>
+  loadFolders: () => Promise<void>
   applyBranchState: () => void
   switchBranch: (id: number | null) => Promise<void>
   findSnapshot: (id: number) => PaletteHistoryGraphResponse['main'][number] | PaletteHistoryGraphResponse['branches'][number]['snapshots'][number] | null
@@ -94,13 +105,76 @@ export function usePaletteContext(): PaletteContext {
   const route = useRoute()
   const router = useRouter()
 
-  const isNewPalette = computed(() => route.params.id === 'new')
-  const paletteId = computed(() => (isNewPalette.value ? 0 : Number(route.params.id)))
+  const username = computed(() => String(route.params.username ?? ''))
+  const routeSegments = computed(() => {
+    const raw = route.params.pathMatch
+    if (!raw) return []
+    const list = Array.isArray(raw) ? raw : String(raw).split('/')
+    return list.filter(Boolean)
+  })
+  const queryPalette = computed(() => (typeof route.query.palette === 'string' ? route.query.palette : null))
+  const paletteName = computed(() => {
+    if (queryPalette.value) return queryPalette.value
+    return routeSegments.value[routeSegments.value.length - 1] ?? ''
+  })
+  const folderPath = computed(() => {
+    if (queryPalette.value) return routeSegments.value
+    return routeSegments.value.slice(0, -1)
+  })
+  const palettePath = computed(() => {
+    const segments = [...folderPath.value, paletteName.value].filter(Boolean)
+    return segments.join('/')
+  })
+
+  const isNewPalette = computed(() => paletteName.value === 'new')
+  const paletteId = ref<number | null>(null)
 
   const history = ref<PaletteHistoryGraphResponse | null>(null)
   const loading = ref(true)
   const error = ref<string | null>(null)
   const pendingTitle = ref('')
+  const pendingDescription = ref('')
+  const pendingFolderId = ref<number | null>(null)
+  const folders = ref<FolderResponse[]>([])
+
+  const folderMap = computed(() => {
+    const map = new Map<number, FolderResponse>()
+    for (const folder of folders.value) map.set(folder.id, folder)
+    return map
+  })
+
+  const folderPathById = computed(() => {
+    const map = new Map<number, string[]>()
+    for (const folder of folders.value) {
+      const names: string[] = []
+      let current: FolderResponse | undefined = folder
+      const seen = new Set<number>()
+      while (current) {
+        if (seen.has(current.id)) break
+        seen.add(current.id)
+        names.push(current.name)
+        if (current.parent_folder_id === null) break
+        current = folderMap.value.get(current.parent_folder_id)
+      }
+      map.set(folder.id, names.reverse())
+    }
+    return map
+  })
+
+  const folderOptions = computed(() => {
+    return Array.from(folderPathById.value.entries())
+      .map(([id, path]) => ({ id, label: path.join(' / ') }))
+      .sort((a, b) => a.label.localeCompare(b.label))
+  })
+
+  const historyFolderId = computed(() => {
+    const pathKey = history.value?.folder_path?.join('/') ?? ''
+    if (!pathKey) return null
+    for (const [id, path] of folderPathById.value.entries()) {
+      if (path.join('/') === pathKey) return id
+    }
+    return null
+  })
 
   const isOwned = computed(() => {
     if (isNewPalette.value) return true
@@ -111,7 +185,14 @@ export function usePaletteContext(): PaletteContext {
 
   const paletteTitle = computed(() => {
     if (isNewPalette.value) return pendingTitle.value || 'Untitled palette'
-    return palettesApi.getCachedPalette(paletteId.value)?.title ?? history.value?.title ?? `Palette #${paletteId.value}`
+    if (paletteId.value !== null) {
+      return (
+        palettesApi.getCachedPalette(paletteId.value)?.title ??
+        history.value?.title ??
+        (paletteName.value || `Palette #${paletteId.value}`)
+      )
+    }
+    return history.value?.title ?? (paletteName.value || 'Palette')
   })
 
   const colors = ref<WorkingColor[]>([])
@@ -194,12 +275,26 @@ export function usePaletteContext(): PaletteContext {
     loading.value = true
     error.value = null
     try {
-      history.value = await palettesApi.getHistory(paletteId.value)
+      await loadFolders()
+      if (!username.value || !palettePath.value) {
+        throw new Error('Palette path is invalid')
+      }
+      history.value = await palettesApi.getHistoryByPath(username.value, palettePath.value)
+      paletteId.value = history.value.palette_id
       applyBranchState()
     } catch (e: any) {
       error.value = e.message ?? 'Failed to load palette'
     } finally {
       loading.value = false
+    }
+  }
+
+  async function loadFolders(): Promise<void> {
+    if (!username.value) return
+    try {
+      folders.value = await foldersApi.getByUsername(username.value)
+    } catch {
+      folders.value = []
     }
   }
 
@@ -227,7 +322,9 @@ export function usePaletteContext(): PaletteContext {
     colors.value = wrapColors(sourceColors)
     latestSnapshotId.value = snapshotId
     savedColorsSig.value = currentColorsSig.value
-    palettesApi.updateCacheColors(paletteId.value, sourceColors)
+    if (paletteId.value !== null) {
+      palettesApi.updateCacheColors(paletteId.value, sourceColors)
+    }
   }
 
   // Switch the current branch context in PaletteView and refresh working colors.
@@ -291,11 +388,16 @@ export function usePaletteContext(): PaletteContext {
   // Initialize a draft palette in PaletteView when the route id is "new".
   function initNewPaletteDraft(): void {
     history.value = null
+    paletteId.value = null
     latestSnapshotId.value = null
     selectedSnapshotId.value = null
     currentBranchId.value = null
     historyOpen.value = false
     error.value = null
+    void loadFolders()
+    pendingDescription.value = ''
+    pendingFolderId.value =
+      typeof window !== 'undefined' ? (window.history.state?.folderId ?? null) : null
 
     const clonedColors = (window.history.state?.clonedColors ?? []) as PaletteColorSave[]
     if (Array.isArray(clonedColors) && clonedColors.length > 0) {
@@ -311,13 +413,14 @@ export function usePaletteContext(): PaletteContext {
   // Clone the current palette colors into a new draft palette route.
   function clonePalette(): void {
     const clonedColors = colors.value.map(c => ({ hex: c.hex, label: c.label ?? null }))
-    router.push({ name: 'palette', params: { id: 'new' }, state: { clonedColors } })
+    const pathMatch = [...folderPath.value, 'new'].join('/')
+    router.push({ name: 'palette', params: { username: username.value, pathMatch }, state: { clonedColors } })
   }
 
   // Watch the palette route param and reload state for PaletteView.
   function startRouteWatch(onBeforeLoad?: () => void): void {
     watch(
-      () => route.params.id,
+      () => [route.params.username, route.params.pathMatch, route.query.palette],
       () => {
         if (onBeforeLoad) onBeforeLoad()
         if (isNewPalette.value) {
@@ -340,9 +443,18 @@ export function usePaletteContext(): PaletteContext {
     router,
     isNewPalette,
     paletteId,
+    username,
+    paletteName,
+    folderPath,
+    palettePath,
     isOwned,
     pendingTitle,
+    pendingDescription,
+    pendingFolderId,
     history,
+    folders,
+    folderOptions,
+    historyFolderId,
     loading,
     error,
     paletteTitle,
@@ -369,6 +481,7 @@ export function usePaletteContext(): PaletteContext {
     wrapColors,
     mobileBranchColor,
     loadHistory,
+    loadFolders,
     applyBranchState,
     switchBranch,
     findSnapshot,

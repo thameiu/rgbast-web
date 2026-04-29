@@ -39,6 +39,26 @@ export interface UserGetResponse {
   birthdate?: string | null;
 }
 
+// ── Folders ───────────────────────────────────────────────────────────────────
+
+export interface FolderCreate {
+  name: string;
+  parent_folder_id?: number | null;
+}
+
+export interface FolderUpdate {
+  name?: string | null;
+  parent_folder_id?: number | null;
+}
+
+export interface FolderResponse {
+  id: number;
+  user_id: number;
+  parent_folder_id: number | null;
+  name: string;
+  created_at: string;
+}
+
 // ── Palettes ──────────────────────────────────────────────────────────────────
 
 /** A single color entry within a palette (hex without #, optional label). */
@@ -50,6 +70,8 @@ export interface PaletteColorSave {
 export interface PaletteCreate {
   title: string;
   description: string;
+  folder_id?: number | null;
+  folder_path?: string[] | null;
   palette_colors?: PaletteColorSave[];
 }
 
@@ -57,7 +79,15 @@ export interface PaletteCreateResponse {
   id: number;
   title: string;
   description: string;
+  folder_id: number | null;
+  folder_path: string[];
   created_at: string;
+}
+
+export interface PaletteUpdate {
+  title?: string | null;
+  description?: string | null;
+  folder_id?: number | null;
 }
 
 /** Payload for saving a new snapshot. Pass branch_id for an existing branch,
@@ -109,8 +139,11 @@ export interface PaletteBranchHistoryResponse {
 
 /** Full history graph: main-branch commits + per-branch commit lists. */
 export interface PaletteHistoryGraphResponse {
+  palette_id: number;
   owner_username: string;
   title: string;
+  description?: string | null;
+  folder_path: string[];
   main: PaletteCommitResponse[];
   branches: PaletteBranchHistoryResponse[];
 }
@@ -170,6 +203,8 @@ export interface PaletteByUsernameItemResponse {
   id: number;
   title: string;
   description?: string;
+  folder_id?: number | null;
+  folder_path?: string[];
   created_at: string;
   latest_main_snapshot: PaletteCommitResponse | null;
 }
@@ -254,6 +289,8 @@ export interface PaletteCache {
   id: number;
   title: string;
   description?: string;
+  folder_id?: number | null;
+  folder_path?: string[];
   created_at: string;
   palette_colors: PaletteColorSave[];
 }

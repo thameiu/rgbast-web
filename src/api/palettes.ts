@@ -12,6 +12,7 @@ import type {
   PaletteSnapshotSave,
   PaletteSnapshotSaveResponse,
   PaletteHistoryGraphResponse,
+  PaletteUpdate,
 } from './types';
 
 const CACHE_KEY = 'rgbast_palettes';
@@ -31,6 +32,12 @@ export const palettesApi = {
   /** Fetch the full commit + branch history for the history graph. */
   getHistory: (paletteId: number): Promise<PaletteHistoryGraphResponse> => {
     return ApiClient.request<PaletteHistoryGraphResponse>(`/palettes/${paletteId}/history`, 'GET');
+  },
+
+  /** Fetch the full commit + branch history by username + folder path. */
+  getHistoryByPath: (username: string, path: string): Promise<PaletteHistoryGraphResponse> => {
+    const encoded = encodeURIComponent(path);
+    return ApiClient.request<PaletteHistoryGraphResponse>(`/users/${username}/palettes/history?path=${encoded}`, 'GET');
   },
 
   /** Merge a branch into main, creating a merge commit on main. */
@@ -71,6 +78,11 @@ export const palettesApi = {
       `/palettes/${paletteId}/main/revert/${snapshotId}`,
       'POST',
     );
+  },
+
+  /** Update palette metadata (title, description, folder assignment). */
+  updatePalette: (paletteId: number, data: PaletteUpdate): Promise<PaletteCreateResponse> => {
+    return ApiClient.request<PaletteCreateResponse>(`/palettes/${paletteId}`, 'PUT', data);
   },
 
   /** Fetch all palettes (with their latest main snapshot) for a given username. */

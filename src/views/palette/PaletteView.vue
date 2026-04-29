@@ -22,6 +22,7 @@
       @toggleHistory="ctx.historyOpen.value = !ctx.historyOpen.value"
       @merge="save.confirmMerge"
       @deletePalette="save.showDeletePaletteModal.value = true"
+      @edit="save.openEditPalette"
       @openTutorial="tutorial.openTutorial"
       @hamburgerClick="ctx.mobileSidebarOpen.value = !ctx.mobileSidebarOpen.value"
       @generate="generator.doGenerate"
@@ -93,6 +94,9 @@
       :currentBranchId="ctx.currentBranchId.value"
       :currentBranchName="ctx.currentBranchName.value"
       :pendingTitle="ctx.pendingTitle.value"
+      :pendingDescription="ctx.pendingDescription.value"
+      :pendingFolderId="ctx.pendingFolderId.value"
+      :folders="ctx.folders.value"
       :saveComment="save.saveComment.value"
       :saveError="save.saveError.value"
       :createNewBranch="save.createNewBranch.value"
@@ -103,9 +107,26 @@
       @close="ctx.showSaveModal.value = false"
       @save="save.doSave"
       @update:pendingTitle="ctx.pendingTitle.value = $event"
+      @update:pendingDescription="ctx.pendingDescription.value = $event"
+      @update:pendingFolderId="ctx.pendingFolderId.value = $event"
       @update:saveComment="save.saveComment.value = $event"
       @update:createNewBranch="save.createNewBranch.value = $event"
       @update:newBranchName="save.newBranchName.value = $event"
+    />
+
+    <PaletteEditModal
+      :open="save.showEditModal.value"
+      :title="save.editTitle.value"
+      :description="save.editDescription.value"
+      :folderId="save.editFolderId.value"
+      :folders="ctx.folders.value"
+      :isSaving="save.isEditing.value"
+      :error="save.editError.value"
+      @close="save.showEditModal.value = false"
+      @save="save.doEditPalette"
+      @update:title="save.editTitle.value = $event"
+      @update:description="save.editDescription.value = $event"
+      @update:folderId="save.editFolderId.value = $event"
     />
 
     <AuthModal
@@ -230,6 +251,7 @@ import PaletteSnapshotBanner from './components/PaletteSnapshotBanner.vue'
 import PaletteColumnsArea from './components/PaletteColumnsArea.vue'
 import PaletteHistoryPanel from './components/PaletteHistoryPanel.vue'
 import PaletteSaveModal from './components/modals/PaletteSaveModal.vue'
+import PaletteEditModal from './components/modals/PaletteEditModal.vue'
 import PaletteMergeModal from './components/modals/PaletteMergeModal.vue'
 import PaletteDeletePaletteModal from './components/modals/PaletteDeletePaletteModal.vue'
 import PaletteDeleteBranchModal from './components/modals/PaletteDeleteBranchModal.vue'

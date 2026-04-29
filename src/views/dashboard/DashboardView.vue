@@ -25,6 +25,26 @@
               <dd>{{ palettes.length }}</dd>
             </div>
           </dl>
+
+          <div class="folder-panel">
+            <p class="folder-panel-label font-mono">Folders</p>
+            <FolderTree
+              :folders="folders"
+              v-model="activeFolderKey"
+              theme="light"
+              mode="navigation"
+              :paletteCounts="folderCounts"
+              :totalCount="palettes.length"
+              :rootCount="rootPaletteCount"
+              :draggingId="draggingId"
+              :palettes="palettes"
+              @createFolder="onCreateFolder"
+              @renameFolder="onRenameFolder"
+              @deleteFolder="openDeleteFolder"
+              @movePalette="onMovePalette"
+              @selectPalette="openPalette"
+            />
+          </div>
         </template>
 
         <p v-else class="err">Unable to fetch session.</p>
@@ -44,50 +64,88 @@
         <div class="palettes-section">
           <div class="section-bar">
             <h2 class="section-title font-display">Palettes</h2>
+
+            <!-- Breadcrumb path -->
+            <nav v-if="activeFolderKey !== 'all'" class="breadcrumb font-mono">
+              <template v-for="(seg, i) in breadcrumbSegments" :key="String(seg.key)">
+                <span
+                  class="bc-seg"
+                  :class="{ 'bc-seg--last': i === breadcrumbSegments.length - 1 }"
+                  @click="i < breadcrumbSegments.length - 1 && (activeFolderKey = seg.key)"
+                  @dragover.prevent="onBreadcrumbDragenter(seg.key)"
+                  @dragleave="onBreadcrumbDragleave()"
+                >{{ seg.label }}</span>
+                <span class="bc-sep">/</span>
+              </template>
+            </nav>
+            <p v-else class="breadcrumb-all font-mono">All palettes</p>
+
             <button class="new-palette-btn" @click="newPalette">
               New palette
               <span aria-hidden="true">+</span>
             </button>
           </div>
 
-          <div v-if="palettes.length === 0" class="empty-state">
+          <div v-if="filteredPalettes.length === 0" class="empty-state">
             <div class="empty-icon">◐</div>
-            <p>No palettes yet.</p>
-            <button class="empty-cta" @click="newPalette">Create your first palette</button>
+            <p>{{ activeFolderKey === 'all' ? 'No palettes yet.' : 'No palettes in this folder.' }}</p>
+            <button class="empty-cta" @click="newPalette">{{ emptyCta }}</button>
           </div>
 
           <div v-else class="palettes-grid">
             <article
-              v-for="p in palettes"
+              v-for="p in filteredPalettes"
               :key="p.id"
               class="palette-card"
+              :class="{ 'card--dragging': draggingId === p.id }"
+              draggable="true"
               @click="openPalette(p)"
+              @dragstart="onCardDragStart(p.id, $event)"
+              @dragend="draggingId = null"
             >
-              <div class="card-strip">
-                <div
-                  v-for="(col, ci) in p.palette_colors.slice(0, 6)"
-                  :key="ci"
-                  class="strip-swatch"
-                  :style="{ background: '#' + col.hex }"
-                ></div>
-                <div v-if="p.palette_colors.length === 0" class="strip-empty">No colors</div>
+              <!-- Tooltip (outside card-clip so it can overflow) -->
+              <div v-if="p.description" class="card-tooltip">
+                <p class="card-tooltip-title">{{ p.title }}</p>
+                <p class="card-tooltip-desc">{{ p.description }}</p>
               </div>
-              <div class="card-body">
-                <h3 class="card-title font-display">{{ p.title }}</h3>
-                <p v-if="p.description" class="card-desc">{{ p.description }}</p>
-                <p class="card-meta font-mono">{{ fmtDate(p.created_at) }}</p>
+
+              <!-- Card visual (clips the strip and content) -->
+              <div class="card-clip">
+                <div class="card-strip">
+                  <div
+                    v-for="(col, ci) in p.palette_colors.slice(0, 6)"
+                    :key="ci"
+                    class="strip-swatch"
+                    :style="{ background: '#' + col.hex }"
+                  ></div>
+                  <div v-if="p.palette_colors.length === 0" class="strip-empty">No colors</div>
+                </div>
+                <div class="card-body">
+                  <p v-if="(p.folder_path?.length)" class="card-path font-mono">
+                    {{ p.folder_path.join(' / ') }}
+                  </p>
+                  <h3 class="card-title font-display">{{ p.title }}</h3>
+                  <p class="card-meta font-mono">{{ fmtDate(p.created_at) }}</p>
+                </div>
+                <button class="card-edit-btn" title="Edit palette" @click.stop="openEditPalette(p)">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 8.5L7.5 3l1.5 1.5L3.5 10H2V8.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M6.8 3.7l1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <button class="card-del-btn" title="Delete palette" @click.stop="confirmDeletePalette(p)">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
               </div>
-              <button class="card-del-btn" title="Delete palette" @click.stop="confirmDeletePalette(p)">
-                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                  <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
             </article>
           </div>
         </div>
       </section>
     </div>
 
+    <!-- Delete palette modal -->
     <Teleport to="body">
       <div v-if="deleteTarget" class="modal-overlay" @click.self="deleteTarget = null">
         <div class="modal">
@@ -105,32 +163,152 @@
         </div>
       </div>
     </Teleport>
+
+    <!-- Edit palette modal -->
+    <Teleport to="body">
+      <div v-if="editTarget" class="modal-overlay" @click.self="editTarget = null">
+        <div class="modal">
+          <h3 class="modal-title font-display">Edit Palette</h3>
+          <div class="edit-field">
+            <label class="edit-label">Name</label>
+            <input class="edit-input" v-model="editDraftTitle" @keydown.enter="saveEditPalette" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Description</label>
+            <textarea class="edit-input edit-textarea" v-model="editDraftDesc" rows="2" placeholder="Optional description…" />
+          </div>
+          <div class="edit-field">
+            <label class="edit-label">Folder</label>
+            <div class="edit-folder-wrap">
+              <FolderPicker :folders="folders" v-model="editDraftFolderId" />
+            </div>
+          </div>
+          <p v-if="editError" class="modal-error">{{ editError }}</p>
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="editTarget = null">Cancel</button>
+            <button class="modal-btn primary" :disabled="isSavingEdit || !editDraftTitle.trim()" @click="saveEditPalette">
+              {{ isSavingEdit ? 'Saving…' : 'Save changes' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Delete folder modal -->
+    <Teleport to="body">
+      <div v-if="deleteFolderTarget" class="modal-overlay" @click.self="deleteFolderTarget = null">
+        <div class="modal">
+          <h3 class="modal-title font-display">Delete Folder</h3>
+          <p class="modal-sub">
+            Delete <strong>{{ deleteFolderTarget.name }}</strong>? Subfolders will also be deleted. Palettes inside will be moved to root.
+          </p>
+          <p v-if="deleteFolderError" class="modal-error">{{ deleteFolderError }}</p>
+          <div class="modal-actions">
+            <button class="modal-btn cancel" @click="deleteFolderTarget = null">Cancel</button>
+            <button class="modal-btn danger" :disabled="isDeletingFolder" @click="doDeleteFolder">
+              {{ isDeletingFolder ? 'Deleting...' : 'Delete folder' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-
 import { authApi } from '@/api'
+import { foldersApi } from '@/api/folders'
 import { palettesApi } from '@/api/palettes'
-import type { PaletteCache } from '@/api/types'
+import type { FolderResponse, PaletteCache } from '@/api/types'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
+import FolderTree from '@/components/folder/FolderTree.vue'
+import FolderPicker from '@/components/folder/FolderPicker.vue'
 
-// DashboardView component: displays user profile details and palette cards.
 const router = useRouter()
 const loading = ref(true)
 const user = ref<any>(null)
 const palettes = ref<PaletteCache[]>([])
+const folders = ref<FolderResponse[]>([])
+const activeFolderKey = ref<'all' | 'root' | number>('all')
+const draggingId = ref<number | null>(null)
 const deleteTarget = ref<PaletteCache | null>(null)
 const isDeleting = ref(false)
 const deleteError = ref('')
+const deleteFolderTarget = ref<FolderResponse | null>(null)
+const deleteFolderError = ref('')
+const isDeletingFolder = ref(false)
+const bcrumbTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
-/**
- * Load the current user session and their palettes for the dashboard.
- */
+const editTarget = ref<PaletteCache | null>(null)
+const editDraftTitle = ref('')
+const editDraftDesc = ref('')
+const editDraftFolderId = ref<number | null>(null)
+const isSavingEdit = ref(false)
+const editError = ref('')
+
+const folderCounts = computed(() => {
+  const counts: Record<number, number> = {}
+  for (const p of palettes.value) {
+    if (p.folder_id == null) continue
+    counts[p.folder_id] = (counts[p.folder_id] ?? 0) + 1
+  }
+  return counts
+})
+
+const rootPaletteCount = computed(() => palettes.value.filter(p => p.folder_id == null).length)
+
+const filteredPalettes = computed(() => {
+  if (activeFolderKey.value === 'all') return palettes.value
+  if (activeFolderKey.value === 'root') return palettes.value.filter(p => p.folder_id == null)
+  return palettes.value.filter(p => p.folder_id === activeFolderKey.value)
+})
+
+const emptyCta = computed(() => {
+  if (activeFolderKey.value !== 'all' && palettes.value.length > 0) return 'Create a new palette here'
+  return 'Create your first palette'
+})
+
+const breadcrumbSegments = computed((): Array<{ key: 'root' | number; label: string }> => {
+  const segs: Array<{ key: 'root' | number; label: string }> = [
+    { key: 'root', label: user.value?.username ?? '~' },
+  ]
+  if (typeof activeFolderKey.value === 'number') {
+    const ancestors = getFolderAncestors(activeFolderKey.value)
+    for (const id of ancestors) {
+      const f = folders.value.find(x => x.id === id)
+      if (f) segs.push({ key: id, label: f.name })
+    }
+  }
+  return segs
+})
+
+function getFolderAncestors(folderId: number): number[] {
+  const path: number[] = []
+  let id: number | null = folderId
+  while (id != null) {
+    path.unshift(id)
+    const folder = folders.value.find(f => f.id === id)
+    id = folder?.parent_folder_id ?? null
+  }
+  return path
+}
+
+function onBreadcrumbDragenter(key: 'root' | number) {
+  if (bcrumbTimer.value) return
+  bcrumbTimer.value = setTimeout(() => {
+    activeFolderKey.value = key
+    bcrumbTimer.value = null
+  }, 500)
+}
+
+function onBreadcrumbDragleave() {
+  if (bcrumbTimer.value) { clearTimeout(bcrumbTimer.value); bcrumbTimer.value = null }
+}
+
 async function loadDashboard() {
   try {
     user.value = await authApi.checkAuth()
@@ -140,12 +318,15 @@ async function loadDashboard() {
         id: p.id,
         title: p.title,
         description: p.description,
+        folder_id: p.folder_id ?? null,
+        folder_path: p.folder_path ?? [],
         created_at: p.created_at,
         palette_colors: p.latest_main_snapshot?.palette_colors ?? [],
       }
       palettesApi.cachePalette(cached)
       return cached
     })
+    await loadFolders()
   } catch {
     localStorage.removeItem('access_token')
     router.push('/login')
@@ -154,46 +335,45 @@ async function loadDashboard() {
   }
 }
 
+async function loadFolders() {
+  if (!user.value?.username) return
+  try {
+    folders.value = await foldersApi.getByUsername(user.value.username)
+  } catch {
+    folders.value = []
+  }
+}
+
 onMounted(() => {
   document.title = 'Dashboard - RGBAST'
   void loadDashboard()
 })
 
-/**
- * Navigate to a palette editor for the selected palette.
- * @param p - Palette cache entry to open.
- */
 function openPalette(p: PaletteCache) {
-  router.push({ name: 'palette', params: { id: p.id } })
+  if (!user.value?.username) return
+  const segments = [...(p.folder_path ?? []), p.title].filter(Boolean)
+  router.push({ name: 'palette', params: { username: user.value.username, pathMatch: segments.join('/') } })
 }
 
-/**
- * Navigate to a new palette draft page.
- */
 function newPalette() {
-  router.push({ name: 'palette', params: { id: 'new' } })
+  if (!user.value?.username) return
+  const folderId = typeof activeFolderKey.value === 'number' ? activeFolderKey.value : null
+  router.push({
+    name: 'palette',
+    params: { username: user.value.username, pathMatch: 'new' },
+    state: { folderId },
+  })
 }
 
-/**
- * Format the palette created_at ISO date for display in the card.
- * @param iso - ISO date string.
- */
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-/**
- * Open the delete confirmation modal for a palette.
- * @param p - Palette cache entry to delete.
- */
 function confirmDeletePalette(p: PaletteCache) {
   deleteTarget.value = p
   deleteError.value = ''
 }
 
-/**
- * Delete the selected palette and update the grid.
- */
 async function doDeletePalette() {
   if (!deleteTarget.value) return
   isDeleting.value = true
@@ -207,6 +387,104 @@ async function doDeletePalette() {
   } finally {
     isDeleting.value = false
   }
+}
+
+function openEditPalette(p: PaletteCache) {
+  editTarget.value = p
+  editDraftTitle.value = p.title
+  editDraftDesc.value = p.description ?? ''
+  editDraftFolderId.value = p.folder_id ?? null
+  editError.value = ''
+}
+
+async function saveEditPalette() {
+  if (!editTarget.value) return
+  const title = editDraftTitle.value.trim()
+  if (!title) return
+  isSavingEdit.value = true
+  editError.value = ''
+  try {
+    await palettesApi.updatePalette(editTarget.value.id, {
+      title,
+      description: editDraftDesc.value.trim() || null,
+      folder_id: editDraftFolderId.value,
+    })
+    const p = palettes.value.find(x => x.id === editTarget.value!.id)
+    if (p) {
+      p.title = title
+      p.description = editDraftDesc.value.trim() || undefined
+      p.folder_id = editDraftFolderId.value
+      if (editDraftFolderId.value === null) {
+        p.folder_path = []
+      } else {
+        const ancestors = getFolderAncestors(editDraftFolderId.value)
+        p.folder_path = ancestors.map(id => folders.value.find(f => f.id === id)?.name ?? '')
+      }
+    }
+    editTarget.value = null
+  } catch (e: any) {
+    editError.value = e.message ?? 'Save failed'
+  } finally {
+    isSavingEdit.value = false
+  }
+}
+
+async function onCreateFolder(payload: { name: string; parentId: number | null }) {
+  try {
+    await foldersApi.create({ name: payload.name, parent_folder_id: payload.parentId })
+    await loadFolders()
+  } catch { /* ignore — tree already closed the input */ }
+}
+
+async function onRenameFolder(payload: { id: number; name: string }) {
+  try {
+    await foldersApi.update(payload.id, { name: payload.name })
+    await loadFolders()
+  } catch {}
+}
+
+function openDeleteFolder(folder: FolderResponse) {
+  deleteFolderTarget.value = folder
+  deleteFolderError.value = ''
+}
+
+async function doDeleteFolder() {
+  if (!deleteFolderTarget.value) return
+  isDeletingFolder.value = true
+  deleteFolderError.value = ''
+  try {
+    await foldersApi.delete(deleteFolderTarget.value.id)
+    deleteFolderTarget.value = null
+    if (typeof activeFolderKey.value === 'number') activeFolderKey.value = 'all'
+    await loadFolders()
+    await loadDashboard()
+  } catch (e: any) {
+    deleteFolderError.value = e.message ?? 'Delete failed'
+  } finally {
+    isDeletingFolder.value = false
+  }
+}
+
+async function onMovePalette(payload: { paletteId: number; targetFolderId: number | null }) {
+  try {
+    await palettesApi.updatePalette(payload.paletteId, { folder_id: payload.targetFolderId })
+    const palette = palettes.value.find(p => p.id === payload.paletteId)
+    if (palette) {
+      palette.folder_id = payload.targetFolderId
+      if (payload.targetFolderId === null) {
+        palette.folder_path = []
+      } else {
+        const ancestors = getFolderAncestors(payload.targetFolderId)
+        palette.folder_path = ancestors.map(id => folders.value.find(f => f.id === id)?.name ?? '')
+      }
+    }
+  } catch {}
+}
+
+function onCardDragStart(id: number, event: DragEvent) {
+  draggingId.value = id
+  event.dataTransfer?.setData('palette-id', String(id))
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
 }
 </script>
 

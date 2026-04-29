@@ -1,0 +1,243 @@
+.ftn-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-right: 8px;
+  cursor: pointer;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  min-height: 30px;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.ftn-row--new { cursor: default; }
+
+/* Light theme */
+.ftn-row--light { color: var(--ink-2); }
+.ftn-row--light:hover:not(.ftn-row--new) {
+  background: rgba(180, 16, 204, 0.07);
+  border-color: rgba(180, 16, 204, 0.18);
+  color: var(--ink);
+}
+.ftn-row--light.ftn-row--active {
+  background: rgba(180, 16, 204, 0.12);
+  border-color: rgba(180, 16, 204, 0.35);
+  color: var(--ink);
+}
+.ftn-row--light.ftn-row--drag {
+  background: rgba(180, 16, 204, 0.18);
+  border-color: rgba(180, 16, 204, 0.5);
+  color: var(--ink);
+}
+
+/* Dark theme */
+.ftn-row--dark { color: rgba(255, 255, 255, 0.55); }
+.ftn-row--dark:hover:not(.ftn-row--new) {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+.ftn-row--dark.ftn-row--active {
+  background: rgba(180, 16, 204, 0.2);
+  border-color: rgba(180, 16, 204, 0.45);
+  color: #fff;
+}
+.ftn-row--dark.ftn-row--drag {
+  background: rgba(180, 16, 204, 0.25);
+  border-color: rgba(180, 16, 204, 0.6);
+  color: #fff;
+}
+
+/* Toggle chevron */
+.ftn-toggle {
+  width: 16px;
+  height: 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  flex-shrink: 0;
+  color: inherit;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.ftn-toggle:hover { opacity: 1; }
+
+.ftn-gap {
+  display: inline-block;
+  width: 16px;
+  flex-shrink: 0;
+}
+
+/* Folder icon */
+.ftn-icon {
+  flex-shrink: 0;
+  display: block;
+  opacity: 0.6;
+  transition: stroke 0.15s, opacity 0.15s;
+  align-self: center;
+}
+.ftn-icon--open { stroke: #b410cc !important; opacity: 1; }
+.ftn-row--active .ftn-icon { opacity: 1; }
+
+/* Label */
+.ftn-label {
+  flex: 1;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  align-self: center;
+}
+
+/* Inline input wrapper (for error message) */
+.ftn-input-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Inline input */
+.ftn-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(180, 16, 204, 0.5);
+  outline: none;
+  font-size: 12.5px;
+  font-family: inherit;
+  line-height: 1.2;
+  padding: 1px 2px;
+  min-width: 0;
+  color: inherit;
+  align-self: center;
+  width: 100%;
+}
+.ftn-row--light .ftn-input { color: var(--ink); }
+.ftn-row--dark .ftn-input { color: #fff; }
+.ftn-input::placeholder { opacity: 0.35; }
+.ftn-input--new { font-style: italic; }
+.ftn-input--error {
+  border-bottom-color: #c0392b;
+  color: #c0392b;
+}
+
+/* Name error message */
+.ftn-name-error {
+  font-size: 10.5px;
+  color: #c0392b;
+  padding: 2px 2px 2px 0;
+  line-height: 1.3;
+}
+
+/* Count badge */
+.ftn-count {
+  font-size: 10px;
+  opacity: 0.4;
+  margin-left: 2px;
+  flex-shrink: 0;
+  font-family: var(--font-mono, monospace);
+  align-self: center;
+}
+
+/* Action buttons (show on row hover) */
+.ftn-btns { display: none; gap: 2px; flex-shrink: 0; }
+.ftn-row:hover .ftn-btns { display: inline-flex; }
+
+.ftn-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  opacity: 0.45;
+  transition: opacity 0.15s, background 0.15s, border-color 0.15s;
+  padding: 0;
+}
+.ftn-btn:hover { opacity: 1; background: rgba(0, 0, 0, 0.07); border-color: rgba(0, 0, 0, 0.12); }
+.ftn-row--dark .ftn-btn:hover { background: rgba(255, 255, 255, 0.09); border-color: rgba(255, 255, 255, 0.14); }
+.ftn-btn--del:hover { color: #b41414 !important; background: rgba(180, 20, 20, 0.1) !important; border-color: rgba(180, 20, 20, 0.2) !important; opacity: 1 !important; }
+
+/* ─── Palette items inside expanded folders ─────────────────── */
+.ftn-palette {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-top: 3px;
+  padding-bottom: 3px;
+  padding-right: 8px;
+  min-height: 26px;
+  cursor: pointer;
+  border-radius: 7px;
+  border: 1px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+  user-select: none;
+  box-sizing: border-box;
+}
+
+.ftn-palette--light { color: var(--ink-3); }
+.ftn-palette--light:hover {
+  background: rgba(14, 14, 16, 0.04);
+  border-color: rgba(14, 14, 16, 0.08);
+  color: var(--ink-2);
+}
+
+.ftn-palette--dark { color: rgba(255, 255, 255, 0.35); }
+.ftn-palette--dark:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.ftn-palette--dragging { opacity: 0.35; cursor: grabbing; }
+
+.ftn-p-title {
+  font-size: 11.5px;
+  font-weight: 500;
+  flex-shrink: 0;
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.2;
+  align-self: center;
+}
+
+.ftn-p-colors {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.ftn-cube {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.ftn-cube-more {
+  font-size: 9px;
+  opacity: 0.5;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}

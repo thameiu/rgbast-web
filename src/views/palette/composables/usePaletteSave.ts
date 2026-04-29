@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import { palettesApi } from '@/api/palettes'
-import type { PaletteColorSave } from '@/api/types'
+import type { PaletteColorSave, PaletteUpdate } from '@/api/types'
 import type { PaletteContext } from './usePaletteContext'
 
 export interface SaveActions {
@@ -33,6 +33,13 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
   const showRevertModal = ref(false)
   const isReverting = ref(false)
   const revertError = ref('')
+
+  const showEditModal = ref(false)
+  const isEditing = ref(false)
+  const editError = ref('')
+  const editTitle = ref('')
+  const editDescription = ref('')
+  const editFolderId = ref<number | null>(null)
 
   const revertableSnapshotCount = computed(() => {
     if (!ctx.selectedSnapshotId.value) return 0
@@ -88,19 +95,30 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       if (ctx.isNewPalette.value) {
         const created = await palettesApi.create({
           title: ctx.pendingTitle.value.trim() || 'New palette',
-          description: '',
+          description: ctx.pendingDescription.value.trim(),
+          folder_id: ctx.pendingFolderId.value ?? null,
           palette_colors: paletteColors,
         })
         palettesApi.cachePalette({
           id: created.id,
           title: created.title,
+          description: created.description,
+          folder_id: created.folder_id,
+          folder_path: created.folder_path,
           created_at: created.created_at,
           palette_colors: paletteColors,
         })
         ctx.showSaveModal.value = false
-        await ctx.router.replace({ name: 'palette', params: { id: created.id } })
+        ctx.pendingDescription.value = ''
+        ctx.pendingFolderId.value = null
+        const pathMatch = [...created.folder_path, created.title].join('/')
+        await ctx.router.replace({ name: 'palette', params: { username: ctx.username.value, pathMatch } })
         await actions.loadHistory()
         return
+      }
+
+      if (ctx.paletteId.value === null) {
+        throw new Error('Palette is not ready yet')
       }
 
       let payload: Parameters<typeof palettesApi.saveSnapshot>[1]
@@ -179,6 +197,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     isMerging.value = true
     mergeError.value = ''
     try {
+      if (ctx.paletteId.value === null) throw new Error('Palette is not ready yet')
       await palettesApi.mergeBranch(ctx.paletteId.value, mergeTargetId.value)
       mergeTargetId.value = null
       ctx.currentBranchId.value = null
@@ -195,6 +214,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     isDeletingPalette.value = true
     deletePaletteError.value = ''
     try {
+      if (ctx.paletteId.value === null) throw new Error('Palette is not ready yet')
       await palettesApi.deletePalette(ctx.paletteId.value)
       showDeletePaletteModal.value = false
       ctx.router.push('/dashboard')
@@ -220,6 +240,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     isDeletingBranch.value = true
     deleteBranchError.value = ''
     try {
+      if (ctx.paletteId.value === null) throw new Error('Palette is not ready yet')
       await palettesApi.deleteBranch(ctx.paletteId.value, deleteBranchTargetId.value)
       if (ctx.currentBranchId.value === deleteBranchTargetId.value) ctx.currentBranchId.value = null
       deleteBranchTargetId.value = null
@@ -239,9 +260,11 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     revertError.value = ''
     try {
       if (c?.isMain) {
+        if (ctx.paletteId.value === null) throw new Error('Palette is not ready yet')
         await palettesApi.revertMainToSnapshot(ctx.paletteId.value, ctx.selectedSnapshotId.value)
         ctx.currentBranchId.value = null
       } else if (c && !c.isMain && c.branchId) {
+        if (ctx.paletteId.value === null) throw new Error('Palette is not ready yet')
         await palettesApi.revertBranchToSnapshot(ctx.paletteId.value, c.branchId, ctx.selectedSnapshotId.value)
         ctx.currentBranchId.value = c.branchId
       }
@@ -252,6 +275,48 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       revertError.value = e.message ?? 'Revert failed'
     } finally {
       isReverting.value = false
+    }
+  }
+
+  function openEditPalette(): void {
+    if (!ctx.history.value) return
+    editTitle.value = ctx.history.value.title
+    editDescription.value = ctx.history.value.description ?? ''
+    editFolderId.value = ctx.historyFolderId.value
+    editError.value = ''
+    showEditModal.value = true
+  }
+
+  async function doEditPalette(): Promise<void> {
+    if (ctx.paletteId.value === null) return
+    isEditing.value = true
+    editError.value = ''
+    try {
+      const payload: PaletteUpdate = {
+        title: editTitle.value.trim() || undefined,
+        description: editDescription.value.trim(),
+        folder_id: editFolderId.value ?? null,
+      }
+      const updated = await palettesApi.updatePalette(ctx.paletteId.value, payload)
+
+      palettesApi.cachePalette({
+        id: updated.id,
+        title: updated.title,
+        description: updated.description,
+        folder_id: updated.folder_id,
+        folder_path: updated.folder_path,
+        created_at: updated.created_at,
+        palette_colors: ctx.colors.value.map(c => ({ hex: c.hex, label: c.label ?? null })),
+      })
+
+      const pathMatch = [...updated.folder_path, updated.title].join('/')
+      await ctx.router.replace({ name: 'palette', params: { username: ctx.username.value, pathMatch } })
+      showEditModal.value = false
+      await actions.loadHistory()
+    } catch (e: any) {
+      editError.value = e.message ?? 'Update failed'
+    } finally {
+      isEditing.value = false
     }
   }
 
@@ -275,6 +340,14 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     showRevertModal,
     isReverting,
     revertError,
+    showEditModal,
+    isEditing,
+    editError,
+    editTitle,
+    editDescription,
+    editFolderId,
+    openEditPalette,
+    doEditPalette,
     revertableSnapshotCount,
     revertTargetLabel,
     requestSave,

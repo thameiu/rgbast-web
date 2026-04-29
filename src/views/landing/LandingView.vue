@@ -22,7 +22,7 @@
         </p>
 
         <div class="cta-row">
-          <RouterLink to="/palette/new" class="btn-primary">
+          <RouterLink to="/login" class="btn-primary">
             Create a palette
           </RouterLink>
           <RouterLink to="/login" class="btn-ghost">
@@ -133,8 +133,10 @@ onMounted(() => { document.title = 'RGBAST — version control for color' })
 
 const now = Date.now()
 const dummyHistory: PaletteHistoryGraphResponse = {
+  palette_id: 0,
   owner_username: 'demo-user',
   title: 'dusk',
+  folder_path: [],
   main: [
     {
       id: 4,

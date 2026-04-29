@@ -16,6 +16,21 @@
             @input="$emit('update:pendingTitle', ($event.target as HTMLInputElement).value)"
             @keydown.enter="$emit('save')"
           />
+          <label class="field-label">Description</label>
+          <textarea
+            :value="pendingDescription"
+            class="modal-input modal-textarea"
+            placeholder="Short note or usage context"
+            maxlength="500"
+            rows="3"
+            @input="$emit('update:pendingDescription', ($event.target as HTMLTextAreaElement).value)"
+          ></textarea>
+          <label class="field-label">Folder</label>
+          <FolderPicker
+            :folders="folders"
+            :modelValue="pendingFolderId"
+            @update:modelValue="$emit('update:pendingFolderId', $event)"
+          />
         </template>
 
         <template v-else-if="selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot">
@@ -129,15 +144,19 @@
 </template>
 
 <script setup lang="ts">
+import type { FolderResponse } from '@/api/types'
 import type { SnapshotContext } from '../../composables/usePaletteContext'
+import FolderPicker from '@/components/folder/FolderPicker.vue'
 
-// PaletteSaveModal component: handles save/create UI for PaletteView.
 defineProps<{
   open: boolean
   isNewPalette: boolean
   currentBranchId: number | null
   currentBranchName: string
   pendingTitle: string
+  pendingDescription: string
+  pendingFolderId: number | null
+  folders: FolderResponse[]
   saveComment: string
   saveError: string
   createNewBranch: boolean
@@ -152,6 +171,8 @@ defineEmits<{
   (e: 'close'): void
   (e: 'save'): void
   (e: 'update:pendingTitle', value: string): void
+  (e: 'update:pendingDescription', value: string): void
+  (e: 'update:pendingFolderId', value: number | null): void
   (e: 'update:saveComment', value: string): void
   (e: 'update:createNewBranch', value: boolean): void
   (e: 'update:newBranchName', value: string): void

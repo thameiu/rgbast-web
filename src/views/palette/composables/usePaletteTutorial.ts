@@ -27,8 +27,10 @@ export function usePaletteTutorial(ctx: TutorialContext) {
   const tutorialNow = Date.now()
 
   const tutorialDemoHistory: PaletteHistoryGraphResponse = {
+    palette_id: 999,
     owner_username: 'tutorial-user',
     title: 'brand-system',
+    folder_path: [],
     main: [
       {
         id: 9004,

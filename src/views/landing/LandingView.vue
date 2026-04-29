@@ -1,7 +1,7 @@
 <template>
   <main class="landing">
     <RgbBackground />
-    <SiteHeader brand-meta="v0.1 · 2026" />
+    <SiteHeader brand-meta="v1.3 · 2026" />
 
     <section class="hero">
       <div class="hero-left">

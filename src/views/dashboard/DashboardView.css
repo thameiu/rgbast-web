@@ -65,6 +65,35 @@
 .sidebar-stats dd { font-size: 25px; font-family: var(--font-display); font-weight: 700; color: var(--ink); }
 
 .err { padding: 10px 12px; border: 1px solid rgba(179,32,50,.3); border-radius: 10px; background: rgba(179,32,50,.08); color: #862028; font-size: 13px; }
+.guest-info {
+  margin-top: 4px;
+  padding: 12px 13px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: rgba(14,14,16,0.03);
+}
+.guest-info-text {
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.45;
+}
+.guest-login-btn {
+  margin-top: 10px;
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--rule);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+.guest-login-btn:hover {
+  border-color: var(--ink-3);
+  background: rgba(14,14,16,0.04);
+}
 
 .folder-panel {
   margin-top: 22px;
@@ -87,6 +116,13 @@
   animation: riseIn .7s cubic-bezier(.2,.9,.2,1) .08s backwards;
 }
 .content-head { max-width: 680px; }
+.guest-note {
+  margin-top: 12px;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
 .eyebrow {
   display: inline-flex;
   align-items: center;

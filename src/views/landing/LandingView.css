@@ -83,12 +83,9 @@
   text-decoration: none;
   transition: background .2s, transform .2s;
 }
-.btn-primary::after {
-  content: "->";
-  transition: transform .2s;
-}
+.btn-arrow { transition: transform .2s; }
 .btn-primary:hover { background: var(--magenta); transform: translateY(-1px); }
-.btn-primary:hover::after { transform: translateX(3px); }
+.btn-primary:hover .btn-arrow { transform: translateX(3px); }
 
 .btn-ghost {
   display: inline-flex;

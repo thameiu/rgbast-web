@@ -88,4 +88,9 @@ export const paletteDraftsApi = {
       .filter(d => d.ownerUsername === ownerUsername)
       .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
   },
+
+  listAllDrafts(): PaletteDraftEntry[] {
+    return Object.values(readDraftMap())
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+  },
 }

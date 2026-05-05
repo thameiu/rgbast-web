@@ -332,15 +332,19 @@ function fromDraftHistorySnapshot(snap: PaletteDraftHistorySnapshot): HistorySna
 }
 
 function hydrateDraftIfReady(): void {
-  if (ctx.loading.value || ctx.error.value) return
+  if (ctx.loading.value) return
   const key = ctx.draftKey.value
   if (!key || hydratedDraftKey.value === key) return
-  hydratedDraftKey.value = key
 
   const draft = paletteDraftsApi.getDraft(key)
+  hydratedDraftKey.value = key
   if (!draft) return
 
   hydratingDraft.value = true
+  if (ctx.error.value) ctx.error.value = null
+  if (!ctx.history.value && draft.paletteId !== null) {
+    ctx.paletteId.value = draft.paletteId
+  }
   ctx.colors.value = ctx.wrapColors(draft.colors)
   ctx.selectedSnapshotId.value = draft.selectedSnapshotId
   ctx.currentBranchId.value = draft.currentBranchId
@@ -358,7 +362,7 @@ function hydrateDraftIfReady(): void {
 }
 
 function persistDraftIfNeeded(): void {
-  if (hydratingDraft.value || ctx.loading.value || !!ctx.error.value) return
+  if (hydratingDraft.value || ctx.loading.value) return
   const key = ctx.draftKey.value
   if (!key || !ctx.username.value) return
   if (hydratedDraftKey.value !== key) return

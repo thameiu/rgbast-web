@@ -47,7 +47,12 @@
           </div>
         </template>
 
-        <p v-else class="err">Unable to fetch session.</p>
+        <template v-else>
+          <div class="guest-info">
+            <p class="guest-info-text">You are not logged in. Showing local drafts stored in this browser.</p>
+            <button class="guest-login-btn" @click="router.push('/login')">Log in</button>
+          </div>
+        </template>
       </aside>
 
       <section class="content">
@@ -59,6 +64,7 @@
           <h1 class="content-title font-display">
             Your <em>palettes</em>, committed.
           </h1>
+          <p v-if="!user" class="guest-note font-mono">Guest mode · local drafts only</p>
         </header>
 
         <div class="palettes-section">
@@ -298,6 +304,35 @@ const editDraftFolderId = ref<number | null>(null)
 const isSavingEdit = ref(false)
 const editError = ref('')
 
+function applyDraftsToState(drafts: PaletteDraftEntry[], serverIds: Set<number>) {
+  unsavedDraftByPaletteId.value = drafts.reduce<Record<number, PaletteDraftEntry>>((acc, d) => {
+    if (d.mode === 'existing' && d.paletteId !== null) acc[d.paletteId] = d
+    return acc
+  }, {})
+  unsavedDraftPaletteIds.value = Array.from(
+    new Set(
+      drafts
+        .filter(d => d.mode === 'existing' && d.paletteId !== null)
+        .map(d => d.paletteId as number),
+    ),
+  )
+  localDraftCards.value = drafts
+    .filter(d => d.mode === 'new' || d.paletteId === null || !serverIds.has(d.paletteId))
+    .map((d, idx) => ({
+      id: -(idx + 1),
+      title: d.paletteTitle || 'Untitled draft',
+      description: d.description || '',
+      folder_id: d.pendingFolderId,
+      folder_path: d.folderPath ?? [],
+      created_at: d.updatedAt,
+      last_snapshot_at: d.updatedAt,
+      palette_colors: d.colors,
+      isLocalDraftOnly: true,
+      hasUnsavedDraft: true,
+      draftLink: d.linkPath,
+    }))
+}
+
 const folderCounts = computed(() => {
   const counts: Record<number, number> = {}
   for (const p of palettes.value) {
@@ -378,7 +413,17 @@ function onBreadcrumbDragleave() {
 }
 
 async function loadDashboard() {
+  loading.value = true
   try {
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      user.value = null
+      palettes.value = []
+      folders.value = []
+      applyDraftsToState(paletteDraftsApi.listAllDrafts(), new Set<number>())
+      return
+    }
+
     user.value = await authApi.checkAuth()
     const resp = await palettesApi.getByUsername(user.value.username)
     palettes.value = resp.palettes.map(p => {
@@ -395,38 +440,15 @@ async function loadDashboard() {
       palettesApi.cachePalette(cached)
       return cached
     })
-    const drafts = paletteDraftsApi.listByOwner(user.value.username)
     const serverIds = new Set(palettes.value.map(p => p.id))
-    unsavedDraftByPaletteId.value = drafts.reduce<Record<number, PaletteDraftEntry>>((acc, d) => {
-      if (d.mode === 'existing' && d.paletteId !== null) acc[d.paletteId] = d
-      return acc
-    }, {})
-    unsavedDraftPaletteIds.value = Array.from(
-      new Set(
-        drafts
-          .filter(d => d.mode === 'existing' && d.paletteId !== null)
-          .map(d => d.paletteId as number),
-      ),
-    )
-    localDraftCards.value = drafts
-      .filter(d => d.mode === 'new' || d.paletteId === null || !serverIds.has(d.paletteId))
-      .map((d, idx) => ({
-        id: -(idx + 1),
-        title: d.paletteTitle || 'Untitled draft',
-        description: d.description || '',
-        folder_id: d.pendingFolderId,
-        folder_path: d.folderPath ?? [],
-        created_at: d.updatedAt,
-        last_snapshot_at: d.updatedAt,
-        palette_colors: d.colors,
-        isLocalDraftOnly: true,
-        hasUnsavedDraft: true,
-        draftLink: d.linkPath,
-      }))
+    applyDraftsToState(paletteDraftsApi.listByOwner(user.value.username), serverIds)
     await loadFolders()
   } catch {
     localStorage.removeItem('access_token')
-    router.push('/login')
+    user.value = null
+    palettes.value = []
+    folders.value = []
+    applyDraftsToState(paletteDraftsApi.listAllDrafts(), new Set<number>())
   } finally {
     loading.value = false
   }
@@ -447,17 +469,20 @@ onMounted(() => {
 })
 
 function openPalette(p: DashboardPaletteCard) {
-  if (!user.value?.username) return
   if (p.draftLink) {
     router.push(p.draftLink)
     return
   }
+  if (!user.value?.username) return
   const segments = [...(p.folder_path ?? []), p.title].filter(Boolean)
   router.push({ name: 'palette', params: { username: user.value.username, pathMatch: segments.join('/') } })
 }
 
 function newPalette() {
-  if (!user.value?.username) return
+  if (!user.value?.username) {
+    router.push({ name: 'palette', params: { username: 'local', pathMatch: 'new' } })
+    return
+  }
   const folderId = typeof activeFolderKey.value === 'number' ? activeFolderKey.value : null
   router.push({
     name: 'palette',

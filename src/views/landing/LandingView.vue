@@ -22,8 +22,9 @@
         </p>
 
         <div class="cta-row">
-          <RouterLink to="/login" class="btn-primary">
+          <RouterLink :to="{ name: 'palette', params: { username: 'local', pathMatch: 'new' } }" class="btn-primary">
             Create a palette
+            <span class="btn-arrow" aria-hidden="true">→</span>
           </RouterLink>
           <RouterLink to="/login" class="btn-ghost">
             <span class="font-mono">→</span> Sign in

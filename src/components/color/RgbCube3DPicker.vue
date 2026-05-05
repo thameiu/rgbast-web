@@ -70,24 +70,24 @@ const cutRChannel = computed(() => idxToChannel(cutR.value, resolution.value))
 const cutGChannel = computed(() => idxToChannel(cutG.value, resolution.value))
 const cutBChannel = computed(() => idxToChannel(cutB.value, resolution.value))
 
-let scene: THREE.Scene | null = null
-let camera: THREE.PerspectiveCamera | null = null
-let renderer: THREE.WebGLRenderer | null = null
+let scene: any = null
+let camera: any = null
+let renderer: any = null
 
-let cubeMaterial: THREE.ShaderMaterial | null = null
-let cubeMesh: THREE.Mesh | null = null
-let cubeWire: THREE.LineSegments | null = null
-let markerRingLight: THREE.Mesh | null = null
-let markerRingDark: THREE.Mesh | null = null
+let cubeMaterial: any = null
+let cubeMesh: any = null
+let cubeWire: any = null
+let markerRingLight: any = null
+let markerRingDark: any = null
 let resizeObserver: ResizeObserver | null = null
-let axisScene: THREE.Scene | null = null
-let axisCamera: THREE.PerspectiveCamera | null = null
-let axisRenderer: THREE.WebGLRenderer | null = null
-let axisRoot: THREE.Group | null = null
-let axisLabelMaterials: THREE.SpriteMaterial[] = []
+let axisScene: any = null
+let axisCamera: any = null
+let axisRenderer: any = null
+let axisRoot: any = null
+let axisLabelMaterials: any[] = []
 
-let raycaster: THREE.Raycaster | null = null
-let ndcPointer: THREE.Vector2 | null = null
+let raycaster: any = null
+let ndcPointer: any = null
 let cameraTarget = new THREE.Vector3(0, 0, 0)
 
 let frameId: number | null = null
@@ -362,7 +362,7 @@ function onContextMenu(event: MouseEvent) {
   event.preventDefault()
 }
 
-function makeAxisLabel(text: string, color: string): THREE.Sprite {
+function makeAxisLabel(text: string, color: string): any {
   const canvas = document.createElement('canvas')
   canvas.width = 96
   canvas.height = 96
@@ -561,12 +561,12 @@ function teardown() {
   cubeMaterial?.dispose()
 
   markerRingLight?.geometry.dispose()
-  ;(markerRingLight?.material as THREE.Material | undefined)?.dispose()
+  ;(markerRingLight?.material as any)?.dispose()
 
   markerRingDark?.geometry.dispose()
-  ;(markerRingDark?.material as THREE.Material | undefined)?.dispose()
+  ;(markerRingDark?.material as any)?.dispose()
 
-  if (cubeWire?.material && cubeWire.material instanceof THREE.Material) {
+  if (cubeWire?.material) {
     cubeWire.material.dispose()
   }
 

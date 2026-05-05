@@ -29,6 +29,7 @@
       @openGenerateSettings="generator.generateOpen.value = true"
       @undo="undo.doUndo"
       @redo="undo.doRedo"
+      @openImagePalette="openImagePaletteModal"
     />
 
     <div v-if="ctx.loading.value" class="loading-screen">
@@ -204,6 +205,19 @@
       @update:genHarmony="generator.genHarmony.value = $event as typeof generator.genHarmony.value"
     />
 
+    <PaletteImageModal
+      :open="imagePaletteOpen"
+      :isLoading="imagePaletteLoading"
+      :error="imagePaletteError"
+      :count="imagePaletteCount"
+      :file="imagePaletteFile"
+      :fileName="imagePaletteFile?.name ?? ''"
+      @close="closeImagePaletteModal"
+      @update:count="imagePaletteCount = $event"
+      @fileChange="onImagePaletteFileChange"
+      @submit="extractPaletteFromImage"
+    />
+
     <PaletteTutorialOverlay
       :show="tutorial.showTutorial.value"
       :tutorialFocus="tutorial.tutorialFocus.value"
@@ -259,10 +273,12 @@ import PaletteDeletePaletteModal from './components/modals/PaletteDeletePaletteM
 import PaletteDeleteBranchModal from './components/modals/PaletteDeleteBranchModal.vue'
 import PaletteRevertModal from './components/modals/PaletteRevertModal.vue'
 import PaletteGenerateModal from './components/modals/PaletteGenerateModal.vue'
+import PaletteImageModal from './components/modals/PaletteImageModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
 import { ref, watch } from 'vue'
 import { foldersApi } from '@/api/folders'
+import { colorApi } from '@/api/color'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteDraftHistorySnapshot } from '@/api/paletteDrafts'
 import type { PaletteColorSave } from '@/api/types'
@@ -305,6 +321,13 @@ const save = usePaletteSave(ctx, {
   loadHistory: ctx.loadHistory,
   clearHistory: undo.clearHistory,
 })
+
+const IMAGE_MAX_BYTES = 50 * 1024 * 1024
+const imagePaletteOpen = ref(false)
+const imagePaletteLoading = ref(false)
+const imagePaletteError = ref('')
+const imagePaletteCount = ref(5)
+const imagePaletteFile = ref<File | null>(null)
 
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
@@ -444,6 +467,56 @@ function clearSnapshotSelectionWithUndo(): void {
 // Update the generator palette dropdown index from the modal component.
 function setGenPaletteDropIdx(value: number | null): void {
   generator.genPaletteDropIdx.value = value
+}
+
+function openImagePaletteModal(): void {
+  imagePaletteOpen.value = true
+  imagePaletteError.value = ''
+}
+
+function closeImagePaletteModal(): void {
+  imagePaletteOpen.value = false
+  imagePaletteLoading.value = false
+  imagePaletteError.value = ''
+}
+
+function onImagePaletteFileChange(file: File | null): void {
+  imagePaletteError.value = ''
+  if (!file) {
+    imagePaletteFile.value = null
+    return
+  }
+  if (file.size > IMAGE_MAX_BYTES) {
+    imagePaletteFile.value = null
+    imagePaletteError.value = 'Image is too large. Maximum size is 50MB.'
+    return
+  }
+  if (!file.type.startsWith('image/')) {
+    imagePaletteFile.value = null
+    imagePaletteError.value = 'File must be an image.'
+    return
+  }
+  imagePaletteFile.value = file
+}
+
+async function extractPaletteFromImage(): Promise<void> {
+  if (!imagePaletteFile.value) {
+    imagePaletteError.value = 'Please choose an image first.'
+    return
+  }
+  imagePaletteLoading.value = true
+  imagePaletteError.value = ''
+  try {
+    const resp = await colorApi.generatePaletteFromImage(imagePaletteFile.value, imagePaletteCount.value)
+    if (!resp.colors.length) throw new Error('No dominant colors could be extracted.')
+    undo.captureForUndo()
+    ctx.colors.value = resp.colors.map(c => ({ hex: c.hex, label: null, _key: ctx.mkKey() }))
+    closeImagePaletteModal()
+  } catch (e: any) {
+    imagePaletteError.value = e.message ?? 'Could not extract colors from image.'
+  } finally {
+    imagePaletteLoading.value = false
+  }
 }
 
 async function handleCreateFolder(payload: { name: string; parentId: number | null }) {

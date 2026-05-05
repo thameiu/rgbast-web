@@ -8,13 +8,10 @@ const API_BASE_URL =
 
 /** Thin fetch wrapper that attaches the JWT bearer token and handles error responses. */
 export class ApiClient {
-  /** Builds headers with Content-Type and Authorization if a token is stored. */
-  private static getHeaders() {
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-    
-    // Example: retrieve token from localStorage
+  /** Builds Authorization header if a token is stored. */
+  private static getAuthHeaders() {
+    const headers: Record<string, string> = {};
+
     const token = localStorage.getItem('access_token');
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -22,11 +19,19 @@ export class ApiClient {
     return headers;
   }
 
+  /** Builds JSON headers with Content-Type and Authorization. */
+  private static getJsonHeaders() {
+    return {
+      'Content-Type': 'application/json',
+      ...this.getAuthHeaders(),
+    };
+  }
+
   /** Generic request with explicit HTTP method. */
   static async request<T>(endpoint: string, method: HttpMethod, body?: unknown): Promise<T> {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method,
-      headers: this.getHeaders(),
+      headers: this.getJsonHeaders(),
       body: body ? JSON.stringify(body) : undefined,
     });
     return this.handleResponse(response);
@@ -40,6 +45,16 @@ export class ApiClient {
   /** POST request with optional JSON body. */
   static async post<T>(endpoint: string, body?: unknown): Promise<T> {
     return this.request<T>(endpoint, 'POST', body);
+  }
+
+  /** POST multipart/form-data body (used for file uploads). */
+  static async postForm<T>(endpoint: string, body: FormData): Promise<T> {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: this.getAuthHeaders(),
+      body,
+    });
+    return this.handleResponse(response);
   }
 
   /** PUT request with optional JSON body. */

@@ -128,6 +128,17 @@
           </svg>
         </button>
       </div>
+      <button
+        class="image-action-btn"
+        title="Extract palette from image"
+        @click="$emit('openImagePalette')"
+      >
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
+          <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
 
       <button
         v-if="isOwned && canDelete"
@@ -188,6 +199,17 @@
         <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
           <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
           <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button
+        class="image-mobile-btn"
+        title="Extract palette from image"
+        @click="$emit('openImagePalette')"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
+          <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
+          <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
       <button
@@ -272,6 +294,7 @@ const emit = defineEmits<{
   hamburgerClick: []
   generate: []
   openGenerateSettings: []
+  openImagePalette: []
   undo: []
   redo: []
 }>()

@@ -265,6 +265,34 @@
   color: rgba(255,120,120,0.9);
 }
 
+.image-action-btn,
+.image-mobile-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.72);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.image-action-btn:hover,
+.image-mobile-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.22);
+  color: #fff;
+}
+
+.image-mobile-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+}
+
 /* ─── Mobile history + hamburger buttons ─────────────────── */
 .mobile-right {
   display: none;

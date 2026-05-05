@@ -3,6 +3,7 @@ import type { Ref, ComputedRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
 import { foldersApi } from '@/api/folders'
+import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { FolderResponse, PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
 import { getBranchColor } from '@/utils/branchColors'
 
@@ -28,6 +29,7 @@ export interface PaletteContext {
   paletteName: ComputedRef<string>
   folderPath: ComputedRef<string[]>
   palettePath: ComputedRef<string>
+  draftKey: ComputedRef<string>
   isOwned: ComputedRef<boolean>
   pendingTitle: Ref<string>
   pendingDescription: Ref<string>
@@ -125,6 +127,7 @@ export function usePaletteContext(): PaletteContext {
     const segments = [...folderPath.value, paletteName.value].filter(Boolean)
     return segments.join('/')
   })
+  const draftKey = computed(() => paletteDraftsApi.makeDraftKey(username.value, palettePath.value))
 
   const isNewPalette = computed(() => paletteName.value === 'new')
   const paletteId = ref<number | null>(null)
@@ -447,6 +450,7 @@ export function usePaletteContext(): PaletteContext {
     paletteName,
     folderPath,
     palettePath,
+    draftKey,
     isOwned,
     pendingTitle,
     pendingDescription,

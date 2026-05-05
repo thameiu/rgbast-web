@@ -16,8 +16,10 @@ export interface KeyboardActions {
 // Wire global keyboard shortcuts for PaletteView and ensure cleanup.
 export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardActions) {
   let altHeld = false
-  let undoPending = false
-  let redoPending = false
+
+  function keyOf(e: KeyboardEvent): string {
+    return e.key.toLowerCase()
+  }
 
   // Handle keydown events for PaletteView shortcuts.
   function onKeydown(e: KeyboardEvent): void {
@@ -26,19 +28,21 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       return
     }
 
-    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ' && !e.shiftKey) {
+    const key = keyOf(e)
+
+    if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
-      undoPending = true
+      if (!e.repeat) actions.doUndo()
       return
     }
-    if ((e.ctrlKey || e.metaKey) && (e.code === 'KeyY' || (e.code === 'KeyZ' && e.shiftKey))) {
+    if ((e.ctrlKey || e.metaKey) && (key === 'y' || (key === 'z' && e.shiftKey))) {
       e.preventDefault()
       e.stopImmediatePropagation()
-      redoPending = true
+      if (!e.repeat) actions.doRedo()
       return
     }
-    if ((e.ctrlKey || e.metaKey) && e.code === 'KeyS') {
+    if ((e.ctrlKey || e.metaKey) && key === 's') {
       e.preventDefault()
       e.stopImmediatePropagation()
       actions.requestSave()
@@ -65,17 +69,6 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
   function onKeyup(e: KeyboardEvent): void {
     if (e.key === 'Alt') {
       altHeld = false
-      return
-    }
-
-    if (e.code === 'KeyZ' && undoPending) {
-      undoPending = false
-      actions.doUndo()
-      return
-    }
-    if ((e.code === 'KeyZ' || e.code === 'KeyY') && redoPending) {
-      redoPending = false
-      actions.doRedo()
       return
     }
 

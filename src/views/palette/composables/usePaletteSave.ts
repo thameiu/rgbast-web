@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { palettesApi } from '@/api/palettes'
+import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteColorSave, PaletteUpdate } from '@/api/types'
 import type { PaletteContext } from './usePaletteContext'
 
@@ -93,6 +94,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       const paletteColors: PaletteColorSave[] = ctx.colors.value.map(c => ({ hex: c.hex, label: c.label ?? null }))
 
       if (ctx.isNewPalette.value) {
+        const oldDraftKey = ctx.draftKey.value
         const created = await palettesApi.create({
           title: ctx.pendingTitle.value.trim() || 'New palette',
           description: ctx.pendingDescription.value.trim(),
@@ -111,6 +113,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
         ctx.showSaveModal.value = false
         ctx.pendingDescription.value = ''
         ctx.pendingFolderId.value = null
+        paletteDraftsApi.removeDraft(oldDraftKey)
         const pathMatch = [...created.folder_path, created.title].join('/')
         await ctx.router.replace({ name: 'palette', params: { username: ctx.username.value, pathMatch } })
         await actions.loadHistory()
@@ -169,6 +172,8 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       }
 
       ctx.selectedSnapshotId.value = null
+      paletteDraftsApi.removeByPaletteId(ctx.paletteId.value)
+      paletteDraftsApi.removeDraft(ctx.draftKey.value)
       await actions.loadHistory()
       ctx.showSaveModal.value = false
       saveComment.value = ''
@@ -216,6 +221,8 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     try {
       if (ctx.paletteId.value === null) throw new Error('Palette is not ready yet')
       await palettesApi.deletePalette(ctx.paletteId.value)
+      paletteDraftsApi.removeByPaletteId(ctx.paletteId.value)
+      paletteDraftsApi.removeDraft(ctx.draftKey.value)
       showDeletePaletteModal.value = false
       ctx.router.push('/dashboard')
     } catch (e: any) {

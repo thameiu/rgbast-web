@@ -261,10 +261,14 @@ import PaletteRevertModal from './components/modals/PaletteRevertModal.vue'
 import PaletteGenerateModal from './components/modals/PaletteGenerateModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 import { foldersApi } from '@/api/folders'
+import { paletteDraftsApi } from '@/api/paletteDrafts'
+import type { PaletteDraftHistorySnapshot } from '@/api/paletteDrafts'
+import type { PaletteColorSave } from '@/api/types'
 import { usePaletteContext } from './composables/usePaletteContext'
 import { usePaletteUndo } from './composables/usePaletteUndo'
+import type { HistorySnapshot } from './composables/usePaletteUndo'
 import { usePaletteInteractions } from './composables/usePaletteInteractions'
 import { usePaletteGenerator } from './composables/usePaletteGenerator'
 import { usePaletteTutorial } from './composables/usePaletteTutorial'
@@ -301,6 +305,100 @@ const save = usePaletteSave(ctx, {
   loadHistory: ctx.loadHistory,
   clearHistory: undo.clearHistory,
 })
+
+const hydratedDraftKey = ref<string | null>(null)
+const hydratingDraft = ref(false)
+
+function toSaveColors(colors: Array<{ hex: string; label: string | null }>): PaletteColorSave[] {
+  return colors.map(c => ({ hex: c.hex, label: c.label ?? null }))
+}
+
+function toDraftHistorySnapshot(snap: HistorySnapshot): PaletteDraftHistorySnapshot {
+  return {
+    colors: toSaveColors(snap.colors),
+    selectedSnapshotId: snap.selectedSnapshotId,
+    currentBranchId: snap.currentBranchId,
+    savedColorsSig: snap.savedColorsSig,
+  }
+}
+
+function fromDraftHistorySnapshot(snap: PaletteDraftHistorySnapshot): HistorySnapshot {
+  return {
+    colors: ctx.wrapColors(snap.colors),
+    selectedSnapshotId: snap.selectedSnapshotId,
+    currentBranchId: snap.currentBranchId,
+    savedColorsSig: snap.savedColorsSig,
+  }
+}
+
+function hydrateDraftIfReady(): void {
+  if (ctx.loading.value || ctx.error.value) return
+  const key = ctx.draftKey.value
+  if (!key || hydratedDraftKey.value === key) return
+  hydratedDraftKey.value = key
+
+  const draft = paletteDraftsApi.getDraft(key)
+  if (!draft) return
+
+  hydratingDraft.value = true
+  ctx.colors.value = ctx.wrapColors(draft.colors)
+  ctx.selectedSnapshotId.value = draft.selectedSnapshotId
+  ctx.currentBranchId.value = draft.currentBranchId
+  ctx.savedColorsSig.value = draft.savedColorsSig
+
+  if (ctx.isNewPalette.value) {
+    ctx.pendingTitle.value = draft.pendingTitle || ctx.pendingTitle.value
+    ctx.pendingDescription.value = draft.pendingDescription
+    ctx.pendingFolderId.value = draft.pendingFolderId
+  }
+
+  undo.undoPast.value = draft.undoPast.map(fromDraftHistorySnapshot)
+  undo.undoFuture.value = draft.undoFuture.map(fromDraftHistorySnapshot)
+  hydratingDraft.value = false
+}
+
+function persistDraftIfNeeded(): void {
+  if (hydratingDraft.value || ctx.loading.value || !!ctx.error.value) return
+  const key = ctx.draftKey.value
+  if (!key || !ctx.username.value) return
+  if (hydratedDraftKey.value !== key) return
+
+  if (!ctx.hasUnsavedChanges.value) {
+    paletteDraftsApi.removeDraft(key)
+    return
+  }
+
+  const isExisting = !ctx.isNewPalette.value && ctx.paletteId.value !== null
+  const pendingFolderPath =
+    ctx.pendingFolderId.value === null
+      ? []
+      : (ctx.folderOptions.value.find(f => f.id === ctx.pendingFolderId.value)?.label.split(' / ') ?? [])
+  const folderPath = isExisting
+    ? (ctx.history.value?.folder_path ?? ctx.folderPath.value)
+    : pendingFolderPath
+
+  paletteDraftsApi.saveDraft({
+    key,
+    mode: isExisting ? 'existing' : 'new',
+    paletteId: isExisting ? ctx.paletteId.value : null,
+    ownerUsername: ctx.username.value,
+    palettePath: ctx.palettePath.value,
+    paletteTitle: ctx.isNewPalette.value ? (ctx.pendingTitle.value.trim() || 'Untitled draft') : ctx.paletteTitle.value,
+    description: ctx.isNewPalette.value ? ctx.pendingDescription.value : (ctx.history.value?.description ?? ''),
+    folderPath,
+    pendingTitle: ctx.pendingTitle.value,
+    pendingDescription: ctx.pendingDescription.value,
+    pendingFolderId: ctx.pendingFolderId.value,
+    linkPath: ctx.route.fullPath,
+    colors: toSaveColors(ctx.colors.value),
+    selectedSnapshotId: ctx.selectedSnapshotId.value,
+    currentBranchId: ctx.currentBranchId.value,
+    savedColorsSig: ctx.savedColorsSig.value,
+    undoPast: undo.undoPast.value.map(toDraftHistorySnapshot),
+    undoFuture: undo.undoFuture.value.map(toDraftHistorySnapshot),
+    updatedAt: new Date().toISOString(),
+  })
+}
 
 const historyActions = usePaletteHistoryActions({
   ctx,
@@ -375,6 +473,42 @@ watch(
     }
   },
   { immediate: true },
+)
+
+watch(
+  () => [ctx.route.params.username, ctx.route.params.pathMatch, ctx.route.query.palette],
+  () => {
+    hydratedDraftKey.value = null
+  },
+)
+
+watch(
+  [ctx.loading, ctx.error, ctx.draftKey],
+  () => {
+    hydrateDraftIfReady()
+  },
+  { immediate: true },
+)
+
+watch(
+  [
+    ctx.currentColorsSig,
+    ctx.savedColorsSig,
+    ctx.currentBranchId,
+    ctx.selectedSnapshotId,
+    ctx.pendingTitle,
+    ctx.pendingDescription,
+    ctx.pendingFolderId,
+    undo.undoPast,
+    undo.undoFuture,
+    ctx.loading,
+    ctx.error,
+    ctx.paletteId,
+  ],
+  () => {
+    persistDraftIfNeeded()
+  },
+  { deep: true },
 )
 
 // Initialize palette loading when the route changes.

@@ -27,6 +27,7 @@
 
       <div class="cube-actions">
         <button type="button" class="camera-reset-btn" @click="resetCamera">Reset Camera</button>
+        <button type="button" class="camera-reset-btn" @click="resetScales">Reset Scales</button>
       </div>
     </div>
 
@@ -96,6 +97,7 @@ let dragMoved = false
 let dragStartX = 0
 let dragStartY = 0
 let dragMode: 'rotate' | 'pan' | null = null
+const activeTouchPoints = new Map<number, { x: number; y: number }>()
 
 let yaw = Math.PI / 4
 let pitch = 0.52
@@ -299,7 +301,41 @@ function resetCamera() {
   updateCamera()
 }
 
+function resetScales() {
+  const maxCut = Math.max(0, resolution.value - 1)
+  cutR.value = maxCut
+  cutG.value = maxCut
+  cutB.value = maxCut
+}
+
+function applyRotate(dx: number, dy: number) {
+  yaw += dx * 0.006
+  pitch = clamp(pitch + dy * 0.006, -1.45, 1.45)
+}
+
+function applyPan(dx: number, dy: number) {
+  if (!camera) return
+  const panScale = distance * 0.0018
+  const viewDir = cameraTarget.clone().sub(camera.position).normalize()
+  const right = new THREE.Vector3().crossVectors(viewDir, camera.up).normalize()
+  const up = camera.up.clone().normalize()
+  const move = right.multiplyScalar(-dx * panScale).add(up.multiplyScalar(dy * panScale))
+  cameraTarget.add(move)
+}
+
 function onPointerDown(event: PointerEvent) {
+  if (event.pointerType === 'touch') {
+    event.preventDefault()
+    renderer?.domElement?.setPointerCapture?.(event.pointerId)
+    activeTouchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    isDragging = true
+    dragMoved = false
+    dragStartX = event.clientX
+    dragStartY = event.clientY
+    dragMode = activeTouchPoints.size >= 2 ? 'pan' : 'rotate'
+    return
+  }
+
   if (event.button !== 0 && event.button !== 2) return
   isDragging = true
   dragMoved = false
@@ -310,22 +346,31 @@ function onPointerDown(event: PointerEvent) {
 
 function onPointerMove(event: PointerEvent) {
   if (!isDragging || !camera || !dragMode) return
+
+  if (event.pointerType === 'touch') {
+    const prev = activeTouchPoints.get(event.pointerId)
+    if (!prev) return
+
+    const dx = event.clientX - prev.x
+    const dy = event.clientY - prev.y
+    activeTouchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY })
+    if (Math.abs(dx) > 1 || Math.abs(dy) > 1) dragMoved = true
+
+    dragMode = activeTouchPoints.size >= 2 ? 'pan' : 'rotate'
+    if (dragMode === 'pan') applyPan(dx, dy)
+    else applyRotate(dx, dy)
+
+    updateCamera()
+    return
+  }
+
   const dx = event.clientX - dragStartX
   const dy = event.clientY - dragStartY
 
   if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragMoved = true
 
-  if (dragMode === 'rotate') {
-    yaw += dx * 0.006
-    pitch = clamp(pitch + dy * 0.006, -1.45, 1.45)
-  } else {
-    const panScale = distance * 0.0018
-    const viewDir = cameraTarget.clone().sub(camera.position).normalize()
-    const right = new THREE.Vector3().crossVectors(viewDir, camera.up).normalize()
-    const up = camera.up.clone().normalize()
-    const move = right.multiplyScalar(-dx * panScale).add(up.multiplyScalar(dy * panScale))
-    cameraTarget.add(move)
-  }
+  if (dragMode === 'rotate') applyRotate(dx, dy)
+  else applyPan(dx, dy)
 
   dragStartX = event.clientX
   dragStartY = event.clientY
@@ -334,11 +379,41 @@ function onPointerMove(event: PointerEvent) {
 }
 
 function onPointerUp(event: PointerEvent) {
+  if (event.pointerType === 'touch') {
+    renderer?.domElement?.releasePointerCapture?.(event.pointerId)
+    activeTouchPoints.delete(event.pointerId)
+    if (activeTouchPoints.size >= 2) dragMode = 'pan'
+    else if (activeTouchPoints.size === 1) dragMode = 'rotate'
+    else {
+      const wasRotateTouch = dragMode === 'rotate'
+      isDragging = false
+      dragMode = null
+      if (!dragMoved && wasRotateTouch) handlePick(event.clientX, event.clientY)
+    }
+    return
+  }
+
   if (!isDragging) return
   const wasRotate = dragMode === 'rotate'
   isDragging = false
   dragMode = null
   if (!dragMoved && wasRotate && event.button === 0) handlePick(event.clientX, event.clientY)
+}
+
+function onPointerCancel(event: PointerEvent) {
+  if (event.pointerType === 'touch') {
+    renderer?.domElement?.releasePointerCapture?.(event.pointerId)
+    activeTouchPoints.delete(event.pointerId)
+    if (!activeTouchPoints.size) {
+      isDragging = false
+      dragMode = null
+      dragMoved = false
+    }
+  } else {
+    isDragging = false
+    dragMode = null
+    dragMoved = false
+  }
 }
 
 function onWheel(event: WheelEvent) {
@@ -531,6 +606,7 @@ function initScene() {
   renderer.domElement.addEventListener('contextmenu', onContextMenu)
   window.addEventListener('pointermove', onPointerMove)
   window.addEventListener('pointerup', onPointerUp)
+  window.addEventListener('pointercancel', onPointerCancel)
   window.addEventListener('resize', onResize)
 
   if (canvasHost.value && typeof ResizeObserver !== 'undefined') {
@@ -553,6 +629,7 @@ function teardown() {
 
   window.removeEventListener('pointermove', onPointerMove)
   window.removeEventListener('pointerup', onPointerUp)
+  window.removeEventListener('pointercancel', onPointerCancel)
   window.removeEventListener('resize', onResize)
   resizeObserver?.disconnect()
   resizeObserver = null

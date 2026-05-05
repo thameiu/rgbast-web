@@ -76,6 +76,12 @@
             {{ isLoading ? 'Extracting...' : 'Extract palette' }}
           </button>
         </div>
+
+        <Transition name="image-modal-loader-fade">
+          <div v-if="isLoading" class="image-modal-loader-overlay">
+            <AppLoader message="Extracting palette from image..." />
+          </div>
+        </Transition>
       </div>
     </div>
   </Teleport>
@@ -83,6 +89,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import AppLoader from '@/components/ui/AppLoader.vue'
 
 const props = defineProps<{
   open: boolean

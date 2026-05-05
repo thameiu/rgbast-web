@@ -20,6 +20,11 @@
   animation: modalPop 0.2s cubic-bezier(.2,.9,.2,1);
 }
 
+.image-modal {
+  position: relative;
+  overflow: hidden;
+}
+
 @keyframes modalPop {
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
@@ -208,4 +213,25 @@
 .modal-btn.confirm:disabled {
   opacity: 0.35;
   cursor: not-allowed;
+}
+
+.image-modal-loader-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 7, 12, 0.74);
+  backdrop-filter: blur(2px);
+}
+
+.image-modal-loader-fade-enter-active,
+.image-modal-loader-fade-leave-active {
+  transition: opacity 0.18s ease;
+}
+
+.image-modal-loader-fade-enter-from,
+.image-modal-loader-fade-leave-to {
+  opacity: 0;
 }

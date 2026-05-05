@@ -252,6 +252,7 @@
       @openImagePalette="openImagePaletteModal"
       @edit="save.openEditPalette"
     />
+
   </div>
 </template>
 

@@ -71,9 +71,9 @@
  * in the palette editor.
  * Clicking the body or hex text opens the inline ColorPicker popover.
  * The 6-dot drag handle emits dragStart on pointerdown for pointer-based
- * horizontal reordering on desktop; on mobile it emits swapTap instead.
+ * horizontal reordering on desktop; on mobile it starts drag after a 300ms hold.
  */
-import { ref, computed } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 import ColorPicker from './ColorPicker.vue'
 
 const props = defineProps<{
@@ -113,6 +113,16 @@ const hexTextEl   = ref<HTMLElement | null>(null)
 
 /** Bounding rect used to position the ColorPicker popover. */
 const anchorRect  = ref<DOMRect | null>(null)
+
+const MOBILE_DRAG_HOLD_MS = 300
+const MOBILE_HOLD_MOVE_CANCEL_PX = 12
+
+const mobileHoldTimer = ref<ReturnType<typeof setTimeout> | null>(null)
+const mobileHoldPointerId = ref<number | null>(null)
+const mobileHoldStartX = ref(0)
+const mobileHoldStartY = ref(0)
+const mobileHoldTriggered = ref(false)
+const suppressNextMobileTap = ref(false)
 
 /**
  * Computed foreground text color (black/white) based on the background luminance.
@@ -156,21 +166,87 @@ async function copyHex() {
 }
 
 /**
- * On desktop: emits dragStart to let the parent start the drag operation.
+ * On desktop: emits dragStart immediately.
+ * On mobile: starts drag only after 300ms hold on the handle.
  * @param e - The originating PointerEvent.
  */
 function onHandlePointerDown(e: PointerEvent) {
-  if (window.matchMedia('(max-width: 768px)').matches) return
-  emit('dragStart', e)
+  if (!window.matchMedia('(max-width: 768px)').matches) {
+    emit('dragStart', e)
+    return
+  }
+
+  if (mobileHoldTimer.value) {
+    clearTimeout(mobileHoldTimer.value)
+    mobileHoldTimer.value = null
+  }
+
+  mobileHoldPointerId.value = e.pointerId
+  mobileHoldStartX.value = e.clientX
+  mobileHoldStartY.value = e.clientY
+  mobileHoldTriggered.value = false
+
+  const onMove = (moveEvt: PointerEvent) => {
+    if (mobileHoldPointerId.value !== moveEvt.pointerId) return
+    if (mobileHoldTriggered.value) return
+    const dx = moveEvt.clientX - mobileHoldStartX.value
+    const dy = moveEvt.clientY - mobileHoldStartY.value
+    if (Math.hypot(dx, dy) >= MOBILE_HOLD_MOVE_CANCEL_PX) {
+      cancelMobileHold()
+    }
+  }
+
+  const onUpOrCancel = (upEvt: PointerEvent) => {
+    if (mobileHoldPointerId.value !== upEvt.pointerId) return
+    cancelMobileHold()
+  }
+
+  const cleanupListeners = () => {
+    window.removeEventListener('pointermove', onMove)
+    window.removeEventListener('pointerup', onUpOrCancel)
+    window.removeEventListener('pointercancel', onUpOrCancel)
+  }
+
+  mobileHoldTimer.value = setTimeout(() => {
+    if (mobileHoldPointerId.value !== e.pointerId) return
+    mobileHoldTriggered.value = true
+    suppressNextMobileTap.value = true
+    cleanupListeners()
+    mobileHoldTimer.value = null
+    mobileHoldPointerId.value = null
+    emit('dragStart', e)
+  }, MOBILE_DRAG_HOLD_MS)
+
+  window.addEventListener('pointermove', onMove, { passive: true })
+  window.addEventListener('pointerup', onUpOrCancel, { passive: true })
+  window.addEventListener('pointercancel', onUpOrCancel, { passive: true })
+
+  function cancelMobileHold(): void {
+    cleanupListeners()
+    if (mobileHoldTimer.value) {
+      clearTimeout(mobileHoldTimer.value)
+      mobileHoldTimer.value = null
+    }
+    mobileHoldPointerId.value = null
+    mobileHoldTriggered.value = false
+  }
 }
 
 /**
- * On mobile: emits swapTap to trigger the tap-to-swap selection flow.
+ * On mobile: keeps tap-to-swap for quick swaps, except after long-press drag start.
  */
 function onHandleClick() {
   if (!window.matchMedia('(max-width: 768px)').matches) return
+  if (suppressNextMobileTap.value) {
+    suppressNextMobileTap.value = false
+    return
+  }
   emit('swapTap')
 }
+
+onBeforeUnmount(() => {
+  if (mobileHoldTimer.value) clearTimeout(mobileHoldTimer.value)
+})
 </script>
 
 <style src="./ColorColumn.css" scoped></style>

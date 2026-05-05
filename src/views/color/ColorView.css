@@ -3,23 +3,6 @@
   color: var(--ink);
 }
 
-/* ── Loading overlay ──────────────────────────────── */
-.color-loading-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.overlay-fade-enter-active,
-.overlay-fade-leave-active { transition: opacity 0.22s ease; }
-.overlay-fade-enter-from,
-.overlay-fade-leave-to { opacity: 0; }
-
 /* ── Skeleton shimmer ─────────────────────────────── */
 @keyframes skel-wave {
   0%   { background-position: -600px 0; }
@@ -39,7 +22,21 @@
   width: 100%;
   height: 200px;
   position: relative;
+  overflow: hidden;
   transition: background 0.15s;
+}
+.hero-swatch::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.26);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s ease-in-out;
+  z-index: 1;
+}
+.hero-swatch--loading::after {
+  opacity: 1;
 }
 .swatch-inner {
   position: absolute;
@@ -48,6 +45,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  z-index: 2;
 }
 .swatch-label {
   font-family: 'Sora', monospace;
@@ -65,6 +63,24 @@
   letter-spacing: -0.02em;
   line-height: 1;
 }
+.hero-loader-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 72px;
+  box-sizing: border-box;
+  z-index: 3;
+}
+.hero-loader-fade-enter-active,
+.hero-loader-fade-leave-active {
+  transition: opacity 0.24s ease-in-out;
+}
+.hero-loader-fade-enter-from,
+.hero-loader-fade-leave-to {
+  opacity: 0;
+}
 
 /* ── Body layout ─────────────────────────────────────── */
 .body-layout {
@@ -75,9 +91,19 @@
   max-width: 1100px;
   margin: 0 auto;
   align-items: start;
+  transition: grid-template-columns 0.26s ease-in-out, gap 0.26s ease-in-out;
+}
+
+.body-layout--3d {
+  grid-template-columns: 440px 1fr;
+  gap: 28px;
 }
 @media (max-width: 768px) {
   .body-layout { grid-template-columns: 1fr; }
+  .body-layout--3d {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
 }
 
 /* ── Card base ───────────────────────────────────────── */
@@ -108,7 +134,52 @@
 .info-col { display: flex; flex-direction: column; gap: 14px; }
 
 /* ── Picker card ─────────────────────────────────────── */
-.picker-card { gap: 10px; position: sticky; top: 76px; }
+.picker-card {
+  gap: 10px;
+  position: sticky;
+  top: 76px;
+  transition: min-height 0.26s ease-in-out, width 0.26s ease-in-out;
+}
+
+.picker-card--3d {
+  min-height: 660px;
+}
+
+@media (max-width: 768px) {
+  .picker-card--3d {
+    min-height: 0;
+  }
+}
+
+.picker-mode-tabs {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.picker-mode-btn {
+  border: none;
+  background: transparent;
+  padding: 7px 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.picker-mode-btn + .picker-mode-btn {
+  border-left: 1px solid rgba(0,0,0,0.1);
+}
+
+.picker-mode-btn.active {
+  background: rgba(180, 16, 204, 0.12);
+  color: var(--ink);
+}
 
 .cp-area {
   position: relative;

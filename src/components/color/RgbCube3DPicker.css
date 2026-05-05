@@ -1,0 +1,153 @@
+.cube-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cube-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.cube-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ctrl-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 5px;
+}
+
+.ctrl {
+  display: grid;
+  grid-template-columns: 72px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.ctrl label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.ctrl input[type='range'] {
+  width: 100%;
+  accent-color: #b410cc;
+}
+
+.ctrl span {
+  min-width: 44px;
+  text-align: right;
+  font-family: 'Sora', monospace;
+  font-size: 10.5px;
+  color: var(--ink-2);
+}
+
+.camera-reset-btn {
+  align-self: flex-start;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--ink-2);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 9px;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+
+.camera-reset-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(0, 0, 0, 0.2);
+  color: var(--ink);
+}
+
+.cube-canvas-shell {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.96), rgba(245, 246, 251, 0.92) 46%, rgba(238, 240, 247, 0.96));
+  overflow: hidden;
+}
+
+.cube-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.cube-error {
+  width: 100%;
+  height: 300px;
+  border-radius: 10px;
+  border: 1px dashed rgba(0, 0, 0, 0.16);
+  background: rgba(0, 0, 0, 0.02);
+  color: var(--ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 12px;
+  padding: 12px;
+}
+
+.cube-hint {
+  margin: 0;
+  font-size: 10px;
+  color: var(--ink-3);
+  letter-spacing: 0.02em;
+}
+
+.cube-picked {
+  margin: 0;
+  font-size: 11px;
+  color: var(--ink-2);
+  font-family: 'Sora', monospace;
+}
+
+@media (max-width: 768px) {
+  .cube-canvas-shell {
+    height: 300px;
+  }
+}
+
+.cube-canvas :deep(canvas) {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.axis-widget {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: 112px;
+  height: 112px;
+  overflow: visible;
+  background: transparent;
+  border: none;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.axis-gizmo {
+  width: 100%;
+  height: 100%;
+}
+
+.axis-gizmo :deep(canvas) {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}

@@ -2,17 +2,8 @@
   <div class="color-view">
     <SiteHeader />
 
-    <!-- Loading overlay (refetch / color change — skeleton handles first load) -->
-    <Teleport to="body">
-      <Transition name="overlay-fade">
-        <div v-if="loading && colorInfo" class="color-loading-overlay">
-          <AppLoader message="Loading color information" />
-        </div>
-      </Transition>
-    </Teleport>
-
     <!-- Hero swatch -->
-    <div class="hero-swatch" :style="{ background: '#' + displayHex }">
+    <div class="hero-swatch" :class="{ 'hero-swatch--loading': loading }" :style="{ background: '#' + displayHex }">
       <div class="swatch-inner">
         <span class="swatch-label" :style="{ color: swatchTextColor }">
           {{ labelDisplay }}
@@ -21,38 +12,60 @@
           #{{ displayHex.toUpperCase() }}
         </span>
       </div>
+      <transition name="hero-loader-fade">
+        <div v-if="loading" class="hero-loader-overlay">
+          <AppLoader message="Loading color information..." />
+        </div>
+      </transition>
     </div>
 
     <!-- Body -->
-    <div class="body-layout">
+    <div class="body-layout" :class="{ 'body-layout--3d': pickerMode === '3d' }">
 
       <!-- Left: picker -->
-      <aside class="picker-col">
-        <div class="card picker-card">
-          <!-- 2D sat/val area -->
-          <div
-            class="cp-area"
-            ref="areaEl"
-            :style="{ background: `hsl(${hsv[0]}, 100%, 50%)` }"
-            @mousedown="startAreaDrag"
-            @touchstart.prevent="startAreaDrag"
-          >
-            <div class="cp-sat-overlay"></div>
-            <div class="cp-val-overlay"></div>
-            <div
-              class="cp-cursor"
-              :style="{
-                left: (hsv[1] * 100) + '%',
-                top:  ((1 - hsv[2]) * 100) + '%',
-                background: '#' + displayHex,
-              }"
-            ></div>
+      <aside class="picker-col" :class="{ 'picker-col--3d': pickerMode === '3d' }">
+        <div class="card picker-card" :class="{ 'picker-card--3d': pickerMode === '3d' }">
+          <div class="picker-mode-tabs">
+            <button class="picker-mode-btn" :class="{ active: pickerMode === '2d' }" @click="pickerMode = '2d'">
+              Normal
+            </button>
+            <button class="picker-mode-btn" :class="{ active: pickerMode === '3d' }" @click="pickerMode = '3d'">
+              3D selector
+            </button>
           </div>
 
-          <!-- Hue slider -->
-          <div class="cp-hue-track" ref="hueEl" @mousedown="startHueDrag" @touchstart.prevent="startHueDrag">
-            <div class="cp-hue-thumb" :style="{ left: (hsv[0] / 360 * 100) + '%' }"></div>
-          </div>
+          <!-- 2D sat/val area -->
+          <template v-if="pickerMode === '2d'">
+            <div
+              class="cp-area"
+              ref="areaEl"
+              :style="{ background: `hsl(${hsv[0]}, 100%, 50%)` }"
+              @mousedown="startAreaDrag"
+              @touchstart.prevent="startAreaDrag"
+            >
+              <div class="cp-sat-overlay"></div>
+              <div class="cp-val-overlay"></div>
+              <div
+                class="cp-cursor"
+                :style="{
+                  left: (hsv[1] * 100) + '%',
+                  top:  ((1 - hsv[2]) * 100) + '%',
+                  background: '#' + displayHex,
+                }"
+              ></div>
+            </div>
+
+            <!-- Hue slider -->
+            <div class="cp-hue-track" ref="hueEl" @mousedown="startHueDrag" @touchstart.prevent="startHueDrag">
+              <div class="cp-hue-thumb" :style="{ left: (hsv[0] / 360 * 100) + '%' }"></div>
+            </div>
+          </template>
+
+          <RgbCube3DPicker
+            v-else
+            :hex="displayHex"
+            @pick="applyHex"
+          />
 
           <!-- Inputs -->
           <div class="cp-inputs">
@@ -60,7 +73,7 @@
               <label>Hex</label>
               <div class="cp-hex-row">
                 <span class="cp-hash">#</span>
-                <input class="cp-input" :value="displayHex" maxlength="6" spellcheck="false"
+                <input class="cp-input" :value="displayHex" maxlength="7" spellcheck="false"
                   @input="onHexInput" @blur="onHexBlur" />
               </div>
             </div>
@@ -359,10 +372,11 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue'
+import { ref, watch } from 'vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
-import AppLoader from '@/components/ui/AppLoader.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
+import AppLoader from '@/components/ui/AppLoader.vue'
+import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
 import { useColorView } from './composables/useColorView'
 
 // ColorView component: orchestrates the color explorer layout and state.
@@ -400,9 +414,12 @@ const {
   onHexInput,
   onHexBlur,
   onRgbInput,
+  applyHex,
   copyHex,
   copySpace,
 } = view
+
+const pickerMode = ref<'2d' | '3d'>('2d')
 
 watch(displayHex, hex => { document.title = `#${hex.toUpperCase()} - RGBAST` }, { immediate: true })
 </script>

@@ -473,7 +473,9 @@ export function useColorView() {
    * @param e - Input event from the hex field.
    */
   function onHexInput(e: Event) {
-    const raw = (e.target as HTMLInputElement).value.replace(/[^0-9a-fA-F]/g, '')
+    const input = e.target as HTMLInputElement
+    const raw = input.value.replace(/[^0-9a-fA-F]/g, '').slice(0, 6).toUpperCase()
+    if (input.value !== raw) input.value = raw
     if (raw.length === 6) hsv.value = rgbToHsv(...hexToRgb(raw))
   }
 
@@ -496,6 +498,15 @@ export function useColorView() {
     const r = [...pickerRgb.value] as RGB
     r[ch] = v
     hsv.value = rgbToHsv(...r)
+  }
+
+  /**
+   * Apply an external hex value (e.g. from the 3D cube selector) to HSV state.
+   * @param hex - Hex value with or without leading #.
+   */
+  function applyHex(hex: string) {
+    const raw = normalizeHex(hex)
+    hsv.value = rgbToHsv(...hexToRgb(raw))
   }
 
   /**
@@ -557,6 +568,7 @@ export function useColorView() {
     onHexInput,
     onHexBlur,
     onRgbInput,
+    applyHex,
     copyHex,
     copySpace,
   }

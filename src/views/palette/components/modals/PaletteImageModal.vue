@@ -51,7 +51,7 @@
           </template>
         </label>
 
-        <p class="upload-meta">Max size: 50 MB</p>
+        <p class="upload-meta">Max size: 10 MB</p>
 
         <label class="field-label">Colors - {{ count }}</label>
         <input

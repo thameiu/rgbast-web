@@ -240,10 +240,6 @@
       :isSaving="save.isSaving.value"
       :hasUnsavedChanges="ctx.hasUnsavedChanges.value"
       :isNewPalette="ctx.isNewPalette.value"
-      :historyForDisplay="tutorial.historyForDisplay.value"
-      :selectedSnapshotId="ctx.selectedSnapshotId.value"
-      :showDemoHistory="tutorial.showDemoHistory.value"
-      :revertableSnapshotCount="save.revertableSnapshotCount.value"
       @close="ctx.mobileSidebarOpen.value = false"
       @switchBranch="switchBranchWithUndo"
       @merge="save.confirmMerge"
@@ -251,10 +247,10 @@
       @requestSave="save.requestSave"
       @clonePalette="ctx.clonePalette"
       @deletePalette="save.showDeletePaletteModal.value = true"
-      @selectSnapshot="historyActions.onHistorySelectSnapshot"
-      @selectBranch="historyActions.onHistorySelectBranch"
-      @deleteBranch="historyActions.onHistoryDeleteBranch"
-      @revertSnapshot="historyActions.onHistoryRevertSnapshot"
+      @generate="generator.doGenerate"
+      @openGenerateSettings="generator.generateOpen.value = true"
+      @openImagePalette="openImagePaletteModal"
+      @edit="save.openEditPalette"
     />
   </div>
 </template>
@@ -322,7 +318,7 @@ const save = usePaletteSave(ctx, {
   clearHistory: undo.clearHistory,
 })
 
-const IMAGE_MAX_BYTES = 50 * 1024 * 1024
+const IMAGE_MAX_BYTES = 10 * 1024 * 1024
 const imagePaletteOpen = ref(false)
 const imagePaletteLoading = ref(false)
 const imagePaletteError = ref('')
@@ -488,7 +484,7 @@ function onImagePaletteFileChange(file: File | null): void {
   }
   if (file.size > IMAGE_MAX_BYTES) {
     imagePaletteFile.value = null
-    imagePaletteError.value = 'Image is too large. Maximum size is 50MB.'
+    imagePaletteError.value = 'Image is too large. Maximum size is 10MB.'
     return
   }
   if (!file.type.startsWith('image/')) {

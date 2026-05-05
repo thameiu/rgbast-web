@@ -188,41 +188,33 @@
       </button>
     </div>
 
-    <!-- Mobile right: unsaved indicator + generate + history + hamburger -->
+    <!-- Mobile right: unsaved indicator + undo/redo + hamburger -->
     <div class="mobile-right">
       <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
-      <button
-        class="gen-mobile-btn"
-        title="Generate (Space)"
-        @click="$emit('generate')"
-      >
-        <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-          <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-          <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button
-        class="image-mobile-btn"
-        title="Extract palette from image"
-        @click="$emit('openImagePalette')"
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
-          <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
-          <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button
-        class="history-mobile-btn"
-        :class="{ active: historyOpen }"
-        aria-label="Toggle history"
-        @click="$emit('toggleHistory')"
-      >
-        <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
+      <div class="mobile-nav-group">
+        <button
+          class="mobile-nav-btn"
+          :disabled="!canUndo"
+          title="Undo (Ctrl+Z)"
+          @click="$emit('undo')"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M2.5 5H8a3 3 0 010 6H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M4.5 2.5L2 5l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <button
+          class="mobile-nav-btn"
+          :disabled="!canRedo"
+          title="Redo (Ctrl+Y)"
+          @click="$emit('redo')"
+        >
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M10.5 5H5a3 3 0 000 6h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8.5 2.5L11 5l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
       <button
         class="hamburger-btn"
         :class="{ open: mobileMenuOpen }"
@@ -245,7 +237,7 @@
  * Shows back button, palette title, branch selector (desktop), undo/redo,
  * history toggle, generate split-button, and save/clone action.
  * On mobile the center and right groups are hidden; a compact mobile-right
- * group is shown instead (generate icon, history icon, hamburger).
+ * group is shown instead (undo/redo controls and hamburger).
  */
 import { ref, computed } from 'vue'
 import { getBranchColor } from '@/utils/branchColors'

@@ -265,8 +265,7 @@
   color: rgba(255,120,120,0.9);
 }
 
-.image-action-btn,
-.image-mobile-btn {
+.image-action-btn {
   width: 30px;
   height: 30px;
   border-radius: 8px;
@@ -280,20 +279,13 @@
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.image-action-btn:hover,
-.image-mobile-btn:hover {
+.image-action-btn:hover {
   background: rgba(255,255,255,0.1);
   border-color: rgba(255,255,255,0.22);
   color: #fff;
 }
 
-.image-mobile-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-}
-
-/* ─── Mobile history + hamburger buttons ─────────────────── */
+/* ─── Mobile undo/redo + hamburger buttons ───────────────── */
 .mobile-right {
   display: none;
   align-items: center;
@@ -301,21 +293,40 @@
   flex-shrink: 0;
 }
 
-.history-mobile-btn {
-  width: 36px;
-  height: 36px;
+.mobile-nav-group {
+  display: inline-flex;
   border-radius: 9px;
   border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.65);
-  cursor: pointer;
-  display: flex;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.mobile-nav-btn {
+  width: 34px;
+  height: 34px;
+  background: rgba(255,255,255,0.05);
+  border: none;
+  color: rgba(255,255,255,0.68);
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
 }
-.history-mobile-btn:hover { background: rgba(255,255,255,0.08); color: #fff; border-color: rgba(255,255,255,0.2); }
-.history-mobile-btn.active { background: rgba(180,16,204,0.14); border-color: rgba(180,16,204,0.4); color: rgba(255,255,255,0.9); }
+
+.mobile-nav-btn + .mobile-nav-btn {
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobile-nav-btn:hover:not(:disabled) {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.mobile-nav-btn:disabled {
+  opacity: 0.28;
+  cursor: not-allowed;
+}
 
 .hamburger-btn {
   width: 36px;
@@ -421,22 +432,6 @@
 }
 .gen-settings-btn:hover { background: rgba(180, 16, 204, 0.18); color: #d060e8; }
 
-/* Mobile generate icon */
-.gen-mobile-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 9px;
-  border: 1px solid rgba(180, 16, 204, 0.28);
-  background: rgba(180, 16, 204, 0.08);
-  color: #d060e8;
-  cursor: pointer;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, border-color 0.15s;
-}
-.gen-mobile-btn:hover { background: rgba(180, 16, 204, 0.2); }
-
 /* ─── Mobile breakpoint ───────────────────────── */
 @media (max-width: 768px) {
   .center-group { display: none; }
@@ -444,5 +439,4 @@
   .mobile-right { display: flex; }
   .left-group   { flex: 1; min-width: 0; }
   .palette-name { max-width: calc(100vw - 160px); }
-  .gen-mobile-btn { display: flex; }
 }

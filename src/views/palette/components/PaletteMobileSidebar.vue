@@ -50,6 +50,42 @@
 
           <div class="msb-divider"></div>
 
+          <div class="msb-section-label">Palette</div>
+          <div class="msb-actions">
+            <div class="msb-gen-group">
+              <button class="msb-gen-main" @click="$emit('generate'); $emit('close')">
+                <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
+                  <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                  <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
+                </svg>
+                Generate
+              </button>
+              <button class="msb-gen-settings" @click="$emit('openGenerateSettings'); $emit('close')">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="1.8" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M6 1v1.2M6 9.8V11M1 6h1.2M9.8 6H11M2.2 2.2l.85.85M8.95 8.95l.85.85M9.8 2.2l-.85.85M3.05 8.95l-.85.85" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+            <button class="msb-action" @click="$emit('openImagePalette'); $emit('close')">
+              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+                <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
+                <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
+                <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Palette from image
+            </button>
+            <button v-if="isOwned" class="msb-action" @click="$emit('edit'); $emit('close')">
+              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 9.5L9.5 2.5l2 2-7 7H2.5v-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M8.8 3.2l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              Edit palette
+            </button>
+          </div>
+
+          <div class="msb-divider"></div>
+
           <div class="msb-actions">
             <button class="msb-action" @click="$emit('openTutorial'); $emit('close')">
               <span class="msb-help-glyph">?</span>
@@ -89,29 +125,6 @@
               Delete palette
             </button>
           </div>
-
-          <div class="msb-divider"></div>
-
-          <div class="msb-section-label msb-history-label">
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-              <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            History
-          </div>
-          <div class="msb-history-body">
-            <HistoryGraph
-              v-if="historyForDisplay"
-              :history="historyForDisplay"
-              :selectedId="showDemoHistory ? null : selectedSnapshotId"
-              :showRevertButton="!showDemoHistory && isOwned && revertableSnapshotCount > 0"
-              @selectSnapshot="$emit('selectSnapshot', $event)"
-              @selectBranch="$emit('selectBranch', $event)"
-              @deleteBranch="$emit('deleteBranch', $event)"
-              @revertSnapshot="$emit('revertSnapshot', $event)"
-            />
-            <div v-else class="msb-history-empty">No history yet.</div>
-          </div>
         </div>
       </div>
     </Transition>
@@ -119,9 +132,6 @@
 </template>
 
 <script setup lang="ts">
-import type { PaletteHistoryGraphResponse } from '@/api/types'
-import HistoryGraph from '@/components/palette/HistoryGraph.vue'
-
 // PaletteMobileSidebar component: renders the mobile action sidebar for PaletteView.
 defineProps<{
   open: boolean
@@ -133,10 +143,6 @@ defineProps<{
   isSaving: boolean
   hasUnsavedChanges: boolean
   isNewPalette: boolean
-  historyForDisplay: PaletteHistoryGraphResponse | null
-  selectedSnapshotId: number | null
-  showDemoHistory: boolean
-  revertableSnapshotCount: number
 }>()
 
 // Emits: close sidebar and action events triggered from the menu.
@@ -148,10 +154,10 @@ defineEmits<{
   (e: 'requestSave'): void
   (e: 'clonePalette'): void
   (e: 'deletePalette'): void
-  (e: 'selectSnapshot', id: number): void
-  (e: 'selectBranch', id: number): void
-  (e: 'deleteBranch', id: number): void
-  (e: 'revertSnapshot', id: number): void
+  (e: 'generate'): void
+  (e: 'openGenerateSettings'): void
+  (e: 'openImagePalette'): void
+  (e: 'edit'): void
 }>()
 </script>
 

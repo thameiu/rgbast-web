@@ -77,15 +77,6 @@
   padding: 0 4px;
 }
 
-.msb-history-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 0;
-  padding: 12px 4px 10px;
-  border-top: none;
-}
-
 .msb-branches {
   display: flex;
   flex-direction: column;
@@ -180,6 +171,52 @@
   gap: 4px;
 }
 
+.msb-gen-group {
+  display: inline-flex;
+  border-radius: 10px;
+  border: 1px solid rgba(180, 16, 204, 0.35);
+  overflow: hidden;
+}
+
+.msb-gen-main,
+.msb-gen-settings {
+  border: none;
+  color: #d974ee;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+
+.msb-gen-main {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 12px 12px;
+  background: rgba(180, 16, 204, 0.14);
+}
+
+.msb-gen-main:hover {
+  background: rgba(180, 16, 204, 0.24);
+  color: #fff;
+}
+
+.msb-gen-settings {
+  width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(180, 16, 204, 0.08);
+  border-left: 1px solid rgba(180, 16, 204, 0.25);
+}
+
+.msb-gen-settings:hover {
+  background: rgba(180, 16, 204, 0.2);
+  color: #fff;
+}
+
 .msb-action {
   display: flex;
   align-items: center;
@@ -257,17 +294,6 @@
   background: rgba(255, 80, 80, 0.08) !important;
   border-color: rgba(255, 80, 80, 0.35) !important;
   color: rgba(255, 130, 130, 0.9) !important;
-}
-
-.msb-history-body {
-  min-height: 120px;
-}
-
-.msb-history-empty {
-  padding: 24px 0;
-  color: rgba(255, 255, 255, 0.3);
-  font-size: 13px;
-  text-align: center;
 }
 
 .sidebar-overlay-enter-active {

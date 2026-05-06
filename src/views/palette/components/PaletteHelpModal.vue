@@ -73,7 +73,6 @@
           <ul class="help-bullets">
             <li><strong>Contrast:</strong> higher values increase luminance distance between outputs.</li>
             <li><strong>Base colors:</strong> 1-3 seed colors used as anchors for generated results.</li>
-            <li><strong>History:</strong> use the History help entry for branching, merge, and revert rules.</li>
           </ul>
         </div>
 

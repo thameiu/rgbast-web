@@ -188,7 +188,7 @@
       </button>
     </div>
 
-    <!-- Mobile right: unsaved indicator + undo/redo + hamburger -->
+    <!-- Mobile right: unsaved indicator + undo/redo + history + hamburger -->
     <div class="mobile-right">
       <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
       <div class="mobile-nav-group">
@@ -216,6 +216,17 @@
         </button>
       </div>
       <button
+        class="history-mobile-btn"
+        :class="{ active: historyOpen }"
+        aria-label="Toggle history"
+        @click="$emit('toggleHistory')"
+      >
+        <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button
         class="hamburger-btn"
         :class="{ open: mobileMenuOpen }"
         :aria-expanded="mobileMenuOpen"
@@ -237,7 +248,7 @@
  * Shows back button, palette title, branch selector (desktop), undo/redo,
  * history toggle, generate split-button, and save/clone action.
  * On mobile the center and right groups are hidden; a compact mobile-right
- * group is shown instead (undo/redo controls and hamburger).
+ * group is shown instead (undo/redo controls, history, and hamburger).
  */
 import { ref, computed } from 'vue'
 import { getBranchColor } from '@/utils/branchColors'

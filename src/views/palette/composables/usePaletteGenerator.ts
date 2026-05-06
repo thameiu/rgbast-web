@@ -36,6 +36,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
     return { position: 'fixed', top: `${r.bottom + 4}px`, left: `${r.left}px`, zIndex: '9999' }
   })
 
+  const GENERATE_COOLDOWN_MS = 250
   let lastGenerateMs = 0
 
   // Open the base-color picker for a specific base color input.
@@ -85,7 +86,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
   // Generate a palette from the API and replace current colors.
   async function doGenerate(): Promise<void> {
     const now = Date.now()
-    if (now - lastGenerateMs < 1000) return
+    if (now - lastGenerateMs < GENERATE_COOLDOWN_MS) return
     lastGenerateMs = now
     generateLoading.value = true
     generateError.value = ''

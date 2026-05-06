@@ -35,23 +35,155 @@
   box-shadow: 0 0 0 2px rgba(246, 195, 67, 0.78), 0 0 28px rgba(246, 195, 67, 0.22);
 }
 
-.help-btn {
+.header-dropdown-group {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.icon-action-btn {
   width: 30px;
   height: 30px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.85);
-  font-size: 15px;
-  font-weight: 800;
-  line-height: 1;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.05);
+  color: rgba(255,255,255,0.72);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.help-btn:hover {
+.icon-action-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.22);
+  color: #fff;
+}
+
+.icon-action-btn--copied {
+  background: rgba(180, 16, 204, 0.18);
+  border-color: rgba(180, 16, 204, 0.5);
+  color: #d974ee;
+}
+
+.icon-action-btn--copied:hover {
+  background: rgba(180, 16, 204, 0.28);
+  border-color: rgba(180, 16, 204, 0.7);
+  color: #fff;
+}
+
+.paste-split-btn {
+  display: inline-flex;
+  align-items: stretch;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+
+.paste-main-btn {
+  border: none;
+  border-radius: 0;
+  width: 30px;
+}
+
+.paste-menu-toggle {
+  width: 20px;
+  border: none;
+  border-left: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.52);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+.paste-menu-toggle:hover,
+.paste-menu-toggle.open {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.92);
+}
+
+.help-split-btn {
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+}
+.help-split-btn:hover,
+.help-split-btn.open {
   background: rgba(14,198,212,0.18);
   border-color: rgba(14,198,212,0.45);
   color: #ffffff;
+}
+
+.help-glyph {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.header-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 212px;
+  background: #18181f;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  padding: 5px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
+  z-index: 120;
+}
+
+.header-menu-opt {
+  width: 100%;
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  padding: 9px 10px;
+  color: rgba(255,255,255,0.84);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background 0.12s, color 0.12s;
+}
+.header-menu-opt:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+.header-menu-kbd {
+  font-size: 10.5px;
+  color: rgba(255,255,255,0.45);
+}
+
+.header-dd-enter-active {
+  transition: opacity 0.14s ease, transform 0.14s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.header-dd-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.header-dd-enter-from,
+.header-dd-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
 }
 
 .snapshot-hint {
@@ -67,6 +199,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 10px;
 }
 
 .back-btn {
@@ -96,8 +229,11 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
+  line-height: 1;
   text-transform: uppercase;
   color: #fff;
+  display: inline-flex;
+  align-items: center;
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
@@ -215,14 +351,21 @@
 .action-btn {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   padding: 7px 14px;
   border-radius: 8px;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, opacity 0.15s;
   white-space: nowrap;
+}
+
+.action-btn svg {
+  display: block;
+  flex-shrink: 0;
 }
 
 .action-btn.secondary {

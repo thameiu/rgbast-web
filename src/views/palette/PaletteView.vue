@@ -10,11 +10,13 @@
       :historyOpen="ctx.historyOpen.value"
       :snapshotHint="ctx.snapshotCommitHint.value"
       :isOwned="ctx.isOwned.value"
+      :isNewPalette="ctx.isNewPalette.value"
       :canDelete="ctx.isOwned.value && !ctx.isNewPalette.value"
       :tutorialFocus="tutorial.headerTutorialFocus.value"
       :mobileMenuOpen="ctx.mobileSidebarOpen.value"
       :canUndo="undo.canUndo.value"
       :canRedo="undo.canRedo.value"
+      :copyFeedback="copyFeedbackActive"
       @back="ctx.router.push('/dashboard')"
       @save="save.requestSave"
       @clone="ctx.clonePalette"
@@ -23,7 +25,12 @@
       @merge="save.confirmMerge"
       @deletePalette="save.showDeletePaletteModal.value = true"
       @edit="save.openEditPalette"
-      @openTutorial="tutorial.openTutorial"
+      @openHelpHistory="openHistoryHelp"
+      @openHelpGeneration="openGenerationHelp"
+      @openHelpCheatSheet="openCheatSheetHelp"
+      @copyPalette="copyPaletteColors"
+      @pasteAdd="pasteAddFromClipboard"
+      @pasteReplace="pasteReplaceFromClipboard"
       @hamburgerClick="ctx.mobileSidebarOpen.value = !ctx.mobileSidebarOpen.value"
       @generate="generator.doGenerate"
       @openGenerateSettings="generator.generateOpen.value = true"
@@ -229,6 +236,12 @@
       @next="tutorial.nextTutorialStep"
       @prev="tutorial.prevTutorialStep"
     />
+    <PaletteHelpModal
+      :open="helpModalOpen"
+      :mode="helpModalMode"
+      @close="closeHelpModal"
+      @openHistory="openHistoryHelpFromModal"
+    />
 
     <PaletteMobileSidebar
       :open="ctx.mobileSidebarOpen.value"
@@ -240,10 +253,16 @@
       :isSaving="save.isSaving.value"
       :hasUnsavedChanges="ctx.hasUnsavedChanges.value"
       :isNewPalette="ctx.isNewPalette.value"
+      :copyFeedback="copyFeedbackActive"
       @close="ctx.mobileSidebarOpen.value = false"
       @switchBranch="switchBranchWithUndo"
       @merge="save.confirmMerge"
-      @openTutorial="tutorial.openTutorial"
+      @openHelpHistory="openHistoryHelp"
+      @openHelpGeneration="openGenerationHelp"
+      @openHelpCheatSheet="openCheatSheetHelp"
+      @copyPalette="copyPaletteColors"
+      @pasteAdd="pasteAddFromClipboard"
+      @pasteReplace="pasteReplaceFromClipboard"
       @requestSave="save.requestSave"
       @clonePalette="ctx.clonePalette"
       @deletePalette="save.showDeletePaletteModal.value = true"
@@ -273,7 +292,8 @@ import PaletteGenerateModal from './components/modals/PaletteGenerateModal.vue'
 import PaletteImageModal from './components/modals/PaletteImageModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
-import { ref, watch } from 'vue'
+import PaletteHelpModal from './components/PaletteHelpModal.vue'
+import { ref, watch, onMounted, onUnmounted } from 'vue'
 import { foldersApi } from '@/api/folders'
 import { colorApi } from '@/api/color'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
@@ -325,6 +345,10 @@ const imagePaletteLoading = ref(false)
 const imagePaletteError = ref('')
 const imagePaletteCount = ref(5)
 const imagePaletteFile = ref<File | null>(null)
+const helpModalOpen = ref(false)
+const helpModalMode = ref<'generation' | 'cheatsheet'>('cheatsheet')
+const copyFeedbackActive = ref(false)
+let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
@@ -435,12 +459,23 @@ const historyActions = usePaletteHistoryActions({
 })
 
 usePaletteKeyboard(
-  { historyOpen: ctx.historyOpen, generateOpen: generator.generateOpen },
+  { generateOpen: generator.generateOpen },
   {
     doUndo: undo.doUndo,
     doRedo: undo.doRedo,
     requestSave: save.requestSave,
     doGenerate: generator.doGenerate,
+    openImagePalette: openImagePaletteModal,
+    openEditPalette: openEditPaletteShortcut,
+    deleteLastColor: deleteLastColorShortcut,
+    deleteFirstColor: deleteFirstColorShortcut,
+    openDeletePaletteModal: openDeletePaletteShortcut,
+    historyLeft: openHistorySidebarShortcut,
+    historyRight: openHistorySidebarShortcut,
+    copyPalette: copyPaletteColors,
+    pasteAddFromClipboard,
+    pasteReplaceFromClipboard,
+    openCheatSheet: openCheatSheetHelp,
   },
 )
 
@@ -471,10 +506,154 @@ function openImagePaletteModal(): void {
   imagePaletteError.value = ''
 }
 
+function openEditPaletteShortcut(): void {
+  if (!ctx.isOwned.value || ctx.isNewPalette.value) return
+  save.openEditPalette()
+}
+
+function openDeletePaletteShortcut(): void {
+  if (!ctx.isOwned.value || ctx.isNewPalette.value) return
+  save.showDeletePaletteModal.value = true
+}
+
+function openHistorySidebarShortcut(): void {
+  if (ctx.isNewPalette.value) return
+  ctx.historyOpen.value = !ctx.historyOpen.value
+}
+
+function deleteLastColorShortcut(): void {
+  const lastIdx = ctx.colors.value.length - 1
+  if (lastIdx < 0) return
+  interactions.removeColor(lastIdx)
+}
+
+function deleteFirstColorShortcut(): void {
+  if (!ctx.colors.value.length) return
+  interactions.removeColor(0)
+}
+
 function closeImagePaletteModal(): void {
   imagePaletteOpen.value = false
   imagePaletteLoading.value = false
   imagePaletteError.value = ''
+}
+
+function openHistoryHelp(): void {
+  tutorial.openTutorial()
+}
+
+function openGenerationHelp(): void {
+  helpModalMode.value = 'generation'
+  helpModalOpen.value = true
+}
+
+function openCheatSheetHelp(): void {
+  helpModalMode.value = 'cheatsheet'
+  helpModalOpen.value = true
+}
+
+function openHistoryHelpFromModal(): void {
+  closeHelpModal()
+  tutorial.openTutorial()
+}
+
+function closeHelpModal(): void {
+  helpModalOpen.value = false
+}
+
+function paletteToClipboardText(): string {
+  return ctx.colors.value.map(color => `#${color.hex.toUpperCase()}`).join(' ')
+}
+
+function extractColorsFromClipboardText(text: string): string[] {
+  const matches = text.match(/#?(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g) ?? []
+  const output: string[] = []
+  for (const match of matches) {
+    const raw = match.replace('#', '').toUpperCase()
+    if (raw.length === 6) {
+      output.push(raw)
+      continue
+    }
+    if (raw.length === 3) {
+      output.push(raw.split('').map(ch => ch + ch).join(''))
+    }
+  }
+  return output
+}
+
+async function readClipboardColors(): Promise<string[]> {
+  if (!navigator.clipboard?.readText) return []
+  try {
+    const text = await navigator.clipboard.readText()
+    return extractColorsFromClipboardText(text)
+  } catch {
+    return []
+  }
+}
+
+function applyClipboardColors(hexes: string[], mode: 'add' | 'replace'): void {
+  if (!hexes.length) return
+  undo.captureForUndo()
+  const nextColors = hexes.map(hex => ({ hex, label: null, _key: ctx.mkKey() }))
+  if (mode === 'replace') {
+    ctx.colors.value = nextColors
+    return
+  }
+  ctx.colors.value = [...ctx.colors.value, ...nextColors]
+}
+
+async function copyPaletteColors(): Promise<void> {
+  if (!navigator.clipboard?.writeText) return
+  try {
+    await navigator.clipboard.writeText(paletteToClipboardText())
+    copyFeedbackActive.value = true
+    if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer)
+    copyFeedbackTimer = setTimeout(() => {
+      copyFeedbackActive.value = false
+      copyFeedbackTimer = null
+    }, 1100)
+  } catch {}
+}
+
+onUnmounted(() => {
+  if (copyFeedbackTimer) clearTimeout(copyFeedbackTimer)
+})
+
+function onEscapeKey(event: KeyboardEvent): void {
+  if (event.key !== 'Escape') return
+  event.preventDefault()
+  event.stopImmediatePropagation()
+
+  if (ctx.showAuthModal.value) { ctx.showAuthModal.value = false; return }
+  if (imagePaletteOpen.value) { closeImagePaletteModal(); return }
+  if (generator.generateOpen.value) { generator.generateOpen.value = false; return }
+  if (save.showRevertModal.value) { save.showRevertModal.value = false; return }
+  if (save.deleteBranchTargetId.value !== null) { save.deleteBranchTargetId.value = null; return }
+  if (save.showDeletePaletteModal.value) { save.showDeletePaletteModal.value = false; return }
+  if (save.mergeTargetId.value !== null) { save.mergeTargetId.value = null; return }
+  if (save.showEditModal.value) { save.showEditModal.value = false; return }
+  if (ctx.showSaveModal.value) { ctx.showSaveModal.value = false; return }
+  if (helpModalOpen.value) { helpModalOpen.value = false; return }
+  if (tutorial.showTutorial.value) { tutorial.closeTutorial(); return }
+  if (ctx.mobileSidebarOpen.value) { ctx.mobileSidebarOpen.value = false; return }
+}
+
+onMounted(() => {
+  document.addEventListener('keydown', onEscapeKey, { capture: true })
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', onEscapeKey, { capture: true })
+})
+
+async function pasteAddFromClipboard(): Promise<void> {
+  const hexes = await readClipboardColors()
+  applyClipboardColors(hexes, 'add')
+}
+
+async function pasteReplaceFromClipboard(): Promise<void> {
+  const hexes = await readClipboardColors()
+  applyClipboardColors(hexes, 'replace')
 }
 
 function onImagePaletteFileChange(file: File | null): void {

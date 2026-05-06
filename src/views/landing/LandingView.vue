@@ -68,45 +68,39 @@
     </section>
 
     <section id="features" class="features">
-      <div class="features-row">
-        <article class="feat">
+      <div class="features-stack">
+        <article class="feat feat--wide feat--atelier" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.01</span>
-          <h3 class="feat-title font-display">Palette&nbsp;Atelier</h3>
+          <h3 class="feat-title font-display">Palette&nbsp;<span class="feat-key feat-key--atelier">Atelier</span></h3>
           <p class="feat-body">
             Build named palettes with hex swatches and custom labels.
             Every color gets a role — not just a value.
           </p>
         </article>
-        <article class="feat">
+        <article class="feat feat--wide feat--generator" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.02</span>
-          <h3 class="feat-title font-display">Commit&nbsp;History</h3>
+          <h3 class="feat-title font-display">Advanced&nbsp;<span class="feat-key feat-key--generator">Generator</span></h3>
           <p class="feat-body">
-            Every save is a commit with a message. Browse the full timeline,
-            inspect past colors, and reload any snapshot.
+            Generate palettes with harmony strategies, contrast tuning, and
+            curated base colors. Pull dominant colors from image or SVG input,
+            then refine and commit what works.
           </p>
         </article>
-        <article class="feat">
+        <article class="feat feat--wide feat--history" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.03</span>
-          <h3 class="feat-title font-display">Branch&nbsp;&amp;&nbsp;Fork</h3>
+          <h3 class="feat-title font-display">Versioned&nbsp;<span class="feat-key feat-key--history">History</span></h3>
           <p class="feat-body">
-            Experiment on a named branch without touching main. Fork from
-            any past snapshot, merge back when it's ready.
+            Commit every change with a message, branch experiments from any
+            snapshot, and merge back when ready. Traverse the timeline and
+            safely roll back without losing work.
           </p>
         </article>
-        <article class="feat">
+        <article class="feat feat--wide feat--color" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.04</span>
-          <h3 class="feat-title font-display">Clone&nbsp;&amp;&nbsp;Remix</h3>
-          <p class="feat-body">
-            Find a palette you like and clone it in one click. Start from
-            inspiration — commit it as your own.
-          </p>
-        </article>
-        <article class="feat feat--color">
-          <span class="feat-num font-mono">F.05</span>
-          <h3 class="feat-title font-display">Color&nbsp;Explorer</h3>
+          <h3 class="feat-title font-display">Color&nbsp;<span class="feat-key feat-key--explorer">Explorer</span></h3>
           <p class="feat-body">
             Inspect any hex: color spaces, accessibility ratings, contrast checker,
-            and color blindness simulations — all in one place.
+            color blindness simulations, and toy around with the 3D Color Picker.
           </p>
           <RouterLink to="/color/B410CC" class="feat-link font-mono">Try it →</RouterLink>
         </article>
@@ -121,7 +115,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onBeforeUnmount } from 'vue'
+import type { ComponentPublicInstance } from 'vue'
 import { RouterLink } from 'vue-router'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import RgbBackground from '@/components/layout/RgbBackground.vue'
@@ -131,6 +126,35 @@ import type { PaletteHistoryGraphResponse } from '@/api/types'
 
 // LandingView component: marketing home page with a demo history graph.
 onMounted(() => { document.title = 'RGBAST — version control for color' })
+
+const featureEls: HTMLElement[] = []
+let featureObserver: IntersectionObserver | null = null
+
+function registerFeatureEl(el: Element | ComponentPublicInstance | null): void {
+  if (!el || !(el instanceof HTMLElement)) return
+  const htmlEl = el
+  if (!featureEls.includes(htmlEl)) featureEls.push(htmlEl)
+}
+
+onMounted(() => {
+  featureObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          ;(entry.target as HTMLElement).classList.add('is-visible')
+          featureObserver?.unobserve(entry.target)
+        }
+      }
+    },
+    { threshold: 0.2, rootMargin: '0px 0px -8% 0px' },
+  )
+  for (const el of featureEls) featureObserver.observe(el)
+})
+
+onBeforeUnmount(() => {
+  featureObserver?.disconnect()
+  featureObserver = null
+})
 
 const now = Date.now()
 const dummyHistory: PaletteHistoryGraphResponse = {

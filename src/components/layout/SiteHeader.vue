@@ -10,21 +10,38 @@
     <nav class="site-nav">
       <template v-if="isOnLanding">
         <a href="#features" class="nav-link">Features</a>
+        <span class="nav-sep" aria-hidden="true"></span>
       </template>
       <RouterLink to="/color/B410CC" class="nav-link" :class="{ 'nav-link--active': isOnColor }">Colors</RouterLink>
-      <template v-if="isLoggedIn">
-        <span v-if="user" class="user-chip font-mono">
-          <span class="chip-label">user</span>
-          <strong>{{ user.username }}</strong>
-        </span>
-        <RouterLink v-if="!isOnDashboard" to="/dashboard" class="nav-link">Dashboard</RouterLink>
-        <button class="nav-cta" @click="handleLogout">Sign out <span aria-hidden="true">→</span></button>
-      </template>
-      <template v-else>
-        <RouterLink to="/login" class="nav-link">Log in</RouterLink>
-        <RouterLink to="/register" class="nav-cta">Start designing <span aria-hidden="true">→</span></RouterLink>
+      <span class="nav-sep" aria-hidden="true"></span>
+      <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">New palette</RouterLink>
+      <template v-if="isLoggedIn && !isOnDashboard">
+        <span class="nav-sep" aria-hidden="true"></span>
+        <RouterLink to="/dashboard" class="nav-link">Dashboard</RouterLink>
       </template>
     </nav>
+
+    <div class="account-slot" ref="accountEl">
+      <button
+        v-if="isLoggedIn"
+        class="profile-link"
+        title="Account menu"
+        aria-label="Open account menu"
+        :aria-expanded="profileMenuOpen"
+        @click="toggleProfileMenu"
+      >
+        <span class="profile-avatar">{{ profileInitial }}</span>
+      </button>
+      <RouterLink v-else to="/login" class="login-link">Log in</RouterLink>
+
+      <Transition name="profile-menu-fade">
+        <div v-if="isLoggedIn && profileMenuOpen" class="profile-menu">
+          <button class="profile-menu-item" @click="onProfileSoon">Profile</button>
+          <button class="profile-menu-item" @click="onSettingsSoon">Settings</button>
+          <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">Sign out</button>
+        </div>
+      </Transition>
+    </div>
 
     <!-- Mobile burger -->
     <button
@@ -60,15 +77,19 @@
         </template>
 
         <RouterLink to="/color/B410CC" class="mob-link" @click="closeSidebar">Colors</RouterLink>
+        <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">New palette</RouterLink>
+        <RouterLink v-if="isLoggedIn && !isOnDashboard" to="/dashboard" class="mob-link" @click="closeSidebar">Dashboard</RouterLink>
 
         <template v-if="isLoggedIn">
-          <span v-if="user" class="mob-user font-mono">{{ user.username }}</span>
-          <RouterLink v-if="!isOnDashboard" to="/dashboard" class="mob-link" @click="closeSidebar">Dashboard</RouterLink>
-          <button class="mob-link mob-signout" @click="handleLogout">Sign out →</button>
+          <span class="mob-user font-mono">
+            <span class="mob-user-avatar">{{ profileInitial }}</span>
+            {{ profileName }}
+          </span>
+          <button class="mob-link mob-signout" @click="handleLogout">Sign out</button>
         </template>
         <template v-else>
-          <RouterLink to="/login" class="mob-link" @click="closeSidebar">Log in</RouterLink>
-          <RouterLink to="/register" class="mob-cta" @click="closeSidebar">Start designing →</RouterLink>
+          <RouterLink to="/login" class="mob-cta" @click="closeSidebar">Log in</RouterLink>
+          <RouterLink to="/register" class="mob-link" @click="closeSidebar">Create account</RouterLink>
         </template>
       </div>
     </nav>
@@ -83,7 +104,7 @@
  *        brandMeta (string) — optional meta text shown after the brand name
  * Used in: LandingView, DashboardView, ColorView
  */
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
 import RgbastLogo from '../ui/RgbastLogo.vue'
@@ -107,16 +128,72 @@ const isOnColor     = computed(() => route.path.startsWith('/color'))
 
 /** True when the user prop is set or a token exists in localStorage. */
 const isLoggedIn    = computed(() => !!props.user || !!localStorage.getItem('access_token'))
+const routeSegments = computed(() => {
+  const raw = route.params.pathMatch
+  if (!raw) return []
+  const list = Array.isArray(raw) ? raw : String(raw).split('/')
+  return list.filter(Boolean)
+})
+const isOnNewPalette = computed(() => route.name === 'palette' && routeSegments.value[routeSegments.value.length - 1] === 'new')
+
+function getTokenUsername(): string | null {
+  const token = localStorage.getItem('access_token')
+  if (!token) return null
+  try {
+    const payloadPart = token.split('.')[1]
+    if (!payloadPart) return null
+    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4))
+    const payload = JSON.parse(atob(normalized + pad))
+    return payload?.sub ?? null
+  } catch {
+    return null
+  }
+}
+
+const profileName = computed(() => props.user?.username ?? getTokenUsername() ?? 'User')
+const profileInitial = computed(() => profileName.value.charAt(0).toUpperCase() || 'U')
+const newPaletteTo = computed(() => {
+  const username = profileName.value && isLoggedIn.value ? profileName.value : 'local'
+  return { name: 'palette', params: { username, pathMatch: 'new' } }
+})
 
 /** Whether the mobile sidebar is visually open. */
 const mobileOpen = ref(false)
+const profileMenuOpen = ref(false)
 
 /** Reference to the sidebar element for GSAP animations. */
 const sidebarEl  = ref<HTMLElement | null>(null)
+const accountEl = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   if (sidebarEl.value) gsap.set(sidebarEl.value, { x: '100%' })
+  document.addEventListener('pointerdown', onGlobalPointerDown)
 })
+
+onBeforeUnmount(() => {
+  document.removeEventListener('pointerdown', onGlobalPointerDown)
+})
+
+function toggleProfileMenu(): void {
+  profileMenuOpen.value = !profileMenuOpen.value
+}
+
+function onProfileSoon(): void {
+  profileMenuOpen.value = false
+}
+
+function onSettingsSoon(): void {
+  profileMenuOpen.value = false
+}
+
+function onGlobalPointerDown(event: PointerEvent): void {
+  if (!profileMenuOpen.value) return
+  const target = event.target as Node | null
+  if (!target) return
+  if (accountEl.value?.contains(target)) return
+  profileMenuOpen.value = false
+}
 
 /**
  * Slides the mobile sidebar in from the right using GSAP.
@@ -130,6 +207,7 @@ function openSidebar() {
  * Slides the mobile sidebar out using GSAP, then hides it.
  */
 function closeSidebar() {
+  profileMenuOpen.value = false
   gsap.to(sidebarEl.value, {
     x: '100%',
     duration: 0.36,
@@ -143,6 +221,7 @@ function closeSidebar() {
  */
 function handleLogout() {
   localStorage.removeItem('access_token')
+  profileMenuOpen.value = false
   closeSidebar()
   router.push('/login')
 }

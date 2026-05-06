@@ -1,14 +1,27 @@
+.auth-page {
+  height: 100dvh;
+  min-height: 100dvh;
+  background: var(--paper);
+  overflow: hidden;
+}
+
 .auth {
   position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
-  min-height: 100vh;
+  height: calc(100dvh - 68px);
+  min-height: calc(100dvh - 68px);
+  margin-top: 68px;
   width: 100%;
   overflow: hidden;
   background: var(--paper);
 }
 @media (max-width: 960px) {
-  .auth { grid-template-columns: 1fr; }
+  .auth {
+    grid-template-columns: 1fr;
+    height: calc(100dvh - 68px);
+  }
+  .auth-page { overflow: auto; }
 }
 
 /* ===== Registration marks ===== */
@@ -199,6 +212,7 @@
   align-items: center;
   justify-content: center;
   padding: 48px clamp(24px, 5vw, 72px);
+  overflow-y: auto;
 }
 .form-inner {
   width: 100%;

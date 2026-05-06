@@ -1,9 +1,11 @@
 <template>
-  <main class="auth">
-    <span class="regmark regmark-tl" aria-hidden="true"></span>
-    <span class="regmark regmark-tr" aria-hidden="true"></span>
-    <span class="regmark regmark-bl" aria-hidden="true"></span>
-    <span class="regmark regmark-br" aria-hidden="true"></span>
+  <div class="auth-page">
+    <SiteHeader />
+    <main class="auth">
+      <span class="regmark regmark-tl" aria-hidden="true"></span>
+      <span class="regmark regmark-tr" aria-hidden="true"></span>
+      <span class="regmark regmark-bl" aria-hidden="true"></span>
+      <span class="regmark regmark-br" aria-hidden="true"></span>
 
     <!-- Left panel -->
     <aside class="panel">
@@ -18,14 +20,8 @@
       </div>
 
       <div class="panel-inner">
-        <RouterLink to="/" class="brand">
-          <RgbastLogo size="32px" />
-          <span class="brand-name">RGBAST</span>
-        </RouterLink>
-
         <div class="panel-lede">
           <p class="eyebrow font-mono">
-            <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
             Atelier · returning designer
           </p>
           <h1 class="panel-title font-display">
@@ -154,7 +150,8 @@
         </p>
       </div>
     </section>
-  </main>
+    </main>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -167,6 +164,7 @@ import { ref, onMounted } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
+import SiteHeader from '@/components/layout/SiteHeader.vue'
 
 const router = useRouter()
 onMounted(() => { document.title = 'Sign in - RGBAST' })

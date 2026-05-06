@@ -2,7 +2,6 @@ import { onMounted, onUnmounted } from 'vue'
 import type { Ref } from 'vue'
 
 export interface KeyboardContext {
-  historyOpen: Ref<boolean>
   generateOpen: Ref<boolean>
 }
 
@@ -11,6 +10,17 @@ export interface KeyboardActions {
   doRedo: () => void
   requestSave: () => void
   doGenerate: () => void
+  openImagePalette: () => void
+  openEditPalette: () => void
+  deleteLastColor: () => void
+  deleteFirstColor: () => void
+  openDeletePaletteModal: () => void
+  historyLeft: () => void
+  historyRight: () => void
+  copyPalette: () => void
+  pasteAddFromClipboard: () => Promise<void>
+  pasteReplaceFromClipboard: () => Promise<void>
+  openCheatSheet: () => void
 }
 
 // Wire global keyboard shortcuts for PaletteView and ensure cleanup.
@@ -42,18 +52,82 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       if (!e.repeat) actions.doRedo()
       return
     }
+    if ((e.ctrlKey || e.metaKey) && key === 's' && e.shiftKey) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.openEditPalette()
+      return
+    }
     if ((e.ctrlKey || e.metaKey) && key === 's') {
       e.preventDefault()
       e.stopImmediatePropagation()
       actions.requestSave()
       return
     }
+    if ((e.ctrlKey || e.metaKey) && key === 'i' && !e.shiftKey && !e.altKey) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.openImagePalette()
+      return
+    }
 
     const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
-    if (['input', 'textarea', 'select'].includes(tag) || (e.target as HTMLElement)?.isContentEditable) return
+    const isEditable = ['input', 'textarea', 'select'].includes(tag) || (e.target as HTMLElement)?.isContentEditable
+
+    if ((e.ctrlKey || e.metaKey) && key === 'c' && !e.shiftKey && !e.altKey) {
+      if (isEditable) return
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.copyPalette()
+      return
+    }
+
+    if ((e.ctrlKey || e.metaKey) && key === 'v' && !e.altKey) {
+      if (isEditable) return
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (e.shiftKey) {
+        if (!e.repeat) void actions.pasteReplaceFromClipboard()
+      } else {
+        if (!e.repeat) void actions.pasteAddFromClipboard()
+      }
+      return
+    }
+
+    if (isEditable) return
+
+    if (key === 'delete' && !e.metaKey) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (e.ctrlKey) {
+        if (!e.repeat) actions.openDeletePaletteModal()
+      } else if (e.shiftKey) {
+        if (!e.repeat) actions.deleteFirstColor()
+      } else if (!e.altKey) {
+        if (!e.repeat) actions.deleteLastColor()
+      }
+      return
+    }
+
+    if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      if (e.code === 'ArrowLeft') {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        if (!e.repeat) actions.historyLeft()
+        return
+      }
+      if (e.code === 'ArrowRight') {
+        e.preventDefault()
+        e.stopImmediatePropagation()
+        if (!e.repeat) actions.historyRight()
+        return
+      }
+    }
 
     if (e.code === 'KeyH' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
-      ctx.historyOpen.value = !ctx.historyOpen.value
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.openCheatSheet()
       return
     }
 

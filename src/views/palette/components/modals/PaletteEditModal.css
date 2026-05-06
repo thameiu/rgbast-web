@@ -17,8 +17,35 @@
   width: 420px;
   max-width: calc(100vw - 32px);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
-  animation: modalPop 0.2s cubic-bezier(0.2, 0.9, 0.2, 1);
+  animation: modalPop 0.2s cubic-bezier(.2,.9,.2,1);
+  position: relative;
+  max-height: calc(100vh - 36px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
 }
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.66);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.modal-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.28);
+  color: #fff;
+}
+
 
 @keyframes modalPop {
   from { opacity: 0; transform: scale(0.95) translateY(8px); }
@@ -142,3 +169,7 @@
   opacity: 0.35;
   cursor: not-allowed;
 }
+
+.modal::-webkit-scrollbar { width: 4px; }
+.modal::-webkit-scrollbar-track { background: transparent; }
+.modal::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }

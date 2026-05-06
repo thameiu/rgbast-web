@@ -64,7 +64,7 @@ export interface PaletteContext {
   wrapColors: (cols: PaletteColorSave[]) => WorkingColor[]
   mobileBranchColor: (idx: number) => string
   loadHistory: () => Promise<void>
-  loadFolders: () => Promise<void>
+  loadFolders: (forUsername?: string | null) => Promise<void>
   applyBranchState: () => void
   switchBranch: (id: number | null) => Promise<void>
   findSnapshot: (id: number) => PaletteHistoryGraphResponse['main'][number] | PaletteHistoryGraphResponse['branches'][number]['snapshots'][number] | null
@@ -82,7 +82,9 @@ function getTokenUsername(): string | null {
   try {
     const payloadPart = token.split('.')[1]
     if (!payloadPart) return null
-    const payload = JSON.parse(atob(payloadPart))
+    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4))
+    const payload = JSON.parse(atob(normalized + pad))
     return payload.sub ?? null
   } catch {
     return null
@@ -292,10 +294,13 @@ export function usePaletteContext(): PaletteContext {
     }
   }
 
-  async function loadFolders(): Promise<void> {
-    if (!username.value) return
+  async function loadFolders(forUsername?: string | null): Promise<void> {
+    const targetUsername = (forUsername?.trim() || '') || (
+      isNewPalette.value ? (getTokenUsername() ?? username.value) : username.value
+    )
+    if (!targetUsername) return
     try {
-      folders.value = await foldersApi.getByUsername(username.value)
+      folders.value = await foldersApi.getByUsername(targetUsername)
     } catch {
       folders.value = []
     }

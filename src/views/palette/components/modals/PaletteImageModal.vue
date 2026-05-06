@@ -2,6 +2,7 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal image-modal">
+        <button class="modal-close-btn" @click="$emit('close')">x</button>
         <h3 class="modal-title font-display">Palette From Image</h3>
 
         <p class="image-help">

@@ -13,6 +13,11 @@
 
     <!-- Center: branch selector (desktop) -->
     <div class="center-group">
+      <span
+        v-if="isOwned && hasUnsavedChanges"
+        class="unsaved-dot"
+        title="Unsaved changes"
+      ></span>
       <div
         class="branch-selector"
         :class="{ open: branchOpen, 'focus-ring': tutorialFocus === 'branches' }"
@@ -62,19 +67,86 @@
           </template>
         </div>
       </Teleport>
+      <div ref="helpGroupEl" class="header-dropdown-group">
+        <button
+          class="help-split-btn"
+          :class="{ open: helpMenuOpen }"
+          title="Help"
+          @click.stop="toggleHelpMenu"
+        >
+          <span class="help-glyph">?</span>
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+            <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <Transition name="header-dd">
+          <div v-if="helpMenuOpen" class="header-dropdown-menu help-menu">
+            <button class="header-menu-opt" @click="onHelpHistory">History</button>
+            <button class="header-menu-opt" @click="onHelpGeneration">Generation</button>
+            <button class="header-menu-opt" @click="onHelpCheatSheet">
+              Cheat sheet
+              <span class="header-menu-kbd">H</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
     </div>
 
     <!-- Right: actions (desktop) -->
     <div class="right-group">
       <button
-        class="help-btn"
-        title="How palettes work"
-        @click="$emit('openTutorial')"
+        class="icon-action-btn"
+        :class="{ 'icon-action-btn--copied': copyFeedback }"
+        title="Copy palette colors (Ctrl+C)"
+        @click="emit('copyPalette')"
       >
-        ?
+        <svg v-if="copyFeedback" width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <svg v-else width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <rect x="4.2" y="3.2" width="7.2" height="8.6" rx="1.4" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M3.4 9.8H2.8A1.2 1.2 0 011.6 8.6V2.8A1.2 1.2 0 012.8 1.6h5.8A1.2 1.2 0 019.8 2.8v.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
       </button>
+
+      <div ref="pasteGroupEl" class="header-dropdown-group">
+        <div class="paste-split-btn">
+          <button
+            class="icon-action-btn paste-main-btn"
+            title="Paste colors and add to palette (Ctrl+V)"
+            @click="emit('pasteAdd')"
+          >
+            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+              <path d="M9.8 2.4h.7A1.5 1.5 0 0112 3.9v7.7a1.5 1.5 0 01-1.5 1.5H4a1.5 1.5 0 01-1.5-1.5V3.9A1.5 1.5 0 014 2.4h.7" stroke="currentColor" stroke-width="1.2"/>
+              <rect x="5.1" y="1.3" width="3.8" height="2.3" rx=".7" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+          </button>
+          <button
+            class="paste-menu-toggle"
+            :class="{ open: pasteMenuOpen }"
+            title="Paste options"
+            @click.stop="togglePasteMenu"
+          >
+            <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
+              <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
+        <Transition name="header-dd">
+          <div v-if="pasteMenuOpen" class="header-dropdown-menu paste-menu">
+            <button class="header-menu-opt" @click="onPasteAddOption">
+              Add pasted colors
+              <span class="header-menu-kbd">Ctrl+V</span>
+            </button>
+            <button class="header-menu-opt" @click="onPasteReplaceOption">
+              Replace all colors
+              <span class="header-menu-kbd">Ctrl+Shift+V</span>
+            </button>
+          </div>
+        </Transition>
+      </div>
+
       <span v-if="snapshotHint" class="snapshot-hint">{{ snapshotHint }}</span>
-      <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
       <!-- Undo / Redo arrows -->
       <div class="undo-redo-group">
         <button
@@ -101,17 +173,6 @@
         </button>
       </div>
 
-      <button
-        class="action-btn secondary"
-        @click="$emit('toggleHistory')"
-        :class="{ active: historyOpen, 'focus-ring': tutorialFocus === 'history' }"
-      >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        History
-      </button>
       <!-- Generate split-button -->
       <div class="gen-btn-group">
         <button class="gen-instant-btn" @click="$emit('generate')" title="Generate palette (Space)">
@@ -151,7 +212,19 @@
         </svg>
       </button>
       <button
-        v-if="isOwned"
+        v-if="!isNewPalette"
+        class="action-btn secondary"
+        @click="$emit('toggleHistory')"
+        :class="{ active: historyOpen, 'focus-ring': tutorialFocus === 'history' }"
+      >
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        History
+      </button>
+      <button
+        v-if="isOwned && !isNewPalette"
         class="action-btn secondary"
         title="Edit palette"
         @click="$emit('edit')"
@@ -216,6 +289,7 @@
         </button>
       </div>
       <button
+        v-if="!isNewPalette"
         class="history-mobile-btn"
         :class="{ active: historyOpen }"
         aria-label="Toggle history"
@@ -250,7 +324,7 @@
  * On mobile the center and right groups are hidden; a compact mobile-right
  * group is shown instead (undo/redo controls, history, and hamburger).
  */
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getBranchColor } from '@/utils/branchColors'
 
 const props = defineProps<{
@@ -264,6 +338,8 @@ const props = defineProps<{
   branches: Array<{ id: number; title: string; is_merged: boolean }>
   /** Whether there are unsaved local changes. */
   hasUnsavedChanges: boolean
+  /** Whether this is a draft/new palette route. */
+  isNewPalette?: boolean
   /** Whether a save request is in-flight. */
   isSaving: boolean
   /** Whether the history panel is currently open. */
@@ -282,6 +358,8 @@ const props = defineProps<{
   canUndo?: boolean
   /** Whether there is a state available to redo. */
   canRedo?: boolean
+  /** Whether copy feedback is active. */
+  copyFeedback?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -294,6 +372,12 @@ const emit = defineEmits<{
   deletePalette: []
   edit: []
   openTutorial: []
+  openHelpHistory: []
+  openHelpGeneration: []
+  openHelpCheatSheet: []
+  copyPalette: []
+  pasteAdd: []
+  pasteReplace: []
   hamburgerClick: []
   generate: []
   openGenerateSettings: []
@@ -304,6 +388,10 @@ const emit = defineEmits<{
 
 /** Whether the branch dropdown flyout is open. */
 const branchOpen = ref(false)
+const pasteMenuOpen = ref(false)
+const helpMenuOpen = ref(false)
+const pasteGroupEl = ref<HTMLElement | null>(null)
+const helpGroupEl = ref<HTMLElement | null>(null)
 
 /** Only non-merged branches shown in the selector. */
 const activeBranches = computed(() => props.branches.filter(b => !b.is_merged))
@@ -334,6 +422,68 @@ const dropdownStyle = ref({
   left: '50%',
   transform: 'translateX(-50%)',
   zIndex: '9999',
+})
+
+function onPasteAddOption(): void {
+  emit('pasteAdd')
+  pasteMenuOpen.value = false
+}
+
+function onPasteReplaceOption(): void {
+  emit('pasteReplace')
+  pasteMenuOpen.value = false
+}
+
+function togglePasteMenu(): void {
+  pasteMenuOpen.value = !pasteMenuOpen.value
+  if (pasteMenuOpen.value) helpMenuOpen.value = false
+}
+
+function onHelpHistory(): void {
+  emit('openHelpHistory')
+  helpMenuOpen.value = false
+}
+
+function onHelpGeneration(): void {
+  emit('openHelpGeneration')
+  helpMenuOpen.value = false
+}
+
+function onHelpCheatSheet(): void {
+  emit('openHelpCheatSheet')
+  helpMenuOpen.value = false
+}
+
+function toggleHelpMenu(): void {
+  helpMenuOpen.value = !helpMenuOpen.value
+  if (helpMenuOpen.value) pasteMenuOpen.value = false
+}
+
+function onDocumentPointerDown(event: Event): void {
+  const target = event.target as Node | null
+  if (pasteMenuOpen.value && pasteGroupEl.value && target && !pasteGroupEl.value.contains(target)) {
+    pasteMenuOpen.value = false
+  }
+  if (helpMenuOpen.value && helpGroupEl.value && target && !helpGroupEl.value.contains(target)) {
+    helpMenuOpen.value = false
+  }
+}
+
+function onDocumentKeydown(event: KeyboardEvent): void {
+  if (event.key === 'Escape') {
+    pasteMenuOpen.value = false
+    helpMenuOpen.value = false
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('pointerdown', onDocumentPointerDown, { capture: true })
+  document.addEventListener('keydown', onDocumentKeydown, { capture: true })
+})
+
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', onDocumentPointerDown, { capture: true })
+  document.removeEventListener('keydown', onDocumentKeydown, { capture: true })
 })
 </script>
 

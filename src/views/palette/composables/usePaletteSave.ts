@@ -9,6 +9,21 @@ export interface SaveActions {
   clearHistory: () => void
 }
 
+function getTokenUsername(): string | null {
+  const token = localStorage.getItem('access_token')
+  if (!token) return null
+  try {
+    const payloadPart = token.split('.')[1]
+    if (!payloadPart) return null
+    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4))
+    const payload = JSON.parse(atob(normalized + pad))
+    return payload?.sub ?? null
+  } catch {
+    return null
+  }
+}
+
 // Handle palette save, merge, delete, and revert flows for PaletteView.
 export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
   const saveComment = ref('')
@@ -80,7 +95,9 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
   }
 
   // Continue into the save modal after successful authentication.
-  function onAuthenticated(): void {
+  async function onAuthenticated(): Promise<void> {
+    const authUsername = getTokenUsername()
+    await ctx.loadFolders(authUsername)
     ctx.showAuthModal.value = false
     ctx.showSaveModal.value = true
   }
@@ -115,7 +132,8 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
         ctx.pendingFolderId.value = null
         paletteDraftsApi.removeDraft(oldDraftKey)
         const pathMatch = [...created.folder_path, created.title].join('/')
-        await ctx.router.replace({ name: 'palette', params: { username: ctx.username.value, pathMatch } })
+        const ownerUsername = getTokenUsername() ?? ctx.username.value
+        await ctx.router.replace({ name: 'palette', params: { username: ownerUsername, pathMatch } })
         await actions.loadHistory()
         return
       }
@@ -317,7 +335,8 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       })
 
       const pathMatch = [...updated.folder_path, updated.title].join('/')
-      await ctx.router.replace({ name: 'palette', params: { username: ctx.username.value, pathMatch } })
+      const ownerUsername = ctx.history.value?.owner_username ?? getTokenUsername() ?? ctx.username.value
+      await ctx.router.replace({ name: 'palette', params: { username: ownerUsername, pathMatch } })
       showEditModal.value = false
       await actions.loadHistory()
     } catch (e: any) {

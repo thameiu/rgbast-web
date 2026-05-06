@@ -1,7 +1,8 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
+    <div v-if="open" class="modal-overlay">
       <div class="modal">
+        <button class="modal-close-btn" @click="$emit('close')">x</button>
         <h3 class="modal-title font-display">Edit Palette</h3>
         <p class="modal-sub">Update name, description, or folder placement.</p>
 

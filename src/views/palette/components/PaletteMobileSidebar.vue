@@ -52,6 +52,47 @@
 
           <div class="msb-section-label">Palette</div>
           <div class="msb-actions">
+            <button
+              v-if="isOwned"
+              class="msb-action msb-action-primary"
+              :disabled="isSaving || !hasUnsavedChanges"
+              @click="$emit('requestSave'); $emit('close')"
+            >
+              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              {{ isSaving ? 'Saving...' : 'Save snapshot' }}
+            </button>
+            <button v-if="isOwned" class="msb-action" @click="$emit('edit'); $emit('close')">
+              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+                <path d="M2.5 9.5L9.5 2.5l2 2-7 7H2.5v-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                <path d="M8.8 3.2l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              Edit palette
+            </button>
+            <button
+              v-if="isOwned && !isNewPalette"
+              class="msb-action msb-action-danger"
+              @click="$emit('deletePalette'); $emit('close')"
+            >
+              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Delete palette
+            </button>
+            <button
+              v-if="!isOwned"
+              class="msb-action msb-action-clone"
+              @click="$emit('clonePalette'); $emit('close')"
+            >
+              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+                <path d="M5 1h7a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+              </svg>
+              Clone palette
+            </button>
+
             <div class="msb-gen-group">
               <button class="msb-gen-main" @click="$emit('generate'); $emit('close')">
                 <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
@@ -75,54 +116,44 @@
               </svg>
               Palette from image
             </button>
-            <button v-if="isOwned" class="msb-action" @click="$emit('edit'); $emit('close')">
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-                <path d="M2.5 9.5L9.5 2.5l2 2-7 7H2.5v-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                <path d="M8.8 3.2l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <button class="msb-action" :class="{ 'msb-action-copy--copied': copyFeedback }" @click="$emit('copyPalette')">
+              <svg v-if="copyFeedback" width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
-              Edit palette
+              <svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="4.2" y="3.2" width="7.2" height="8.6" rx="1.4" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M3.4 9.8H2.8A1.2 1.2 0 011.6 8.6V2.8A1.2 1.2 0 012.8 1.6h5.8A1.2 1.2 0 019.8 2.8v.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Copy colors
+            </button>
+            <button class="msb-action" @click="$emit('pasteAdd'); $emit('close')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M9.8 2.4h.7A1.5 1.5 0 0112 3.9v7.7a1.5 1.5 0 01-1.5 1.5H4a1.5 1.5 0 01-1.5-1.5V3.9A1.5 1.5 0 014 2.4h.7" stroke="currentColor" stroke-width="1.2"/>
+                <rect x="5.1" y="1.3" width="3.8" height="2.3" rx=".7" stroke="currentColor" stroke-width="1.2"/>
+              </svg>
+              Paste colors (add)
+            </button>
+            <button class="msb-action" @click="$emit('pasteReplace'); $emit('close')">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M9.8 2.4h.7A1.5 1.5 0 0112 3.9v7.7a1.5 1.5 0 01-1.5 1.5H4a1.5 1.5 0 01-1.5-1.5V3.9A1.5 1.5 0 014 2.4h.7" stroke="currentColor" stroke-width="1.2"/>
+                <rect x="5.1" y="1.3" width="3.8" height="2.3" rx=".7" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M4.4 6.9h5.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Paste colors (replace)
             </button>
           </div>
 
           <div class="msb-divider"></div>
 
+          <div class="msb-section-label">Help</div>
           <div class="msb-actions">
-            <button class="msb-action" @click="$emit('openTutorial'); $emit('close')">
+            <button class="msb-action" @click="$emit('openHelpHistory'); $emit('close')">
               <span class="msb-help-glyph">?</span>
-              How it works
+              History
             </button>
-            <button
-              v-if="isOwned"
-              class="msb-action msb-action-primary"
-              :disabled="isSaving || !hasUnsavedChanges"
-              @click="$emit('requestSave'); $emit('close')"
-            >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
-              {{ isSaving ? 'Saving...' : 'Save snapshot' }}
-            </button>
-            <button
-              v-else
-              class="msb-action msb-action-clone"
-              @click="$emit('clonePalette'); $emit('close')"
-            >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-                <path d="M5 1h7a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
-              Clone palette
-            </button>
-            <button
-              v-if="isOwned && !isNewPalette"
-              class="msb-action msb-action-danger"
-              @click="$emit('deletePalette'); $emit('close')"
-            >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              Delete palette
+            <button class="msb-action" @click="$emit('openHelpGeneration'); $emit('close')">
+              <span class="msb-help-glyph">?</span>
+              Generation
             </button>
           </div>
         </div>
@@ -143,6 +174,7 @@ defineProps<{
   isSaving: boolean
   hasUnsavedChanges: boolean
   isNewPalette: boolean
+  copyFeedback?: boolean
 }>()
 
 // Emits: close sidebar and action events triggered from the menu.
@@ -150,7 +182,12 @@ defineEmits<{
   (e: 'close'): void
   (e: 'switchBranch', id: number | null): void
   (e: 'merge', id: number): void
-  (e: 'openTutorial'): void
+  (e: 'openHelpHistory'): void
+  (e: 'openHelpGeneration'): void
+  (e: 'openHelpCheatSheet'): void
+  (e: 'copyPalette'): void
+  (e: 'pasteAdd'): void
+  (e: 'pasteReplace'): void
   (e: 'requestSave'): void
   (e: 'clonePalette'): void
   (e: 'deletePalette'): void

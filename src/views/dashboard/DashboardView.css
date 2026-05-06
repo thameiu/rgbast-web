@@ -31,6 +31,7 @@
 .shell {
   display: grid;
   grid-template-columns: 260px minmax(0, 1fr);
+  align-items: start;
   gap: clamp(24px, 3vw, 40px);
   padding: calc(68px + clamp(32px, 5vw, 64px)) clamp(24px, 4vw, 56px) clamp(32px, 5vw, 64px);
 }
@@ -99,6 +100,9 @@
   margin-top: 22px;
   padding-top: 18px;
   border-top: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .folder-panel-label {
@@ -107,6 +111,12 @@
   text-transform: uppercase;
   color: var(--ink-3);
   margin-bottom: 10px;
+}
+
+.folder-panel-tree {
+  max-height: min(52vh, 480px);
+  overflow: auto;
+  padding-right: 4px;
 }
 
 /* Content */

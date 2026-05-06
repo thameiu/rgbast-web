@@ -2,6 +2,7 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal">
+        <button class="modal-close-btn" @click="$emit('close')">x</button>
         <h3 class="modal-title font-display">Delete Branch</h3>
         <p class="modal-sub">
           Delete branch <strong>{{ branchName }}</strong>? All snapshots in this branch will be permanently lost.

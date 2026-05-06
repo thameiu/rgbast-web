@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="auth-overlay" @click.self="$emit('cancel')">
+    <div class="auth-overlay">
       <div class="auth-modal">
         <!-- Header -->
         <div class="auth-header">

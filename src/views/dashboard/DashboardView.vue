@@ -28,22 +28,24 @@
 
           <div class="folder-panel">
             <p class="folder-panel-label font-mono">Folders</p>
-            <FolderTree
-              :folders="folders"
-              v-model="activeFolderKey"
-              theme="light"
-              mode="navigation"
-              :paletteCounts="folderCounts"
-              :totalCount="palettes.length"
-              :rootCount="rootPaletteCount"
-              :draggingId="draggingId"
-              :palettes="palettes"
-              @createFolder="onCreateFolder"
-              @renameFolder="onRenameFolder"
-              @deleteFolder="openDeleteFolder"
-              @movePalette="onMovePalette"
-              @selectPalette="openPalette"
-            />
+            <div class="folder-panel-tree">
+              <FolderTree
+                :folders="folders"
+                v-model="activeFolderKey"
+                theme="light"
+                mode="navigation"
+                :paletteCounts="folderCounts"
+                :totalCount="palettes.length"
+                :rootCount="rootPaletteCount"
+                :draggingId="draggingId"
+                :palettes="palettes"
+                @createFolder="onCreateFolder"
+                @renameFolder="onRenameFolder"
+                @deleteFolder="openDeleteFolder"
+                @movePalette="onMovePalette"
+                @selectPalette="openPalette"
+              />
+            </div>
           </div>
         </template>
 

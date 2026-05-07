@@ -1,0 +1,143 @@
+.settings-view {
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(14, 14, 16, 0.055) 1px, transparent 0) 0 0 / 24px 24px,
+    #dcdcdc;
+}
+
+.settings-shell {
+  margin-top: 68px;
+  max-width: 860px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 30px 20px 44px;
+  display: grid;
+  gap: 16px;
+}
+
+.settings-head {
+  margin-bottom: 8px;
+}
+
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.settings-title {
+  margin-top: 6px;
+  font-size: clamp(38px, 5vw, 52px);
+}
+
+.settings-card {
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 20px;
+  display: grid;
+  gap: 14px;
+}
+
+.card-title {
+  font-size: 26px;
+}
+
+.form {
+  display: grid;
+  gap: 12px;
+}
+
+.field {
+  display: grid;
+  gap: 6px;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.field-label {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.field-input {
+  width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.field-input:focus {
+  outline: none;
+  border-color: var(--ink);
+}
+
+.msg {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+
+.msg--error {
+  color: #8a1f29;
+  border: 1px solid rgba(179, 32, 50, 0.35);
+  background: rgba(179, 32, 50, 0.1);
+}
+
+.msg--ok {
+  color: #185f2d;
+  border: 1px solid rgba(24, 95, 45, 0.35);
+  background: rgba(24, 95, 45, 0.09);
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn--primary {
+  background: var(--ink);
+  color: #fff;
+}
+
+.btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.danger {
+  border-color: rgba(179, 32, 50, 0.35);
+}
+
+.danger-copy {
+  color: var(--ink-2);
+}
+
+.btn--danger {
+  background: rgba(179, 32, 50, 0.95);
+  color: #fff;
+}
+
+.btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .field-row {
+    grid-template-columns: 1fr;
+  }
+}

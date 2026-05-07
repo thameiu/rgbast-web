@@ -1,5 +1,12 @@
 import { ApiClient } from './client';
-import type { Login, LoginResponse } from './types';
+import type {
+  Login,
+  LoginResponse,
+  MessageResponse,
+  PasswordResetConfirm,
+  PasswordResetRequest,
+  UserGetResponse,
+} from './types';
 
 /** Authentication endpoints: login and session verification. */
 export const authApi = {
@@ -9,7 +16,15 @@ export const authApi = {
   },
 
   /** Verify the stored token and return the current user's profile. */
-  checkAuth: (): Promise<any> => {
-    return ApiClient.request<any>('/check-auth', 'POST');
-  }
+  checkAuth: (): Promise<UserGetResponse> => {
+    return ApiClient.request<UserGetResponse>('/check-auth', 'POST');
+  },
+
+  requestPasswordReset: (data: PasswordResetRequest): Promise<MessageResponse> => {
+    return ApiClient.request<MessageResponse>('/password-reset/request', 'POST', data);
+  },
+
+  confirmPasswordReset: (data: PasswordResetConfirm): Promise<MessageResponse> => {
+    return ApiClient.request<MessageResponse>('/password-reset/confirm', 'POST', data);
+  },
 };

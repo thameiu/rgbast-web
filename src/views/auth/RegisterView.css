@@ -309,6 +309,15 @@
   font-size: 13px;
   font-weight: 500;
 }
+.ok {
+  padding: 10px 12px;
+  border: 1px solid rgba(24, 95, 45, 0.34);
+  border-radius: 10px;
+  background: rgba(24, 95, 45, 0.09);
+  color: #185f2d;
+  font-size: 13px;
+  font-weight: 500;
+}
 
 .submit {
   margin-top: 8px;

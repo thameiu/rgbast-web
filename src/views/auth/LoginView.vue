@@ -136,7 +136,12 @@
             />
           </label>
 
+          <p class="forgot">
+            <RouterLink to="/forgot-password" class="alt-link">Forgot password?</RouterLink>
+          </p>
+
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
+          <p v-if="infoMessage" class="ok">{{ infoMessage }}</p>
 
           <button type="submit" :disabled="isSubmitting" class="submit">
             <span>{{ isSubmitting ? 'Signing in…' : 'Sign in' }}</span>
@@ -161,12 +166,13 @@
  * Right panel: username/password form that calls authApi.login and redirects to /dashboard.
  */
 import { ref, onMounted } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 
 const router = useRouter()
+const route = useRoute()
 onMounted(() => { document.title = 'Sign in - RGBAST' })
 
 /** Form field values. */
@@ -177,6 +183,18 @@ const isSubmitting = ref(false)
 
 /** Error message shown below the form on failure. */
 const errorMessage = ref('')
+const infoMessage = ref('')
+
+onMounted(() => {
+  const verified = typeof route.query.verified === 'string' ? route.query.verified : ''
+  if (verified === '1') {
+    infoMessage.value = 'Email verified. You can now sign in.'
+  } else if (verified === 'expired') {
+    infoMessage.value = 'Verification link expired. Please register again to receive a new email.'
+  } else if (verified === 'invalid') {
+    infoMessage.value = 'Verification link is invalid.'
+  }
+})
 
 /**
  * Submits the login form, stores the access token, and navigates to /dashboard.
@@ -184,6 +202,7 @@ const errorMessage = ref('')
 async function handleLogin() {
   isSubmitting.value = true
   errorMessage.value = ''
+  infoMessage.value = ''
   try {
     const response = await authApi.login({
       username: form.value.username,

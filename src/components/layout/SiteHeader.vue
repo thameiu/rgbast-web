@@ -195,6 +195,7 @@ function goToProfile(): void {
 function onSettingsSoon(): void {
   profileMenuOpen.value = false
   closeSidebar()
+  router.push('/settings')
 }
 
 function onGlobalPointerDown(event: PointerEvent): void {

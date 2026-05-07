@@ -164,6 +164,7 @@
           </div>
 
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
+          <p v-if="successMessage" class="ok">{{ successMessage }}</p>
 
           <button type="submit" :disabled="isSubmitting" class="submit">
             <span>{{ isSubmitting ? 'Creating…' : 'Create account' }}</span>
@@ -186,15 +187,14 @@
  * RegisterView — Two-column account creation page.
  * Left panel: decorative scattered palette cards with concentric rings.
  * Right panel: username/email/password form with optional identity fields.
- * On success, auto-logs in and redirects to /dashboard.
+ * On success, asks the user to verify email from the mailbox link.
  */
 import { ref, onMounted } from 'vue'
-import { RouterLink, useRouter } from 'vue-router'
-import { authApi, usersApi } from '@/api'
+import { RouterLink } from 'vue-router'
+import { usersApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 
-const router = useRouter()
 onMounted(() => { document.title = 'Create account - RGBAST' })
 
 /** All form field values including optional identity details. */
@@ -205,13 +205,15 @@ const isSubmitting = ref(false)
 
 /** Error message shown below the form on failure. */
 const errorMessage = ref('')
+const successMessage = ref('')
 
 /**
- * Submits the registration form, then auto-logs in and navigates to /dashboard.
+ * Submits the registration form and asks the user to verify email.
  */
 async function handleRegister() {
   isSubmitting.value = true
   errorMessage.value = ''
+  successMessage.value = ''
   try {
     await usersApi.create({
       username: form.value.username,
@@ -221,12 +223,8 @@ async function handleRegister() {
       lastname: form.value.lastname || null,
       birthdate: form.value.birthdate || null,
     })
-    const loginResponse = await authApi.login({
-      username: form.value.username,
-      password: form.value.password,
-    })
-    localStorage.setItem('access_token', loginResponse.access_token)
-    router.push('/dashboard')
+    successMessage.value = 'Account created. Check your email and click the verification link to sign in.'
+    form.value.password = ''
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Registration failed.'
   } finally {

@@ -31,6 +31,7 @@
             <span class="auth-label font-mono">Password</span>
             <input v-model="loginForm.password" class="auth-input" type="password" required placeholder="••••••••" />
           </label>
+          <RouterLink to="/forgot-password" class="auth-hint-link" @click="$emit('cancel')">Forgot password?</RouterLink>
           <p v-if="loginError" class="auth-error">{{ loginError }}</p>
           <button class="auth-submit" type="submit" :disabled="isSubmitting">
             {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
@@ -54,6 +55,7 @@
             <span class="auth-hint font-mono">Uppercase · lowercase · number · symbol · 8+</span>
           </label>
           <p v-if="regError" class="auth-error">{{ regError }}</p>
+          <p v-if="regSuccess" class="auth-success">{{ regSuccess }}</p>
           <button class="auth-submit" type="submit" :disabled="isSubmitting">
             {{ isSubmitting ? 'Creating…' : 'Create account' }}
             <span aria-hidden="true">→</span>
@@ -68,11 +70,12 @@
 /**
  * AuthModal — Inline auth gate shown when an unauthenticated user tries to save a palette.
  * Provides login/register tabs inside a teleported overlay.
- * Emits: authenticated — on successful login or registration
+ * Emits: authenticated — on successful login
  *        cancel — when the user dismisses the modal
  * Used in: PaletteView
  */
 import { ref } from 'vue'
+import { RouterLink } from 'vue-router'
 import { authApi, usersApi } from '@/api'
 import RgbastLogo from '../ui/RgbastLogo.vue'
 
@@ -95,6 +98,7 @@ const regForm = ref({ username: '', email: '', password: '' })
 
 /** Error message for the registration form. */
 const regError = ref('')
+const regSuccess = ref('')
 
 /**
  * Submits the login form. Stores the token and emits 'authenticated' on success.
@@ -114,11 +118,12 @@ async function doLogin() {
 }
 
 /**
- * Submits the registration form, then auto-logs-in and emits 'authenticated'.
+ * Submits the registration form and shows a verification-email notice.
  */
 async function doRegister() {
   isSubmitting.value = true
   regError.value = ''
+  regSuccess.value = ''
   try {
     await usersApi.create({
       username: regForm.value.username,
@@ -128,9 +133,8 @@ async function doRegister() {
       lastname: null,
       birthdate: null,
     })
-    const resp = await authApi.login({ username: regForm.value.username, password: regForm.value.password })
-    localStorage.setItem('access_token', resp.access_token)
-    emit('authenticated')
+    regSuccess.value = 'Account created. Verify your email from the link you received, then sign in.'
+    regForm.value.password = ''
   } catch (e: any) {
     regError.value = e.message ?? 'Registration failed.'
   } finally {

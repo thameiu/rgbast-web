@@ -7,7 +7,20 @@ export interface Login {
 
 export interface LoginResponse {
   access_token: string;
-  token_type: string;
+  token_type?: string;
+}
+
+export interface PasswordResetRequest {
+  email: string;
+}
+
+export interface PasswordResetConfirm {
+  token: string;
+  password: string;
+}
+
+export interface MessageResponse {
+  response: string;
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────────
@@ -36,6 +49,21 @@ export interface UserGetResponse {
   firstname: string | null;
   lastname: string | null;
   birthdate?: string | null;
+}
+
+export interface UserUpdateMe {
+  username?: string | null;
+  firstname?: string | null;
+  lastname?: string | null;
+}
+
+export interface UserUpdateMeResponse {
+  id: number;
+  username: string;
+  firstname: string | null;
+  lastname: string | null;
+  birthdate?: string | null;
+  access_token?: string | null;
 }
 
 // ── Folders ───────────────────────────────────────────────────────────────────

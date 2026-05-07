@@ -17,9 +17,9 @@
       <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">Search</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
       <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">New palette</RouterLink>
-      <template v-if="isLoggedIn && !isOnDashboard">
+      <template v-if="isLoggedIn">
         <span class="nav-sep" aria-hidden="true"></span>
-        <RouterLink to="/dashboard" class="nav-link">Dashboard</RouterLink>
+        <RouterLink to="/dashboard" class="nav-link" :class="{ 'nav-link--active': isOnDashboard }">Dashboard</RouterLink>
       </template>
     </nav>
 
@@ -81,7 +81,7 @@
         <RouterLink to="/color/B410CC" class="mob-link" @click="closeSidebar">Colors</RouterLink>
         <RouterLink to="/search" class="mob-link" @click="closeSidebar">Search</RouterLink>
         <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">New palette</RouterLink>
-        <RouterLink v-if="isLoggedIn && !isOnDashboard" to="/dashboard" class="mob-link" @click="closeSidebar">Dashboard</RouterLink>
+        <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">Dashboard</RouterLink>
 
         <template v-if="isLoggedIn">
           <span class="mob-user font-mono">

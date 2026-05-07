@@ -17,7 +17,7 @@
       :canUndo="undo.canUndo.value"
       :canRedo="undo.canRedo.value"
       :copyFeedback="copyFeedbackActive"
-      @back="ctx.router.push('/dashboard')"
+      @back="goBackOrDashboard"
       @save="save.requestSave"
       @clone="ctx.clonePalette"
       @branchChange="switchBranchWithUndo"
@@ -45,7 +45,7 @@
 
     <div v-else-if="ctx.error.value" class="error-screen">
       <p>{{ ctx.error.value }}</p>
-      <button @click="ctx.router.push('/dashboard')">&lt;- Back to dashboard</button>
+      <button @click="goBackOrDashboard">&lt;- Go back</button>
     </div>
 
     <div v-else class="editor-shell" :class="{ 'history-open': ctx.historyOpen.value, 'has-banner': ctx.showSnapshotBanner.value }">
@@ -352,6 +352,14 @@ let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
+
+function goBackOrDashboard(): void {
+  if (window.history.length > 1) {
+    ctx.router.back()
+    return
+  }
+  void ctx.router.push('/dashboard')
+}
 
 function toSaveColors(colors: Array<{ hex: string; label: string | null }>): PaletteColorSave[] {
   return colors.map(c => ({ hex: c.hex, label: c.label ?? null }))

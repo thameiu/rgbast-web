@@ -155,6 +155,7 @@ import PaletteCard from '@/components/palette/PaletteCard.vue'
 
 const router = useRouter()
 const viewerUser = ref<any>(null)
+const SEARCH_SCOPE_KEY = 'rgbast_search_scope'
 
 const scope = ref<'users' | 'palettes'>('users')
 const query = ref('')
@@ -203,6 +204,7 @@ function setScope(next: 'users' | 'palettes') {
   scope.value = next
   scopeOpen.value = false
   recentOpen.value = true
+  localStorage.setItem(SEARCH_SCOPE_KEY, next)
 }
 
 function setColorMode(next: 'exact' | 'similar') {
@@ -227,6 +229,7 @@ function removeColor(hex: string) {
 
 function applyRecent(item: RecentSearchEntry) {
   scope.value = item.scope
+  localStorage.setItem(SEARCH_SCOPE_KEY, item.scope)
   query.value = item.query
   colorMode.value = item.colorMode
   colors.value = [...item.colors]
@@ -308,6 +311,10 @@ function onGlobalPointerDown(event: PointerEvent) {
 }
 
 onMounted(async () => {
+  const savedScope = localStorage.getItem(SEARCH_SCOPE_KEY)
+  if (savedScope === 'users' || savedScope === 'palettes') {
+    scope.value = savedScope
+  }
   loadRecentSearches()
   document.addEventListener('pointerdown', onGlobalPointerDown)
   const token = localStorage.getItem('access_token')

@@ -59,6 +59,12 @@
   color: #fff;
 }
 
+.icon-action-btn--active {
+  background: rgba(14,198,212,0.16);
+  border-color: rgba(14,198,212,0.42);
+  color: #fff;
+}
+
 .icon-action-btn--copied {
   background: rgba(180, 16, 204, 0.18);
   border-color: rgba(180, 16, 204, 0.5);
@@ -144,6 +150,81 @@
   padding: 5px;
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7);
   z-index: 120;
+}
+
+.display-menu {
+  min-width: 220px;
+}
+
+.header-menu-title {
+  margin: 0;
+  padding: 7px 8px 6px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+}
+
+.header-check-opt {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  color: rgba(255,255,255,0.82);
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.header-check-opt:hover {
+  background: rgba(255,255,255,0.07);
+  color: #fff;
+}
+
+.header-check-opt input {
+  width: 13px;
+  height: 13px;
+  accent-color: #b410cc;
+}
+
+.header-menu-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.09);
+  margin: 6px 4px;
+}
+
+.header-inline-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 4px 8px 8px;
+}
+
+.header-chip-opt {
+  border: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.75);
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+
+.header-chip-opt:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.28);
+  color: #fff;
+}
+
+.header-chip-opt.active {
+  background: rgba(180,16,204,0.16);
+  border-color: rgba(180,16,204,0.45);
+  color: #f1b8fc;
 }
 
 .header-menu-opt {

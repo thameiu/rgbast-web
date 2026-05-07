@@ -145,6 +145,28 @@
 
           <div class="msb-divider"></div>
 
+          <div class="msb-section-label">Display</div>
+          <div class="msb-display-list">
+            <label class="msb-check">
+              <input type="checkbox" :checked="displaySettings.hex" @change="$emit('toggleDisplayFormat', 'hex')">
+              <span>HEX</span>
+            </label>
+            <label class="msb-check">
+              <input type="checkbox" :checked="displaySettings.rgb" @change="$emit('toggleDisplayFormat', 'rgb')">
+              <span>RGB</span>
+            </label>
+            <label class="msb-check">
+              <input type="checkbox" :checked="displaySettings.hsl" @change="$emit('toggleDisplayFormat', 'hsl')">
+              <span>HSL</span>
+            </label>
+            <label class="msb-check">
+              <input type="checkbox" :checked="displaySettings.cmyk" @change="$emit('toggleDisplayFormat', 'cmyk')">
+              <span>CMYK</span>
+            </label>
+          </div>
+
+          <div class="msb-divider"></div>
+
           <div class="msb-section-label">Help</div>
           <div class="msb-actions">
             <button class="msb-action" @click="$emit('openHelpHistory'); $emit('close')">
@@ -164,6 +186,8 @@
 
 <script setup lang="ts">
 // PaletteMobileSidebar component: renders the mobile action sidebar for PaletteView.
+import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
+
 defineProps<{
   open: boolean
   currentBranchId: number | null
@@ -175,6 +199,7 @@ defineProps<{
   hasUnsavedChanges: boolean
   isNewPalette: boolean
   copyFeedback?: boolean
+  displaySettings: PaletteDisplaySettings
 }>()
 
 // Emits: close sidebar and action events triggered from the menu.
@@ -188,6 +213,7 @@ defineEmits<{
   (e: 'copyPalette'): void
   (e: 'pasteAdd'): void
   (e: 'pasteReplace'): void
+  (e: 'toggleDisplayFormat', format: PaletteColorFormat): void
   (e: 'requestSave'): void
   (e: 'clonePalette'): void
   (e: 'deletePalette'): void

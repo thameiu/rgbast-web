@@ -19,6 +19,9 @@
       :canUndo="undo.canUndo.value"
       :canRedo="undo.canRedo.value"
       :copyFeedback="copyFeedbackActive"
+      :displaySettings="displaySettings"
+      :copyFormat="copyFormat"
+      :canChangeCopyFormat="!isMobileViewport"
       @back="goBackOrDashboard"
       @save="save.requestSave"
       @clone="ctx.clonePalette"
@@ -33,6 +36,8 @@
       @copyPalette="copyPaletteColors"
       @pasteAdd="pasteAddFromClipboard"
       @pasteReplace="pasteReplaceFromClipboard"
+      @toggleDisplayFormat="toggleDisplayFormat"
+      @setCopyFormat="setCopyFormat"
       @hamburgerClick="ctx.mobileSidebarOpen.value = !ctx.mobileSidebarOpen.value"
       @generate="generator.doGenerate"
       @openGenerateSettings="generator.generateOpen.value = true"
@@ -68,6 +73,7 @@
         :swapSourceIdx="interactions.swapSourceIdx.value"
         :showAddBtn="interactions.showAddBtn.value"
         :isTutorialFocus="tutorial.tutorialFocus.value === 'canvas'"
+        :displaySettings="displaySettings"
         :setColsAreaEl="setColsAreaEl"
         :onColsMouseMove="interactions.onColsMouseMove"
         :getColStyle="interactions.getColStyle"
@@ -257,6 +263,7 @@
       :hasUnsavedChanges="ctx.hasUnsavedChanges.value"
       :isNewPalette="ctx.isNewPalette.value"
       :copyFeedback="copyFeedbackActive"
+      :displaySettings="displaySettings"
       @close="ctx.mobileSidebarOpen.value = false"
       @switchBranch="switchBranchWithUndo"
       @merge="save.confirmMerge"
@@ -266,6 +273,7 @@
       @copyPalette="copyPaletteColors"
       @pasteAdd="pasteAddFromClipboard"
       @pasteReplace="pasteReplaceFromClipboard"
+      @toggleDisplayFormat="toggleDisplayFormat"
       @requestSave="save.requestSave"
       @clonePalette="ctx.clonePalette"
       @deletePalette="save.showDeletePaletteModal.value = true"
@@ -311,6 +319,13 @@ import { usePaletteTutorial } from './composables/usePaletteTutorial'
 import { usePaletteSave } from './composables/usePaletteSave'
 import { usePaletteKeyboard } from './composables/usePaletteKeyboard'
 import { usePaletteHistoryActions } from './composables/usePaletteHistoryActions'
+import {
+  DEFAULT_PALETTE_COPY_FORMAT,
+  DEFAULT_PALETTE_DISPLAY_SETTINGS,
+  formatHexByMode,
+  parseColorsFromText,
+} from '@/utils/paletteColorFormats'
+import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 
 // PaletteView component: orchestrates the palette editor UI and feature modules.
 const ctx = usePaletteContext()
@@ -352,6 +367,11 @@ const helpModalOpen = ref(false)
 const helpModalMode = ref<'generation' | 'cheatsheet'>('cheatsheet')
 const copyFeedbackActive = ref(false)
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
+const DISPLAY_SETTINGS_KEY = 'rgbast_palette_display_settings_v1'
+const COPY_FORMAT_KEY = 'rgbast_palette_copy_format_v1'
+const displaySettings = ref<PaletteDisplaySettings>({ ...DEFAULT_PALETTE_DISPLAY_SETTINGS })
+const copyFormat = ref<PaletteColorFormat>(DEFAULT_PALETTE_COPY_FORMAT)
+const isMobileViewport = ref(false)
 
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
@@ -580,23 +600,11 @@ function closeHelpModal(): void {
 }
 
 function paletteToClipboardText(): string {
-  return ctx.colors.value.map(color => `#${color.hex.toUpperCase()}`).join(' ')
+  return ctx.colors.value.map(color => formatHexByMode(color.hex, copyFormat.value)).join(' ')
 }
 
 function extractColorsFromClipboardText(text: string): string[] {
-  const matches = text.match(/#?(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})(?![0-9a-fA-F])/g) ?? []
-  const output: string[] = []
-  for (const match of matches) {
-    const raw = match.replace('#', '').toUpperCase()
-    if (raw.length === 6) {
-      output.push(raw)
-      continue
-    }
-    if (raw.length === 3) {
-      output.push(raw.split('').map(ch => ch + ch).join(''))
-    }
-  }
-  return output
+  return parseColorsFromText(text)
 }
 
 async function readClipboardColors(): Promise<string[]> {
@@ -618,6 +626,48 @@ function applyClipboardColors(hexes: string[], mode: 'add' | 'replace'): void {
     return
   }
   ctx.colors.value = [...ctx.colors.value, ...nextColors]
+}
+
+function toggleDisplayFormat(format: PaletteColorFormat): void {
+  const next: PaletteDisplaySettings = { ...displaySettings.value }
+  next[format] = !next[format]
+  if (!next.hex && !next.rgb && !next.hsl && !next.cmyk) return
+  displaySettings.value = next
+}
+
+function setCopyFormat(format: PaletteColorFormat): void {
+  copyFormat.value = format
+}
+
+function loadLocalDisplaySettings(): void {
+  try {
+    const rawDisplay = localStorage.getItem(DISPLAY_SETTINGS_KEY)
+    if (rawDisplay) {
+      const parsed = JSON.parse(rawDisplay) as Partial<PaletteDisplaySettings>
+      displaySettings.value = {
+        hex: parsed.hex ?? DEFAULT_PALETTE_DISPLAY_SETTINGS.hex,
+        rgb: parsed.rgb ?? DEFAULT_PALETTE_DISPLAY_SETTINGS.rgb,
+        hsl: parsed.hsl ?? DEFAULT_PALETTE_DISPLAY_SETTINGS.hsl,
+        cmyk: parsed.cmyk ?? DEFAULT_PALETTE_DISPLAY_SETTINGS.cmyk,
+      }
+      if (!displaySettings.value.hex && !displaySettings.value.rgb && !displaySettings.value.hsl && !displaySettings.value.cmyk) {
+        displaySettings.value = { ...DEFAULT_PALETTE_DISPLAY_SETTINGS }
+      }
+    }
+  } catch {
+    displaySettings.value = { ...DEFAULT_PALETTE_DISPLAY_SETTINGS }
+  }
+
+  const rawCopyFormat = localStorage.getItem(COPY_FORMAT_KEY)
+  if (rawCopyFormat === 'hex' || rawCopyFormat === 'rgb' || rawCopyFormat === 'hsl' || rawCopyFormat === 'cmyk') {
+    copyFormat.value = rawCopyFormat
+  } else {
+    copyFormat.value = DEFAULT_PALETTE_COPY_FORMAT
+  }
+}
+
+function updateViewportMode(): void {
+  isMobileViewport.value = window.matchMedia('(max-width: 768px)').matches
 }
 
 async function copyPaletteColors(): Promise<void> {
@@ -657,10 +707,14 @@ function onEscapeKey(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+  loadLocalDisplaySettings()
+  updateViewportMode()
+  window.addEventListener('resize', updateViewportMode, { passive: true })
   document.addEventListener('keydown', onEscapeKey, { capture: true })
 })
 
 onUnmounted(() => {
+  window.removeEventListener('resize', updateViewportMode)
   document.removeEventListener('keydown', onEscapeKey, { capture: true })
 })
 
@@ -781,6 +835,18 @@ watch(
   },
   { deep: true },
 )
+
+watch(
+  displaySettings,
+  (value) => {
+    localStorage.setItem(DISPLAY_SETTINGS_KEY, JSON.stringify(value))
+  },
+  { deep: true },
+)
+
+watch(copyFormat, (value) => {
+  localStorage.setItem(COPY_FORMAT_KEY, value)
+})
 
 // Initialize palette loading when the route changes.
 ctx.startRouteWatch(undo.clearHistory)

@@ -23,6 +23,7 @@
         :isDragging="draggedIdx === i"
         :dragStyle="getColStyle(i)"
         :swapSelected="swapSourceIdx === i"
+        :displaySettings="displaySettings"
         @update:hex="hex => $emit('update:hex', i, hex)"
         @update:label="lbl => $emit('update:label', i, lbl)"
         @remove="$emit('remove', i)"
@@ -43,6 +44,7 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import ColorColumn from '@/components/palette/ColorColumn.vue'
 import type { WorkingColor } from '../composables/usePaletteContext'
+import type { PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 
 // PaletteColumnsArea component: renders and manages the color column list in PaletteView.
 const props = defineProps<{
@@ -51,6 +53,7 @@ const props = defineProps<{
   swapSourceIdx: number | null
   showAddBtn: boolean
   isTutorialFocus: boolean
+  displaySettings: PaletteDisplaySettings
   setColsAreaEl: (el: HTMLElement | null) => void
   onColsMouseMove: (e: MouseEvent) => void
   getColStyle: (i: number) => Record<string, string>

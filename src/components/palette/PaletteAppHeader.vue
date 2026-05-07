@@ -157,6 +157,53 @@
         </Transition>
       </div>
 
+      <div ref="displayGroupEl" class="header-dropdown-group">
+        <button
+          class="icon-action-btn"
+          :class="{ 'icon-action-btn--active': displayMenuOpen }"
+          title="Display settings"
+          @click.stop="toggleDisplayMenu"
+        >
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+            <path d="M2 3.2h10M2 7h10M2 10.8h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="5" cy="3.2" r="1.4" fill="#0e0e14" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="9" cy="7" r="1.4" fill="#0e0e14" stroke="currentColor" stroke-width="1.2"/>
+            <circle cx="4" cy="10.8" r="1.4" fill="#0e0e14" stroke="currentColor" stroke-width="1.2"/>
+          </svg>
+        </button>
+        <Transition name="header-dd">
+          <div v-if="displayMenuOpen" class="header-dropdown-menu display-menu">
+            <p class="header-menu-title">Display values</p>
+            <label class="header-check-opt">
+              <input type="checkbox" :checked="displaySettings.hex" @change="emit('toggleDisplayFormat', 'hex')">
+              <span>HEX</span>
+            </label>
+            <label class="header-check-opt">
+              <input type="checkbox" :checked="displaySettings.rgb" @change="emit('toggleDisplayFormat', 'rgb')">
+              <span>RGB</span>
+            </label>
+            <label class="header-check-opt">
+              <input type="checkbox" :checked="displaySettings.hsl" @change="emit('toggleDisplayFormat', 'hsl')">
+              <span>HSL</span>
+            </label>
+            <label class="header-check-opt">
+              <input type="checkbox" :checked="displaySettings.cmyk" @change="emit('toggleDisplayFormat', 'cmyk')">
+              <span>CMYK</span>
+            </label>
+            <div v-if="canChangeCopyFormat" class="header-menu-divider"></div>
+            <template v-if="canChangeCopyFormat">
+              <p class="header-menu-title">Copy full palette as</p>
+              <div class="header-inline-options">
+                <button class="header-chip-opt" :class="{ active: copyFormat === 'hex' }" @click="emit('setCopyFormat', 'hex')">HEX</button>
+                <button class="header-chip-opt" :class="{ active: copyFormat === 'rgb' }" @click="emit('setCopyFormat', 'rgb')">RGB</button>
+                <button class="header-chip-opt" :class="{ active: copyFormat === 'hsl' }" @click="emit('setCopyFormat', 'hsl')">HSL</button>
+                <button class="header-chip-opt" :class="{ active: copyFormat === 'cmyk' }" @click="emit('setCopyFormat', 'cmyk')">CMYK</button>
+              </div>
+            </template>
+          </div>
+        </Transition>
+      </div>
+
       <span v-if="snapshotHint" class="snapshot-hint">{{ snapshotHint }}</span>
       <!-- Undo / Redo arrows -->
       <div class="undo-redo-group">
@@ -337,6 +384,7 @@
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getBranchColor } from '@/utils/branchColors'
+import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 
 const props = defineProps<{
   /** Display name for the current palette. */
@@ -375,6 +423,12 @@ const props = defineProps<{
   canRedo?: boolean
   /** Whether copy feedback is active. */
   copyFeedback?: boolean
+  /** Local display toggles for color formats. */
+  displaySettings: PaletteDisplaySettings
+  /** Active format used by full-palette copy. */
+  copyFormat: PaletteColorFormat
+  /** Whether the copy format selector should be visible. */
+  canChangeCopyFormat?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -393,6 +447,8 @@ const emit = defineEmits<{
   copyPalette: []
   pasteAdd: []
   pasteReplace: []
+  toggleDisplayFormat: [format: PaletteColorFormat]
+  setCopyFormat: [format: PaletteColorFormat]
   hamburgerClick: []
   generate: []
   openGenerateSettings: []
@@ -406,8 +462,10 @@ const emit = defineEmits<{
 const branchOpen = ref(false)
 const pasteMenuOpen = ref(false)
 const helpMenuOpen = ref(false)
+const displayMenuOpen = ref(false)
 const pasteGroupEl = ref<HTMLElement | null>(null)
 const helpGroupEl = ref<HTMLElement | null>(null)
+const displayGroupEl = ref<HTMLElement | null>(null)
 
 /** Only non-merged branches shown in the selector. */
 const activeBranches = computed(() => props.branches.filter(b => !b.is_merged))
@@ -452,7 +510,10 @@ function onPasteReplaceOption(): void {
 
 function togglePasteMenu(): void {
   pasteMenuOpen.value = !pasteMenuOpen.value
-  if (pasteMenuOpen.value) helpMenuOpen.value = false
+  if (pasteMenuOpen.value) {
+    helpMenuOpen.value = false
+    displayMenuOpen.value = false
+  }
 }
 
 function onHelpHistory(): void {
@@ -472,7 +533,18 @@ function onHelpCheatSheet(): void {
 
 function toggleHelpMenu(): void {
   helpMenuOpen.value = !helpMenuOpen.value
-  if (helpMenuOpen.value) pasteMenuOpen.value = false
+  if (helpMenuOpen.value) {
+    pasteMenuOpen.value = false
+    displayMenuOpen.value = false
+  }
+}
+
+function toggleDisplayMenu(): void {
+  displayMenuOpen.value = !displayMenuOpen.value
+  if (displayMenuOpen.value) {
+    helpMenuOpen.value = false
+    pasteMenuOpen.value = false
+  }
 }
 
 function onDocumentPointerDown(event: Event): void {
@@ -483,12 +555,16 @@ function onDocumentPointerDown(event: Event): void {
   if (helpMenuOpen.value && helpGroupEl.value && target && !helpGroupEl.value.contains(target)) {
     helpMenuOpen.value = false
   }
+  if (displayMenuOpen.value && displayGroupEl.value && target && !displayGroupEl.value.contains(target)) {
+    displayMenuOpen.value = false
+  }
 }
 
 function onDocumentKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
     pasteMenuOpen.value = false
     helpMenuOpen.value = false
+    displayMenuOpen.value = false
   }
 }
 

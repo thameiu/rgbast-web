@@ -171,6 +171,31 @@
   gap: 4px;
 }
 
+.msb-display-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.msb-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.msb-check input {
+  width: 13px;
+  height: 13px;
+  accent-color: #b410cc;
+}
+
 .msb-gen-group {
   display: inline-flex;
   width: 100%;

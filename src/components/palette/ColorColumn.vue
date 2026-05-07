@@ -32,20 +32,38 @@
       />
 
       <div
+        v-for="row in formatRows"
+        :key="row.key"
+        class="format-row"
+      >
+        <span class="format-key">{{ row.key.toUpperCase() }}</span>
+        <span class="format-text" :title="row.value">{{ row.value }}</span>
+        <button
+          class="copy-btn"
+          :title="copiedRowKey === row.key ? 'Copied!' : `Copy ${row.key}`"
+          @click.stop="copyValue(row.value, row.key)"
+        >
+          <span v-if="copiedRowKey === row.key" class="copy-ok">✓</span>
+          <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/>
+            <path d="M2 8V2h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <div
+        v-if="displaySettings.hex"
         class="hex-row"
-        @mouseenter="hovering = true"
-        @mouseleave="hovering = false"
       >
         <span ref="hexTextEl" class="hex-text" @click.stop="openPicker">
           #{{ modelValue.hex.toUpperCase() }}
         </span>
         <button
-          v-if="hovering && !pickerOpen"
           class="copy-btn"
-          :title="copied ? 'Copied!' : 'Copy hex'"
-          @click.stop="copyHex"
+          :title="copiedRowKey === 'hex' ? 'Copied!' : 'Copy hex'"
+          @click.stop="copyValue('#' + modelValue.hex.toUpperCase(), 'hex')"
         >
-          <span v-if="copied" class="copy-ok">✓</span>
+          <span v-if="copiedRowKey === 'hex'" class="copy-ok">✓</span>
           <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
             <rect x="3.5" y="3.5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/>
             <path d="M2 8V2h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -75,6 +93,8 @@
  */
 import { ref, computed, onBeforeUnmount } from 'vue'
 import ColorPicker from './ColorPicker.vue'
+import type { PaletteDisplaySettings } from '@/utils/paletteColorFormats'
+import { formatHexByMode } from '@/utils/paletteColorFormats'
 
 const props = defineProps<{
   /** Current hex and label for this column. */
@@ -89,6 +109,8 @@ const props = defineProps<{
   isDragOver?: boolean
   /** True when this column is the first-selected target in mobile swap mode. */
   swapSelected?: boolean
+  /** Enabled color formats to display under each label. */
+  displaySettings: PaletteDisplaySettings
 }>()
 
 const emit = defineEmits<{
@@ -99,11 +121,9 @@ const emit = defineEmits<{
   'swapTap': []
 }>()
 
-/** Whether the hex footer row is being hovered (shows copy button). */
-const hovering    = ref(false)
-
-/** Whether the hex was just copied (shows ✓ briefly). */
-const copied      = ref(false)
+/** Row key that was copied most recently (shows ✓ briefly). */
+const copiedRowKey = ref<string | null>(null)
+let copiedTimer: ReturnType<typeof setTimeout> | null = null
 
 /** Whether the ColorPicker popover is currently open. */
 const pickerOpen  = ref(false)
@@ -123,6 +143,14 @@ const mobileHoldStartX = ref(0)
 const mobileHoldStartY = ref(0)
 const mobileHoldTriggered = ref(false)
 const suppressNextMobileTap = ref(false)
+
+const formatRows = computed(() => {
+  const rows: Array<{ key: 'rgb' | 'hsl' | 'cmyk'; value: string }> = []
+  if (props.displaySettings.rgb) rows.push({ key: 'rgb', value: formatHexByMode(props.modelValue.hex, 'rgb') })
+  if (props.displaySettings.hsl) rows.push({ key: 'hsl', value: formatHexByMode(props.modelValue.hex, 'hsl') })
+  if (props.displaySettings.cmyk) rows.push({ key: 'cmyk', value: formatHexByMode(props.modelValue.hex, 'cmyk') })
+  return rows
+})
 
 /**
  * Computed foreground text color (black/white) based on the background luminance.
@@ -157,11 +185,15 @@ function openPicker() {
 /**
  * Copies the hex value to the clipboard and shows a brief ✓ confirmation.
  */
-async function copyHex() {
+async function copyValue(value: string, key: string) {
   try {
-    await navigator.clipboard.writeText('#' + props.modelValue.hex.toUpperCase())
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 1500)
+    await navigator.clipboard.writeText(value)
+    copiedRowKey.value = key
+    if (copiedTimer) clearTimeout(copiedTimer)
+    copiedTimer = setTimeout(() => {
+      copiedRowKey.value = null
+      copiedTimer = null
+    }, 1500)
   } catch {}
 }
 
@@ -246,6 +278,7 @@ function onHandleClick() {
 
 onBeforeUnmount(() => {
   if (mobileHoldTimer.value) clearTimeout(mobileHoldTimer.value)
+  if (copiedTimer) clearTimeout(copiedTimer)
 })
 </script>
 

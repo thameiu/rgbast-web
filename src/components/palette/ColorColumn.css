@@ -71,6 +71,38 @@
 .label-input::placeholder { opacity: 0.4; }
 .label-input:focus { opacity: 1; }
 
+.format-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 18px;
+}
+
+.format-key {
+  width: 34px;
+  flex-shrink: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--fg);
+  opacity: 0.72;
+}
+
+.format-text {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: calc(100% - 58px);
+  font-family: 'Sora', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .hex-row {
   display: flex; align-items: center; gap: 6px; min-height: 22px;
 }
@@ -88,9 +120,15 @@
   background: transparent; border: none;
   color: var(--fg); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  padding: 2px; opacity: 0.7; transition: opacity 0.15s; font-size: 11px;
+  padding: 2px; opacity: 0; transition: opacity 0.15s; font-size: 11px;
+  flex-shrink: 0;
 }
-.copy-btn:hover { opacity: 1; }
+.format-row:hover .copy-btn,
+.hex-row:hover .copy-btn,
+.copy-btn:focus-visible {
+  opacity: 0.75;
+}
+.copy-btn:hover { opacity: 1 !important; }
 .copy-ok { font-size: 12px; }
 
 /* ─── Mobile: horizontal rows ──────── */
@@ -123,5 +161,8 @@
     flex-direction: column;
     justify-content: flex-end;
     padding: 8px 14px 10px;
+  }
+  .copy-btn {
+    opacity: 0.75;
   }
 }

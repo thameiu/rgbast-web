@@ -14,6 +14,8 @@
       </template>
       <RouterLink to="/color/B410CC" class="nav-link" :class="{ 'nav-link--active': isOnColor }">Colors</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
+      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">Search</RouterLink>
+      <span class="nav-sep" aria-hidden="true"></span>
       <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">New palette</RouterLink>
       <template v-if="isLoggedIn && !isOnDashboard">
         <span class="nav-sep" aria-hidden="true"></span>
@@ -36,7 +38,7 @@
 
       <Transition name="profile-menu-fade">
         <div v-if="isLoggedIn && profileMenuOpen" class="profile-menu">
-          <button class="profile-menu-item" @click="onProfileSoon">Profile</button>
+          <button class="profile-menu-item" @click="goToProfile">Profile</button>
           <button class="profile-menu-item" @click="onSettingsSoon">Settings</button>
           <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">Sign out</button>
         </div>
@@ -77,6 +79,7 @@
         </template>
 
         <RouterLink to="/color/B410CC" class="mob-link" @click="closeSidebar">Colors</RouterLink>
+        <RouterLink to="/search" class="mob-link" @click="closeSidebar">Search</RouterLink>
         <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">New palette</RouterLink>
         <RouterLink v-if="isLoggedIn && !isOnDashboard" to="/dashboard" class="mob-link" @click="closeSidebar">Dashboard</RouterLink>
 
@@ -85,6 +88,8 @@
             <span class="mob-user-avatar">{{ profileInitial }}</span>
             {{ profileName }}
           </span>
+          <button class="mob-link" @click="goToProfile">Profile</button>
+          <button class="mob-link" @click="onSettingsSoon">Settings</button>
           <button class="mob-link mob-signout" @click="handleLogout">Sign out</button>
         </template>
         <template v-else>
@@ -108,6 +113,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
 import RgbastLogo from '../ui/RgbastLogo.vue'
+import { searchApi } from '@/api/search'
 
 const props = defineProps<{
   user?: { username: string; firstname?: string | null; lastname?: string | null } | null
@@ -125,6 +131,7 @@ const isOnDashboard = computed(() => route.path === '/dashboard')
 
 /** True when the current route starts with /color. */
 const isOnColor     = computed(() => route.path.startsWith('/color'))
+const isOnSearch    = computed(() => route.path.startsWith('/search'))
 
 /** True when the user prop is set or a token exists in localStorage. */
 const isLoggedIn    = computed(() => !!props.user || !!localStorage.getItem('access_token'))
@@ -179,12 +186,15 @@ function toggleProfileMenu(): void {
   profileMenuOpen.value = !profileMenuOpen.value
 }
 
-function onProfileSoon(): void {
+function goToProfile(): void {
   profileMenuOpen.value = false
+  closeSidebar()
+  router.push(`/users/${encodeURIComponent(profileName.value)}`)
 }
 
 function onSettingsSoon(): void {
   profileMenuOpen.value = false
+  closeSidebar()
 }
 
 function onGlobalPointerDown(event: PointerEvent): void {
@@ -221,6 +231,7 @@ function closeSidebar() {
  */
 function handleLogout() {
   localStorage.removeItem('access_token')
+  searchApi.clearRecentSearches()
   profileMenuOpen.value = false
   closeSidebar()
   router.push('/login')

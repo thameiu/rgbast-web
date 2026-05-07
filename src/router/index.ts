@@ -6,6 +6,8 @@ import RegisterView from '@/views/auth/RegisterView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
 import PaletteView from '@/views/palette/PaletteView.vue'
 import ColorView from '@/views/color/ColorView.vue'
+import ProfileView from '@/views/profile/ProfileView.vue'
+import SearchView from '@/views/search/SearchView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -31,6 +33,16 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
+    },
+    {
+      path: '/users/:username',
+      name: 'profile',
+      component: ProfileView,
+    },
+    {
+      path: '/search',
+      name: 'search',
+      component: SearchView,
     },
     {
       path: '/users/:username/:pathMatch(.*)*',

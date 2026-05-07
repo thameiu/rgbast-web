@@ -33,7 +33,6 @@ export interface UserCreateResponse {
 export interface UserGetResponse {
   id: number;
   username: string;
-  email: string;
   firstname: string | null;
   lastname: string | null;
   birthdate?: string | null;
@@ -294,4 +293,38 @@ export interface PaletteCache {
   created_at: string;
   last_snapshot_at?: string;
   palette_colors: PaletteColorSave[];
+}
+
+// ── Search ───────────────────────────────────────────────────────────────────
+
+export interface UserSearchItem {
+  id: number;
+  username: string;
+  firstname: string | null;
+  lastname: string | null;
+}
+
+export interface UserSearchResponse {
+  query: string;
+  total: number;
+  results: UserSearchItem[];
+}
+
+export interface PaletteSearchItem {
+  id: number;
+  owner_username: string;
+  title: string;
+  description?: string | null;
+  folder_path: string[];
+  created_at: string;
+  latest_main_snapshot_created_at?: string | null;
+  palette_colors: PaletteColorSave[];
+}
+
+export interface PaletteSearchResponse {
+  query?: string | null;
+  colors: string[];
+  color_mode: 'exact' | 'similar';
+  total: number;
+  results: PaletteSearchItem[];
 }

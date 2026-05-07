@@ -1,0 +1,154 @@
+.palette-card {
+  height: 190px;
+  overflow: visible;
+  cursor: pointer;
+  transition: transform .2s, opacity .2s;
+  position: relative;
+}
+.palette-card:hover { transform: translateY(-3px); }
+.card--dragging { opacity: 0.4; }
+
+.card-clip {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #faf7f0;
+  border: 1px solid var(--rule);
+  transition: border-color .2s, box-shadow .2s;
+  display: flex;
+  flex-direction: column;
+}
+.palette-card:hover .card-clip {
+  border-color: var(--ink-3);
+  box-shadow: 0 8px 24px rgba(14,14,16,.08);
+}
+
+.card-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 10px;
+  padding: 10px 14px;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  box-shadow: 0 8px 28px rgba(14,14,16,.25);
+  max-height: 180px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+}
+.card-tooltip::-webkit-scrollbar { width: 4px; }
+.card-tooltip::-webkit-scrollbar-track { background: transparent; }
+.card-tooltip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 2px; }
+
+.card-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+
+.palette-card:hover .card-tooltip,
+.card-tooltip:hover {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.card-tooltip-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-tooltip-desc {
+  font-size: 11.5px;
+  color: rgba(250,247,240,0.75);
+  line-height: 1.45;
+}
+
+.card-edit-btn, .card-del-btn {
+  position: absolute;
+  top: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(14,14,16,0.55);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s;
+  z-index: 5;
+}
+.card-del-btn { right: 8px; }
+.card-edit-btn { right: 44px; }
+.palette-card:hover .card-del-btn,
+.palette-card:hover .card-edit-btn { opacity: 1; }
+.card-del-btn:hover { background: rgba(180,20,20,0.85) !important; border-color: rgba(255,80,80,0.4); color: #fff; }
+.card-edit-btn:hover { background: rgba(14,14,16,0.75) !important; color: #fff; }
+
+.card-strip { display: flex; height: 80px; flex-shrink: 0; }
+.strip-swatch { flex: 1; }
+.strip-empty {
+  flex: 1;
+  background: var(--paper-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--ink-3);
+  letter-spacing: 0.05em;
+}
+
+.card-body {
+  padding: 12px 16px 14px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.card-path {
+  font-size: 10px;
+  color: var(--ink-3);
+  margin-bottom: 4px;
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+  flex-shrink: 0;
+}
+.card-title {
+  font-size: 23px;
+  font-weight: 700;
+  color: var(--ink);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-unsaved-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--yellow);
+  box-shadow: 0 0 0 3px rgba(246, 195, 67, 0.22);
+}
+.card-meta {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}

@@ -116,6 +116,28 @@
   align-self: center;
 }
 
+.ft-count-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.ft-count-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  opacity: 0.5;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.ft-count-icon {
+  opacity: 0.85;
+}
+
 /* Inline input */
 .ft-inline-input {
   flex: 1;

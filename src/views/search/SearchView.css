@@ -1,0 +1,347 @@
+.search-view {
+  min-height: 100vh;
+  color: var(--ink);
+}
+
+.search-shell {
+  padding: calc(68px + 22px) clamp(24px, 4vw, 56px) 42px;
+}
+
+.search-top {
+  display: grid;
+  grid-template-columns: minmax(200px, 320px) minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+  margin-bottom: 10px;
+}
+
+.search-head {
+  padding-top: 4px;
+}
+
+.search-title {
+  margin: 0;
+  font-size: clamp(44px, 5.2vw, 68px);
+  line-height: 1;
+}
+
+.search-sub {
+  margin: 6px 0 0;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.search-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.main-controls {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.search-input-wrap {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 8px;
+}
+
+.search-main-input {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink);
+  font-size: 13px;
+  height: 42px;
+  padding: 0 12px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.search-main-input:focus {
+  border-color: rgba(180, 16, 204, 0.55);
+}
+
+.search-icon-btn {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: #111114;
+  color: #fff;
+  height: 42px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s;
+}
+
+.search-icon-btn:hover {
+  background: #8f0aa4;
+}
+
+.recent-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 52px;
+  border: 1px solid rgba(14, 14, 16, 0.12);
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 12px;
+  box-shadow: 0 14px 32px rgba(14, 14, 16, 0.12);
+  z-index: 60;
+  max-height: 270px;
+  overflow-y: auto;
+}
+
+.recent-dd-item {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(14, 14, 16, 0.08);
+  background: transparent;
+  color: var(--ink-2);
+  text-align: left;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.recent-dd-item:last-child {
+  border-bottom: none;
+}
+
+.recent-dd-item:hover {
+  background: rgba(180, 16, 204, 0.08);
+  color: #8f0aa4;
+}
+
+.recent-dd-main {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.recent-dd-meta {
+  font-size: 10px;
+  color: var(--ink-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.cselect {
+  position: relative;
+}
+
+.cselect-trigger {
+  width: 100%;
+  height: 42px;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--ink-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cselect-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  border: 1px solid rgba(14, 14, 16, 0.12);
+  background: rgba(255, 255, 255, 0.97);
+  border-radius: 12px;
+  box-shadow: 0 14px 30px rgba(14, 14, 16, 0.11);
+  z-index: 70;
+}
+
+.cselect-item {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(14, 14, 16, 0.07);
+  background: transparent;
+  text-align: left;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.cselect-item:last-child {
+  border-bottom: none;
+}
+
+.cselect-item:hover,
+.cselect-item.active {
+  background: rgba(180, 16, 204, 0.09);
+  color: #8f0aa4;
+}
+
+.palette-filters {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.color-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.color-input {
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--ink);
+  font-size: 13px;
+  height: 38px;
+  padding: 0 11px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.small-btn {
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #111114;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  height: 38px;
+  padding: 0 13px;
+  cursor: pointer;
+}
+
+.small-btn:hover {
+  background: #8f0aa4;
+}
+
+.color-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--ink-2);
+  font-size: 11px;
+  padding: 4px 9px;
+  cursor: pointer;
+}
+
+.chip-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(14, 14, 16, 0.2);
+}
+
+.search-error {
+  color: #9e2525;
+  font-size: 12px;
+  margin: 6px 0 10px;
+}
+
+.results-title {
+  margin: 0 0 10px;
+  font-size: clamp(28px, 3.1vw, 35px);
+}
+
+.empty {
+  color: var(--ink-3);
+  font-size: 13px;
+}
+
+.users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+
+.user-card {
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #111114;
+  color: #f3f3f8;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.user-name {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.user-full {
+  font-size: 12px;
+  color: var(--ink-3);
+}
+
+.palettes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.dd-fade-enter-active,
+.dd-fade-leave-active {
+  transition: opacity .14s ease, transform .14s ease;
+}
+
+.dd-fade-enter-from,
+.dd-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+@media (max-width: 1050px) {
+  .search-top {
+    grid-template-columns: 1fr;
+  }
+
+  .main-controls,
+  .palette-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .recent-dropdown {
+    right: 0;
+  }
+}

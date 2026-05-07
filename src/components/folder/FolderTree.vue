@@ -26,6 +26,7 @@
         dragTargetId === 'root' && 'ft-item--drag',
       ]"
       @click="emit('update:modelValue', mode === 'navigation' ? 'root' : null)"
+      @dblclick.stop="mode === 'navigation' && (rootFolders.length > 0 || rootPalettes.length > 0) && toggleRoot()"
       @dragover.prevent="onDragover($event, 'root')"
       @dragleave="onDragleave('root')"
       @drop.prevent="onDrop($event, null)"
@@ -46,7 +47,21 @@
         <path d="M1 10V5a1 1 0 0 1 .5-.87l5-2.88a1 1 0 0 1 1 0l5 2.88A1 1 0 0 1 13 5v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1Z" />
       </svg>
       <span class="ft-label ft-label--root">{{ mode === 'picker' ? 'Root (no folder)' : 'Root' }}</span>
-      <span v-if="mode === 'navigation'" class="ft-count">{{ rootCount }}</span>
+      <span v-if="mode === 'navigation'" class="ft-count-icons">
+        <span class="ft-count-item" title="Palettes">
+          <svg class="ft-count-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="10" height="8" rx="1.3" />
+            <path d="M4.33 1.4v7.2M7.67 1.4v7.2" />
+          </svg>
+          <span>{{ rootCount ?? 0 }}</span>
+        </span>
+        <span class="ft-count-item" title="Subfolders">
+          <svg class="ft-count-icon" width="11" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+            <path d="M1 3.5C1 2.67 1.67 2 2.5 2H5l1.5 1.5H11.5C12.33 3.5 13 4.17 13 5v4.5C13 10.33 12.33 11 11.5 11h-9C1.67 11 1 10.33 1 9.5V3.5Z" />
+          </svg>
+          <span>{{ rootFolders.length }}</span>
+        </span>
+      </span>
     </div>
 
     <!-- Root children when expanded (navigation mode) -->
@@ -58,9 +73,9 @@
         class="ft-palette"
         :class="[`ft-palette--${theme}`, draggingPaletteId === p.id && 'ft-palette--dragging']"
         style="padding-left: 28px"
-        draggable="true"
-        @click="emit('selectPalette', p)"
-        @dragstart="startPaletteDrag(p.id, $event)"
+        :draggable="allowFolderEditing"
+        @dblclick="emit('selectPalette', p)"
+        @dragstart="allowFolderEditing && startPaletteDrag(p.id, $event)"
         @dragend="endPaletteDrag()"
         @dragover.prevent
       >
@@ -77,7 +92,7 @@
 
       <!-- Root-level inline create input -->
       <div
-        v-if="inlineCreate?.parentId === null"
+        v-if="allowFolderEditing && inlineCreate?.parentId === null"
         class="ft-item ft-item--new"
         :class="`ft-item--${theme}`"
         style="padding-left: 28px; flex-direction: column; align-items: stretch; gap: 0"
@@ -108,7 +123,7 @@
 
       <!-- Root-level inline create input (picker mode) -->
       <div
-        v-if="inlineCreate?.parentId === null"
+        v-if="allowFolderEditing && inlineCreate?.parentId === null"
         class="ft-item ft-item--new"
         :class="`ft-item--${theme}`"
         style="padding-left: 28px; flex-direction: column; align-items: stretch; gap: 0"
@@ -135,7 +150,7 @@
 
     <!-- New folder button (both modes) -->
     <button
-      v-if="!inlineCreate"
+      v-if="allowFolderEditing && !inlineCreate"
       class="ft-add-btn"
       :class="`ft-add-btn--${theme}`"
       @click="startInlineCreate(null)"
@@ -154,7 +169,7 @@ import type { FolderResponse, PaletteCache } from '@/api/types'
 import type { FolderTreeState } from './folderTreeTypes'
 import FolderTreeNode from './FolderTreeNode.vue'
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   folders: FolderResponse[]
   modelValue: 'all' | 'root' | number | null
   theme: 'light' | 'dark'
@@ -164,7 +179,10 @@ const props = defineProps<{
   rootCount?: number
   draggingId?: number | null
   palettes?: PaletteCache[]
-}>()
+  allowFolderEditing?: boolean
+}>(), {
+  allowFolderEditing: true,
+})
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: 'all' | 'root' | number | null): void
@@ -188,6 +206,16 @@ const rootCreateRef = ref<HTMLInputElement | null>(null)
 
 const rootFolders = computed(() => getChildren(null))
 const rootPalettes = computed(() => (props.palettes ?? []).filter(p => p.folder_id == null))
+const childFolderCounts = computed(() => {
+  const counts: Record<number, number> = {}
+  for (const folder of props.folders) {
+    const parentId = folder.parent_folder_id
+    if (parentId != null) {
+      counts[parentId] = (counts[parentId] ?? 0) + 1
+    }
+  }
+  return counts
+})
 
 const rootCreateError = computed((): string | null => {
   if (!inlineCreate.value || inlineCreate.value.parentId !== null) return null
@@ -228,6 +256,7 @@ function selectPalette(p: PaletteCache) {
 }
 
 function startInlineCreate(parentId: number | null) {
+  if (!props.allowFolderEditing) return
   if (parentId !== null) {
     openFolders.value = new Set([...openFolders.value, parentId])
   } else {
@@ -239,17 +268,20 @@ function startInlineCreate(parentId: number | null) {
 }
 
 function startInlineRename(folder: FolderResponse) {
+  if (!props.allowFolderEditing) return
   inlineRename.value = { folderId: folder.id }
   inlineValue.value = folder.name
 }
 
 function commitInlineCreate(parentId: number | null) {
+  if (!props.allowFolderEditing) return
   const name = inlineValue.value.trim()
   if (name) emit('createFolder', { name, parentId })
   cancelInline()
 }
 
 function commitInlineRename(folderId: number) {
+  if (!props.allowFolderEditing) return
   const name = inlineValue.value.trim()
   if (name) emit('renameFolder', { id: folderId, name })
   cancelInline()
@@ -266,6 +298,7 @@ function updateInlineValue(value: string) { inlineValue.value = value }
 function onDeleteFolder(folder: FolderResponse) { emit('deleteFolder', folder) }
 
 function startPaletteDrag(id: number, event: DragEvent) {
+  if (!props.allowFolderEditing) return
   draggingPaletteId.value = id
   event.dataTransfer?.setData('palette-id', String(id))
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
@@ -276,6 +309,7 @@ function endPaletteDrag() {
 }
 
 function onDragover(event: DragEvent, targetId: number | 'root' | null) {
+  if (!props.allowFolderEditing) return
   event.preventDefault()
   if (lastDragTarget.value === targetId) return
   if (expandTimer.value) { clearTimeout(expandTimer.value); expandTimer.value = null }
@@ -303,6 +337,7 @@ function onDragleave(targetId: number | 'root' | null) {
 }
 
 function onDrop(event: DragEvent, targetFolderId: number | null) {
+  if (!props.allowFolderEditing) return
   dragTargetId.value = null
   lastDragTarget.value = null
   if (expandTimer.value) { clearTimeout(expandTimer.value); expandTimer.value = null }
@@ -324,8 +359,11 @@ const state: FolderTreeState = {
   get dragTargetId() { return dragTargetId.value },
   get theme() { return props.theme },
   get mode() { return props.mode },
+  get allowFolderEditing() { return props.allowFolderEditing },
   get activeFolderKey() { return props.modelValue },
   get paletteCounts() { return props.paletteCounts ?? {} },
+  get childFolderCounts() { return childFolderCounts.value },
+  get rootChildFolderCount() { return rootFolders.value.length },
   get palettes() { return props.palettes ?? [] },
   get inlineCreate() { return inlineCreate.value },
   get inlineRename() { return inlineRename.value },

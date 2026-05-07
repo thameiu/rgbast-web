@@ -6,8 +6,11 @@ export interface FolderTreeState {
   dragTargetId: number | 'root' | null
   theme: 'light' | 'dark'
   mode: 'navigation' | 'picker'
+  allowFolderEditing: boolean
   activeFolderKey: 'all' | 'root' | number | null
   paletteCounts: Record<number, number>
+  childFolderCounts: Record<number, number>
+  rootChildFolderCount: number
   palettes: PaletteCache[]
   inlineCreate: { parentId: number | null } | null
   inlineRename: { folderId: number } | null

@@ -125,62 +125,19 @@
           </div>
 
           <div v-else class="palettes-grid">
-            <article
+            <PaletteCard
               v-for="p in filteredPalettes"
               :key="p.isLocalDraftOnly ? p.draftLink ?? `draft-${p.id}` : p.id"
-              class="palette-card"
-              :class="{ 'card--dragging': draggingId === p.id }"
-              :draggable="!p.isLocalDraftOnly"
-              @click="openPalette(p)"
-              @dragstart="!p.isLocalDraftOnly && onCardDragStart(p.id, $event)"
+              :palette="p"
+              :show-actions="!p.isLocalDraftOnly"
+              :is-dragging="draggingId === p.id"
+              :draggable-enabled="!p.isLocalDraftOnly"
+              @open="openPalette(p)"
+              @edit="openEditPalette(p)"
+              @delete="confirmDeletePalette(p)"
+              @dragstart="onCardDragStart(p.id, $event)"
               @dragend="draggingId = null"
-            >
-              <!-- Tooltip (outside card-clip so it can overflow) -->
-              <div v-if="p.description" class="card-tooltip">
-                <p class="card-tooltip-title">{{ p.title }}</p>
-                <p class="card-tooltip-desc">{{ p.description }}</p>
-              </div>
-
-              <!-- Card visual (clips the strip and content) -->
-              <div class="card-clip">
-                <div class="card-strip">
-                  <div
-                    v-for="(col, ci) in p.palette_colors.slice(0, 6)"
-                    :key="ci"
-                    class="strip-swatch"
-                    :style="{ background: '#' + col.hex }"
-                  ></div>
-                  <div v-if="p.palette_colors.length === 0" class="strip-empty">No colors</div>
-                </div>
-                <div class="card-body">
-                  <p class="card-path font-mono">
-                    {{
-                      p.isLocalDraftOnly
-                        ? (p.folder_path?.length ? 'Draft · / ' + p.folder_path.join(' / ') : 'Draft · /')
-                        : (p.folder_path?.length ? '/ ' + p.folder_path.join(' / ') : '/')
-                    }}
-                  </p>
-                  <h3 class="card-title font-display">
-                    {{ p.title }}
-                    <span v-if="p.hasUnsavedDraft" class="card-unsaved-dot" title="Unsaved local changes"></span>
-                  </h3>
-                  <p class="card-meta font-mono">
-                    {{ p.isLocalDraftOnly ? `Draft · ${fmtDate(p.last_snapshot_at ?? p.created_at)}` : fmtDate(p.last_snapshot_at ?? p.created_at) }}
-                  </p>
-                </div>
-                <button v-if="!p.isLocalDraftOnly" class="card-edit-btn" title="Edit palette" @click.stop="openEditPalette(p)">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 8.5L7.5 3l1.5 1.5L3.5 10H2V8.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                    <path d="M6.8 3.7l1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-                  </svg>
-                </button>
-                <button v-if="!p.isLocalDraftOnly" class="card-del-btn" title="Delete palette" @click.stop="confirmDeletePalette(p)">
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-              </div>
-            </article>
+            />
           </div>
         </div>
       </section>
@@ -273,6 +230,7 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import FolderTree from '@/components/folder/FolderTree.vue'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
+import PaletteCard from '@/components/palette/PaletteCard.vue'
 
 const router = useRouter()
 const loading = ref(true)
@@ -491,10 +449,6 @@ function newPalette() {
     params: { username: user.value.username, pathMatch: 'new' },
     state: { folderId },
   })
-}
-
-function fmtDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 function confirmDeletePalette(p: PaletteCache) {

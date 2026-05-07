@@ -151,6 +151,28 @@
   align-self: center;
 }
 
+.ftn-count-icons {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.ftn-count-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  opacity: 0.5;
+  font-family: var(--font-mono, monospace);
+  line-height: 1;
+}
+
+.ftn-count-icon {
+  opacity: 0.85;
+}
+
 /* Action buttons (show on row hover) */
 .ftn-btns { display: none; gap: 2px; flex-shrink: 0; }
 .ftn-row:hover .ftn-btns { display: inline-flex; }

@@ -1,12 +1,12 @@
 import { ApiClient } from './client';
-import type { UserCreate, UserCreateResponse } from './types';
+import type { UserCreate, UserCreateResponse, UserGetResponse } from './types';
 
 export const usersApi = {
   create: (data: UserCreate): Promise<UserCreateResponse> => {
     return ApiClient.request<UserCreateResponse>('/users', 'POST', data);
   },
 
-  getByUsername: (username: string): Promise<any> => {
-    return ApiClient.request<any>(`/users?username=${encodeURIComponent(username)}`, 'GET');
-  }
+  getByUsername: (username: string): Promise<UserGetResponse> => {
+    return ApiClient.request<UserGetResponse>(`/users/${encodeURIComponent(username)}`, 'GET');
+  },
 };

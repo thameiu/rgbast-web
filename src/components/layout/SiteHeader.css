@@ -93,8 +93,11 @@
   background: #111114;
   border: 1px solid #111114;
   color: #f3f3f8;
+  font-family: var(--font-display);
   font-size: 13px;
   font-weight: 700;
+  line-height: 1;
+  padding-top: 2px;
   transition: background 0.18s, border-color 0.18s;
 }
 
@@ -332,6 +335,9 @@
   justify-content: center;
   background: #111114;
   color: #f3f3f8;
+  font-family: var(--font-display);
   font-size: 12px;
   font-weight: 700;
+  line-height: 1;
+  padding-top: 2px;
 }

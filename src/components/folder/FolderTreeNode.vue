@@ -51,8 +51,22 @@ export default { name: 'FolderTreeNode' }
       </template>
       <span v-else class="ftn-label">{{ folder.name }}</span>
 
-      <span v-if="state.mode === 'navigation'" class="ftn-count">{{ state.paletteCounts[folder.id] ?? 0 }}</span>
-      <span v-if="state.mode === 'navigation' || state.mode === 'picker'" class="ftn-btns">
+      <span v-if="state.mode === 'navigation'" class="ftn-count-icons">
+        <span class="ftn-count-item" title="Palettes">
+          <svg class="ftn-count-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="1" width="10" height="8" rx="1.3" />
+            <path d="M4.33 1.4v7.2M7.67 1.4v7.2" />
+          </svg>
+          <span>{{ state.paletteCounts[folder.id] ?? 0 }}</span>
+        </span>
+        <span class="ftn-count-item" title="Subfolders">
+          <svg class="ftn-count-icon" width="11" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+            <path d="M1 3.5C1 2.67 1.67 2 2.5 2H5l1.5 1.5H11.5C12.33 3.5 13 4.17 13 5v4.5C13 10.33 12.33 11 11.5 11h-9C1.67 11 1 10.33 1 9.5V3.5Z" />
+          </svg>
+          <span>{{ state.childFolderCounts[folder.id] ?? 0 }}</span>
+        </span>
+      </span>
+      <span v-if="state.allowFolderEditing && (state.mode === 'navigation' || state.mode === 'picker')" class="ftn-btns">
         <button class="ftn-btn" title="New subfolder" @click.stop="state.startInlineCreate(folder.id)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 1v6M1 4h6" /></svg>
         </button>
@@ -74,9 +88,9 @@ export default { name: 'FolderTreeNode' }
           class="ftn-palette"
           :class="[`ftn-palette--${state.theme}`, state.draggingPaletteId === p.id && 'ftn-palette--dragging']"
           :style="{ paddingLeft: `${8 + (depth + 1) * 20}px` }"
-          draggable="true"
-          @click.stop="state.selectPalette(p)"
-          @dragstart="state.startPaletteDrag(p.id, $event)"
+          :draggable="state.allowFolderEditing"
+          @dblclick.stop="state.selectPalette(p)"
+          @dragstart="state.allowFolderEditing && state.startPaletteDrag(p.id, $event)"
           @dragend="state.endPaletteDrag()"
           @dragover.prevent
         >
@@ -96,7 +110,7 @@ export default { name: 'FolderTreeNode' }
 
       <!-- Inline create child input -->
       <div
-        v-if="state.inlineCreate?.parentId === folder.id"
+        v-if="state.allowFolderEditing && state.inlineCreate?.parentId === folder.id"
         class="ftn-row ftn-row--new"
         :class="`ftn-row--${state.theme}`"
         :style="{ paddingLeft: `${8 + (depth + 1) * 20}px`, flexDirection: 'column', alignItems: 'stretch', gap: '0' }"
@@ -145,7 +159,7 @@ function handleRowClick() {
   clickTimer = setTimeout(() => {
     if (clickCount === 2) {
       state.toggle(props.folder.id)
-    } else if (clickCount >= 3) {
+    } else if (clickCount >= 3 && state.allowFolderEditing) {
       state.startInlineRename(props.folder)
     }
     clickCount = 0
@@ -158,7 +172,6 @@ const isDragTarget = computed(() => state.dragTargetId === props.folder.id)
 const children = computed(() => state.getChildren(props.folder.id))
 const myPalettes = computed(() => state.palettes.filter(p => p.folder_id === props.folder.id))
 const hasContent = computed(() => children.value.length > 0 || (state.mode === 'navigation' && myPalettes.value.length > 0))
-
 const createError = computed((): string | null => {
   if (!state.inlineCreate || state.inlineCreate.parentId !== props.folder.id) return null
   const n = state.inlineValue.trim()

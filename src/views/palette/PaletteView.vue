@@ -414,6 +414,7 @@ function hydrateDraftIfReady(): void {
 }
 
 function persistDraftIfNeeded(): void {
+  if (save.isSaving.value) return
   if (hydratingDraft.value || ctx.loading.value) return
   const key = ctx.draftKey.value
   if (!key || !ctx.username.value) return

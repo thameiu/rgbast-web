@@ -276,7 +276,7 @@ async function runSearch() {
   }
 }
 
-function paletteToCard(item: PaletteSearchItem): PaletteCache {
+function paletteToCard(item: PaletteSearchItem): PaletteCache & { ownerUsername: string; ownerClickable: boolean } {
   return {
     id: item.id,
     title: item.title,
@@ -285,6 +285,8 @@ function paletteToCard(item: PaletteSearchItem): PaletteCache {
     created_at: item.created_at,
     last_snapshot_at: item.latest_main_snapshot_created_at ?? undefined,
     palette_colors: item.palette_colors,
+    ownerUsername: item.owner_username,
+    ownerClickable: true,
   }
 }
 

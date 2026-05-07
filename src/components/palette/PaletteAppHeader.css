@@ -232,13 +232,46 @@
   line-height: 1;
   text-transform: uppercase;
   color: #fff;
-  display: inline-flex;
+  display: inline-block;
   align-items: center;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  max-width: 100%;
+}
+.palette-title-wrap {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.palette-owner-link {
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.64);
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  flex: 0 1 auto;
+}
+.palette-owner-link:hover {
+  color: #fff;
+}
+.palette-owner-link--disabled {
+  text-decoration: none;
+  cursor: default;
+  color: rgba(255,255,255,0.5);
 }
 
 /* Branch selector */
@@ -609,4 +642,6 @@
   .mobile-right { display: flex; }
   .left-group   { flex: 1; min-width: 0; }
   .palette-name { max-width: none; }
+  .palette-title-wrap { gap: 8px; }
+  .palette-owner-link { max-width: 110px; font-size: 10px; }
 }

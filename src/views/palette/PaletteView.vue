@@ -2,6 +2,8 @@
   <div class="palette-view">
     <PaletteAppHeader
       :paletteTitle="ctx.paletteTitle.value"
+      :ownerUsername="ctx.isNewPalette.value ? null : (ctx.history.value?.owner_username ?? ctx.username.value)"
+      :ownerProfileClickable="!ctx.isNewPalette.value"
       :currentBranch="ctx.currentBranchName.value"
       :currentBranchId="ctx.currentBranchId.value"
       :branches="ctx.allBranches.value"
@@ -37,6 +39,7 @@
       @undo="undo.doUndo"
       @redo="undo.doRedo"
       @openImagePalette="openImagePaletteModal"
+      @openOwnerProfile="openOwnerProfile"
     />
 
     <div v-if="ctx.loading.value" class="loading-screen">
@@ -528,6 +531,12 @@ function openDeletePaletteShortcut(): void {
 function openHistorySidebarShortcut(): void {
   if (ctx.isNewPalette.value) return
   ctx.historyOpen.value = !ctx.historyOpen.value
+}
+
+function openOwnerProfile(): void {
+  const owner = ctx.history.value?.owner_username ?? ctx.username.value
+  if (!owner || ctx.isNewPalette.value) return
+  void ctx.router.push(`/users/${encodeURIComponent(owner)}`)
 }
 
 function deleteLastColorShortcut(): void {

@@ -8,7 +8,18 @@
         </svg>
       </button>
       <div class="divider"></div>
-      <span class="palette-name font-display">{{ paletteTitle }}</span>
+      <div class="palette-title-wrap">
+        <span class="palette-name font-display">{{ paletteTitle }}</span>
+        <button
+          v-if="ownerUsername"
+          class="palette-owner-link"
+          :class="{ 'palette-owner-link--disabled': !ownerProfileClickable }"
+          :disabled="!ownerProfileClickable"
+          @click.stop="$emit('openOwnerProfile')"
+        >
+          by {{ ownerUsername }}
+        </button>
+      </div>
     </div>
 
     <!-- Center: branch selector (desktop) -->
@@ -330,6 +341,10 @@ import { getBranchColor } from '@/utils/branchColors'
 const props = defineProps<{
   /** Display name for the current palette. */
   paletteTitle: string
+  /** Owner username displayed next to the palette title. */
+  ownerUsername?: string | null
+  /** Whether owner link should be clickable. */
+  ownerProfileClickable?: boolean
   /** Name of the currently-active branch. */
   currentBranch: string
   /** ID of the currently-active branch, or null for main. */
@@ -384,6 +399,7 @@ const emit = defineEmits<{
   openImagePalette: []
   undo: []
   redo: []
+  openOwnerProfile: []
 }>()
 
 /** Whether the branch dropdown flyout is open. */

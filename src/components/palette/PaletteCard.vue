@@ -34,6 +34,17 @@
           {{ palette.title }}
           <span v-if="palette.hasUnsavedDraft" class="card-unsaved-dot" title="Unsaved local changes"></span>
         </h3>
+        <p v-if="palette.ownerUsername" class="card-owner">
+          by
+          <button
+            class="card-owner-link"
+            :class="{ 'card-owner-link--disabled': !palette.ownerClickable }"
+            :disabled="!palette.ownerClickable"
+            @click.stop="onOwnerClick"
+          >
+            {{ palette.ownerUsername }}
+          </button>
+        </p>
         <p class="card-meta font-mono">
           {{ palette.isLocalDraftOnly ? `Draft · ${formattedDate}` : formattedDate }}
         </p>
@@ -56,11 +67,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useRouter } from 'vue-router'
 import type { PaletteCache } from '@/api/types'
 
 type PaletteCardData = PaletteCache & {
   isLocalDraftOnly?: boolean
   hasUnsavedDraft?: boolean
+  ownerUsername?: string
+  ownerClickable?: boolean
 }
 
 const props = withDefaults(defineProps<{
@@ -73,6 +87,8 @@ const props = withDefaults(defineProps<{
   draggableEnabled: false,
   isDragging: false,
 })
+
+const router = useRouter()
 
 const emit = defineEmits<{
   (e: 'open'): void
@@ -93,6 +109,11 @@ const formattedDate = computed(() =>
 function onDragStart(event: DragEvent) {
   if (!props.draggableEnabled) return
   emit('dragstart', event)
+}
+
+function onOwnerClick(): void {
+  if (!props.palette.ownerUsername || !props.palette.ownerClickable) return
+  void router.push(`/users/${encodeURIComponent(props.palette.ownerUsername)}`)
 }
 </script>
 

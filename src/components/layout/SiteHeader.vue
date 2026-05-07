@@ -86,7 +86,7 @@
         <template v-if="isLoggedIn">
           <span class="mob-user font-mono">
             <span class="mob-user-avatar">{{ profileInitial }}</span>
-            {{ profileName }}
+            <span class="mob-user-name">{{ profileName }}</span>
           </span>
           <button class="mob-link" @click="goToProfile">Profile</button>
           <button class="mob-link" @click="onSettingsSoon">Settings</button>

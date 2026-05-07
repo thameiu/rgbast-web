@@ -329,6 +329,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(14,14,16,0.55);
+  min-width: 0;
 }
 
 .mob-user-avatar {
@@ -345,4 +346,12 @@
   font-weight: 700;
   line-height: 1;
   padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.mob-user-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -192,8 +192,8 @@ export function usePaletteContext(): PaletteContext {
     if (isNewPalette.value) return pendingTitle.value || 'Untitled palette'
     if (paletteId.value !== null) {
       return (
-        palettesApi.getCachedPalette(paletteId.value)?.title ??
         history.value?.title ??
+        palettesApi.getCachedPalette(paletteId.value)?.title ??
         (paletteName.value || `Palette #${paletteId.value}`)
       )
     }
@@ -286,6 +286,17 @@ export function usePaletteContext(): PaletteContext {
       }
       history.value = await palettesApi.getHistoryByPath(username.value, palettePath.value)
       paletteId.value = history.value.palette_id
+      const latestMainColors = history.value.main[0]?.palette_colors ?? []
+      palettesApi.cachePalette({
+        id: history.value.palette_id,
+        title: history.value.title,
+        description: history.value.description ?? '',
+        folder_id: historyFolderId.value,
+        folder_path: history.value.folder_path,
+        created_at: palettesApi.getCachedPalette(history.value.palette_id)?.created_at ?? new Date().toISOString(),
+        last_snapshot_at: history.value.main[0]?.created_at,
+        palette_colors: latestMainColors,
+      })
       applyBranchState()
     } catch (e: any) {
       error.value = e.message ?? 'Failed to load palette'

@@ -141,6 +141,16 @@
           </p>
 
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
+          <p v-if="showResendVerification" class="resend-wrap">
+            <button
+              type="button"
+              class="resend-link"
+              :disabled="resendSubmitting"
+              @click="handleResendVerification"
+            >
+              {{ resendSubmitting ? 'Sending…' : 'Resend verification email' }}
+            </button>
+          </p>
           <p v-if="infoMessage" class="ok">{{ infoMessage }}</p>
 
           <button type="submit" :disabled="isSubmitting" class="submit">
@@ -184,6 +194,8 @@ const isSubmitting = ref(false)
 /** Error message shown below the form on failure. */
 const errorMessage = ref('')
 const infoMessage = ref('')
+const resendSubmitting = ref(false)
+const showResendVerification = ref(false)
 
 onMounted(() => {
   const verified = typeof route.query.verified === 'string' ? route.query.verified : ''
@@ -203,6 +215,7 @@ async function handleLogin() {
   isSubmitting.value = true
   errorMessage.value = ''
   infoMessage.value = ''
+  showResendVerification.value = false
   try {
     const response = await authApi.login({
       username: form.value.username,
@@ -211,9 +224,30 @@ async function handleLogin() {
     localStorage.setItem('access_token', response.access_token)
     router.push('/dashboard')
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Login failed.'
+    const message = error instanceof Error ? error.message : 'Login failed.'
+    errorMessage.value = message
+    showResendVerification.value = message.toLowerCase().includes('email not verified')
   } finally {
     isSubmitting.value = false
+  }
+}
+
+async function handleResendVerification() {
+  if (!form.value.username.trim()) {
+    errorMessage.value = 'Enter your username or email first.'
+    return
+  }
+  resendSubmitting.value = true
+  infoMessage.value = ''
+  try {
+    const response = await authApi.resendVerificationEmail({
+      identifier: form.value.username.trim(),
+    })
+    infoMessage.value = response.response
+  } catch (error: unknown) {
+    errorMessage.value = error instanceof Error ? error.message : 'Could not resend verification email.'
+  } finally {
+    resendSubmitting.value = false
   }
 }
 </script>

@@ -24,6 +24,15 @@
               <dt class="font-mono">palettes</dt>
               <dd>{{ palettes.length }}</dd>
             </div>
+            <div>
+              <dt class="font-mono">colleagues</dt>
+              <dd>
+                <button v-if="user" class="stat-link" @click="showColleaguesModal = true">
+                  {{ colleaguesCount }}
+                </button>
+                <span v-else>0</span>
+              </dd>
+            </div>
           </dl>
 
           <div class="folder-panel">
@@ -213,15 +222,23 @@
         </div>
       </div>
     </Teleport>
+
+    <ColleaguesModal
+      :open="showColleaguesModal"
+      removeConfirmMode="inline"
+      @close="showColleaguesModal = false"
+      @updated="void loadColleaguesSummary()"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import { foldersApi } from '@/api/folders'
 import { palettesApi } from '@/api/palettes'
+import { colleaguesApi } from '@/api/colleagues'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteDraftEntry } from '@/api/paletteDrafts'
 import type { FolderResponse, PaletteCache } from '@/api/types'
@@ -231,6 +248,7 @@ import AppLoader from '@/components/ui/AppLoader.vue'
 import FolderTree from '@/components/folder/FolderTree.vue'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
+import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
 
 const router = useRouter()
 const loading = ref(true)
@@ -263,6 +281,8 @@ const editDraftDesc = ref('')
 const editDraftFolderId = ref<number | null>(null)
 const isSavingEdit = ref(false)
 const editError = ref('')
+const colleaguesCount = ref(0)
+const showColleaguesModal = ref(false)
 
 function applyDraftsToState(drafts: PaletteDraftEntry[], serverIds: Set<number>) {
   unsavedDraftByPaletteId.value = drafts.reduce<Record<number, PaletteDraftEntry>>((acc, d) => {
@@ -380,6 +400,7 @@ async function loadDashboard() {
       user.value = null
       palettes.value = []
       folders.value = []
+      colleaguesCount.value = 0
       applyDraftsToState(paletteDraftsApi.listAllDrafts(), new Set<number>())
       return
     }
@@ -402,15 +423,30 @@ async function loadDashboard() {
     })
     const serverIds = new Set(palettes.value.map(p => p.id))
     applyDraftsToState(paletteDraftsApi.listByOwner(user.value.username), serverIds)
+    await loadColleaguesSummary()
     await loadFolders()
   } catch {
     localStorage.removeItem('access_token')
     user.value = null
     palettes.value = []
     folders.value = []
+    colleaguesCount.value = 0
     applyDraftsToState(paletteDraftsApi.listAllDrafts(), new Set<number>())
   } finally {
     loading.value = false
+  }
+}
+
+async function loadColleaguesSummary() {
+  if (!user.value) {
+    colleaguesCount.value = 0
+    return
+  }
+  try {
+    const payload = await colleaguesApi.listMine()
+    colleaguesCount.value = payload.colleagues.length
+  } catch {
+    colleaguesCount.value = Number(user.value.colleagues_count ?? 0)
   }
 }
 
@@ -425,8 +461,17 @@ async function loadFolders() {
 
 onMounted(() => {
   document.title = 'Dashboard - RGBAST'
+  window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdatedEvent)
   void loadDashboard()
 })
+
+onBeforeUnmount(() => {
+  window.removeEventListener('rgbast:colleagues-updated', onColleaguesUpdatedEvent)
+})
+
+function onColleaguesUpdatedEvent(): void {
+  void loadColleaguesSummary()
+}
 
 function openPalette(p: DashboardPaletteCard) {
   if (p.draftLink) {

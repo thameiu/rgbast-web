@@ -75,6 +75,50 @@
   margin-left: 16px;
 }
 
+.notif-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 14px;
+}
+
+.notif-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(14,14,16,0.16);
+  background: rgba(255,255,255,0.76);
+  color: rgba(14,14,16,0.8);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+
+.notif-btn:hover {
+  border-color: rgba(180,16,204,0.35);
+  background: rgba(180,16,204,0.1);
+  color: #8f0aa4;
+}
+
+.notif-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  padding: 0 4px;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 16px;
+  text-align: center;
+  color: #fff;
+  background: #b410cc;
+}
+
 .profile-link {
   text-decoration: none;
   border: none;
@@ -177,6 +221,120 @@
 .profile-menu-fade-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+.notif-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 300px;
+  max-height: min(60vh, 420px);
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(14,14,16,0.12);
+  background: rgba(255,255,255,0.97);
+  box-shadow: 0 10px 24px rgba(14,14,16,0.12);
+  padding: 9px;
+  z-index: 120;
+}
+
+.notif-title {
+  margin: 2px 2px 8px;
+  font-size: 10px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: rgba(14,14,16,0.5);
+}
+
+.notif-empty {
+  font-size: 12.5px;
+  color: rgba(14,14,16,0.6);
+  padding: 8px 6px;
+}
+
+.notif-error {
+  font-size: 12px;
+  color: #862028;
+  border: 1px solid rgba(179,32,50,0.2);
+  background: rgba(179,32,50,0.08);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.notif-list {
+  display: grid;
+  gap: 8px;
+}
+
+.notif-item {
+  border: 1px solid rgba(14,14,16,0.1);
+  border-radius: 10px;
+  background: #fff;
+  padding: 8px;
+}
+
+.notif-user {
+  border: none;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 8px;
+}
+
+.notif-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #111114;
+  color: #f3f3f8;
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  padding-top: 1px;
+}
+
+.notif-username {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(14,14,16,0.84);
+}
+
+.notif-actions {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+.notif-action {
+  border: 1px solid rgba(14,14,16,0.15);
+  border-radius: 7px;
+  background: #fff;
+  color: rgba(14,14,16,0.76);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+.notif-action:hover:not(:disabled) {
+  border-color: rgba(14,14,16,0.32);
+}
+
+.notif-action--accept {
+  border-color: rgba(180,16,204,0.35);
+  color: #8f0aa4;
+  background: rgba(180,16,204,0.1);
+}
+
+.notif-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* ─── Mobile burger ───────────────── */
@@ -354,4 +512,58 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.mob-requests {
+  margin-top: 6px;
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid rgba(14,14,16,0.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,0.65);
+}
+
+.mob-requests-title {
+  margin: 0 0 8px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: rgba(14,14,16,0.5);
+}
+
+.mob-request-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mob-request-row + .mob-request-row {
+  margin-top: 6px;
+}
+
+.mob-request-user {
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  color: rgba(14,14,16,0.85);
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+
+.mob-request-actions {
+  display: inline-flex;
+  gap: 5px;
+}
+
+.mob-request-btn {
+  border: 1px solid rgba(14,14,16,0.16);
+  border-radius: 7px;
+  background: #fff;
+  color: rgba(14,14,16,0.78);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 7px;
+  cursor: pointer;
 }

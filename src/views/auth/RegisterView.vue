@@ -222,6 +222,7 @@ async function handleRegister() {
       firstname: form.value.firstname || null,
       lastname: form.value.lastname || null,
       birthdate: form.value.birthdate || null,
+      verify_type: 'link',
     })
     successMessage.value = 'Account created. Check your email and click the verification link to sign in.'
     form.value.password = ''

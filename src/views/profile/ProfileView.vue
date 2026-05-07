@@ -23,6 +23,42 @@
             <p class="profile-fullname">
               {{ fullName }}
             </p>
+            <div class="profile-meta-actions">
+              <button class="profile-colleagues-link font-mono" @click="onColleaguesClick">
+                {{ colleaguesCountLabel }}
+              </button>
+
+              <template v-if="!isOwnProfile">
+                <div class="profile-colleague-wrap">
+                  <button
+                    class="profile-colleague-btn"
+                    :class="{
+                      'is-accepted': relationStatus === 'accepted',
+                      'is-pending': relationStatus === 'pending_outgoing',
+                      'is-incoming': relationStatus === 'pending_incoming',
+                    }"
+                    :disabled="relationLoading"
+                    @click="onPrimaryColleagueAction"
+                  >
+                    <IconUsers v-if="relationStatus === 'accepted'" class="profile-colleague-icon" />
+                    <IconClock3 v-else-if="relationStatus === 'pending_outgoing'" class="profile-colleague-icon" />
+                    <IconMail v-else-if="relationStatus === 'pending_incoming'" class="profile-colleague-icon" />
+                    <IconUsers v-else class="profile-colleague-icon" />
+                    {{ relationPrimaryLabel }}
+                  </button>
+
+                  <button
+                    v-if="showSecondaryAction"
+                    class="profile-colleague-remove"
+                    :disabled="relationLoading"
+                    :title="secondaryActionLabel"
+                    @click="onRemoveCrossClick"
+                  >
+                    ×
+                  </button>
+                </div>
+              </template>
+            </div>
           </div>
         </header>
 
@@ -66,21 +102,61 @@
         </div>
       </template>
     </section>
+
+    <AuthModal
+      v-if="showAuthModal"
+      theme="light"
+      @authenticated="onProfileAuthSuccess"
+      @cancel="showAuthModal = false"
+    />
+
+    <ColleaguesModal
+      :open="showColleaguesModal"
+      :viewMode="isOwnProfile ? 'mine' : 'public'"
+      :publicUsername="profileUser?.username ?? null"
+      removeConfirmMode="modal"
+      @close="showColleaguesModal = false"
+      @updated="onColleaguesUpdated"
+    />
+
+    <Teleport to="body">
+      <Transition name="profile-confirm-fade">
+        <div v-if="showProfileRemoveConfirm" class="profile-confirm-overlay" @click.self="showProfileRemoveConfirm = false">
+          <div class="profile-confirm-modal">
+            <h3 class="profile-confirm-title font-display">Confirm</h3>
+            <p class="profile-confirm-text">
+              Are you sure you want to {{ secondaryActionLabel.toLowerCase() }}?
+            </p>
+            <div class="profile-confirm-actions">
+              <button class="profile-confirm-btn" :disabled="relationLoading" @click="showProfileRemoveConfirm = false">No</button>
+              <button class="profile-confirm-btn profile-confirm-btn--danger" :disabled="relationLoading" @click="confirmRemoveFromProfile">Yes</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </main>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { FolderResponse, PaletteCache, UserGetResponse } from '@/api/types'
 import { authApi } from '@/api'
 import { usersApi } from '@/api/users'
+import { colleaguesApi } from '@/api/colleagues'
 import { palettesApi } from '@/api/palettes'
 import { foldersApi } from '@/api/folders'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import FolderTree from '@/components/folder/FolderTree.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
+import AuthModal from '@/components/auth/AuthModal.vue'
+import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
+import type { ColleagueRelationStatus } from '@/api/types'
+import IconUsers from '@/components/icons/IconUsers.vue'
+import IconClock3 from '@/components/icons/IconClock3.vue'
+import IconMail from '@/components/icons/IconMail.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -92,8 +168,15 @@ const profileUser = ref<UserGetResponse | null>(null)
 const palettes = ref<PaletteCache[]>([])
 const folders = ref<FolderResponse[]>([])
 const activeFolderKey = ref<'all' | 'root' | number>('all')
+const relationStatus = ref<ColleagueRelationStatus>('none')
+const relationLoading = ref(false)
+const showAuthModal = ref(false)
+const showColleaguesModal = ref(false)
+const pendingAddAfterAuth = ref(false)
+const showProfileRemoveConfirm = ref(false)
 
 const profileUsername = computed(() => String(route.params.username ?? '').trim())
+const isOwnProfile = computed(() => !!viewerUser.value?.username && viewerUser.value.username === profileUsername.value)
 
 const fullName = computed(() => {
   const name = [profileUser.value?.firstname, profileUser.value?.lastname].filter(Boolean).join(' ')
@@ -138,6 +221,29 @@ const filteredPalettes = computed(() => {
   return list
 })
 
+const relationPrimaryLabel = computed(() => {
+  if (!viewerUser.value) return 'Add colleague'
+  if (relationStatus.value === 'accepted') return 'Colleague'
+  if (relationStatus.value === 'pending_outgoing') return 'Request sent'
+  if (relationStatus.value === 'pending_incoming') return 'Accept request'
+  return 'Add colleague'
+})
+
+const showSecondaryAction = computed(() => {
+  return relationStatus.value === 'accepted' || relationStatus.value === 'pending_outgoing' || relationStatus.value === 'pending_incoming'
+})
+
+const secondaryActionLabel = computed(() => {
+  if (relationStatus.value === 'accepted') return 'Remove'
+  if (relationStatus.value === 'pending_outgoing') return 'Remove request'
+  return 'Deny'
+})
+
+const colleaguesCountLabel = computed(() => {
+  const count = Number(profileUser.value?.colleagues_count ?? 0)
+  return `${count} ${count === 1 ? 'Colleague' : 'Colleagues'}`
+})
+
 async function loadViewerUser() {
   const token = localStorage.getItem('access_token')
   if (!token) {
@@ -149,6 +255,19 @@ async function loadViewerUser() {
   } catch {
     viewerUser.value = null
     localStorage.removeItem('access_token')
+  }
+}
+
+async function loadRelationStatus() {
+  if (!viewerUser.value || !profileUser.value || isOwnProfile.value) {
+    relationStatus.value = isOwnProfile.value ? 'self' : 'none'
+    return
+  }
+  try {
+    const resp = await colleaguesApi.getStatus(profileUser.value.username)
+    relationStatus.value = resp.status
+  } catch {
+    relationStatus.value = 'none'
   }
 }
 
@@ -193,6 +312,7 @@ async function loadProfile() {
   } finally {
     loading.value = false
   }
+  await loadRelationStatus()
 }
 
 function openPalette(palette: PaletteCache) {
@@ -213,8 +333,13 @@ function getFolderAncestors(folderId: number): number[] {
 }
 
 onMounted(async () => {
+  window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdatedEvent)
   await loadViewerUser()
   await loadProfile()
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('rgbast:colleagues-updated', onColleaguesUpdatedEvent)
 })
 
 watch(
@@ -223,6 +348,94 @@ watch(
     await loadProfile()
   },
 )
+
+async function onPrimaryColleagueAction(): Promise<void> {
+  if (isOwnProfile.value || !profileUser.value) return
+  if (!viewerUser.value) {
+    pendingAddAfterAuth.value = true
+    showAuthModal.value = true
+    return
+  }
+  relationLoading.value = true
+  try {
+    if (relationStatus.value === 'pending_incoming') {
+      await colleaguesApi.accept(profileUser.value.username)
+      relationStatus.value = 'accepted'
+      profileUser.value.colleagues_count = Number(profileUser.value.colleagues_count ?? 0) + 1
+    } else if (relationStatus.value === 'none') {
+      const resp = await colleaguesApi.addOrAccept(profileUser.value.username)
+      relationStatus.value = resp.status === 'accepted' ? 'accepted' : 'pending_outgoing'
+      if (resp.status === 'accepted') {
+        profileUser.value.colleagues_count = Number(profileUser.value.colleagues_count ?? 0) + 1
+      }
+    }
+    window.dispatchEvent(new Event('rgbast:colleagues-updated'))
+  } finally {
+    relationLoading.value = false
+  }
+}
+
+async function onSecondaryColleagueAction(): Promise<void> {
+  if (!profileUser.value || !viewerUser.value) return
+  if (!showSecondaryAction.value) return
+  relationLoading.value = true
+  try {
+    await colleaguesApi.remove(profileUser.value.username)
+    if (relationStatus.value === 'accepted') {
+      profileUser.value.colleagues_count = Math.max(0, Number(profileUser.value.colleagues_count ?? 0) - 1)
+    }
+    relationStatus.value = 'none'
+    window.dispatchEvent(new Event('rgbast:colleagues-updated'))
+  } finally {
+    relationLoading.value = false
+  }
+}
+
+function onRemoveCrossClick(): void {
+  if (!showSecondaryAction.value) return
+  showProfileRemoveConfirm.value = true
+}
+
+async function confirmRemoveFromProfile(): Promise<void> {
+  showProfileRemoveConfirm.value = false
+  await onSecondaryColleagueAction()
+}
+
+async function onProfileAuthSuccess(): Promise<void> {
+  showAuthModal.value = false
+  await loadViewerUser()
+  await loadRelationStatus()
+  if (pendingAddAfterAuth.value) {
+    pendingAddAfterAuth.value = false
+    await onPrimaryColleagueAction()
+  }
+}
+
+function onColleaguesClick(): void {
+  if (isOwnProfile.value && !viewerUser.value) {
+    showAuthModal.value = true
+    return
+  }
+  showColleaguesModal.value = true
+}
+
+function onColleaguesUpdated(): void {
+  void refreshOwnProfileColleaguesCount()
+  void loadRelationStatus()
+}
+
+async function refreshOwnProfileColleaguesCount(): Promise<void> {
+  if (!profileUser.value || !viewerUser.value || !isOwnProfile.value) return
+  try {
+    const payload = await colleaguesApi.listMine()
+    profileUser.value.colleagues_count = payload.colleagues.length
+  } catch {}
+}
+
+function onColleaguesUpdatedEvent(): void {
+  void refreshOwnProfileColleaguesCount()
+  void loadRelationStatus()
+}
 </script>
 
 <style scoped src="./ProfileView.css"></style>

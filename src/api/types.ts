@@ -19,6 +19,15 @@ export interface PasswordResetConfirm {
   password: string;
 }
 
+export interface VerifyEmailCodeRequest {
+  email: string;
+  code: string;
+}
+
+export interface VerifyEmailResendRequest {
+  identifier: string;
+}
+
 export interface MessageResponse {
   response: string;
 }
@@ -32,6 +41,7 @@ export interface UserCreate {
   lastname?: string | null;
   password: string;
   birthdate?: string | null;
+  verify_type?: 'link' | 'code';
 }
 
 export interface UserCreateResponse {
@@ -49,6 +59,11 @@ export interface UserGetResponse {
   firstname: string | null;
   lastname: string | null;
   birthdate?: string | null;
+  colleagues_count?: number;
+}
+
+export interface UserMeResponse extends UserGetResponse {
+  email: string;
 }
 
 export interface UserUpdateMe {
@@ -355,4 +370,48 @@ export interface PaletteSearchResponse {
   color_mode: 'exact' | 'similar';
   total: number;
   results: PaletteSearchItem[];
+}
+
+// ── Colleagues ──────────────────────────────────────────────────────────────
+
+export type ColleagueRelationStatus =
+  | 'self'
+  | 'none'
+  | 'pending_outgoing'
+  | 'pending_incoming'
+  | 'accepted'
+
+export interface ColleagueUserItem {
+  id: number
+  username: string
+  firstname: string | null
+  lastname: string | null
+}
+
+export interface ColleagueListResponse {
+  colleagues: ColleagueUserItem[]
+  outgoing_pending: ColleagueUserItem[]
+  incoming_pending: ColleagueUserItem[]
+  incoming_count: number
+}
+
+export interface ColleagueActionResponse {
+  status: 'pending' | 'accepted' | 'removed'
+  user: ColleagueUserItem
+  response: string
+}
+
+export interface ColleagueStatusResponse {
+  status: ColleagueRelationStatus
+}
+
+export interface ColleagueCountResponse {
+  username: string
+  colleagues_count: number
+}
+
+export interface ColleaguePublicListResponse {
+  username: string
+  colleagues: ColleagueUserItem[]
+  total: number
 }

@@ -5,7 +5,9 @@ import type {
   MessageResponse,
   PasswordResetConfirm,
   PasswordResetRequest,
-  UserGetResponse,
+  VerifyEmailCodeRequest,
+  VerifyEmailResendRequest,
+  UserMeResponse,
 } from './types';
 
 /** Authentication endpoints: login and session verification. */
@@ -16,8 +18,8 @@ export const authApi = {
   },
 
   /** Verify the stored token and return the current user's profile. */
-  checkAuth: (): Promise<UserGetResponse> => {
-    return ApiClient.request<UserGetResponse>('/check-auth', 'POST');
+  checkAuth: (): Promise<UserMeResponse> => {
+    return ApiClient.request<UserMeResponse>('/check-auth', 'POST');
   },
 
   requestPasswordReset: (data: PasswordResetRequest): Promise<MessageResponse> => {
@@ -26,5 +28,13 @@ export const authApi = {
 
   confirmPasswordReset: (data: PasswordResetConfirm): Promise<MessageResponse> => {
     return ApiClient.request<MessageResponse>('/password-reset/confirm', 'POST', data);
+  },
+
+  verifyEmailCode: (data: VerifyEmailCodeRequest): Promise<LoginResponse> => {
+    return ApiClient.request<LoginResponse>('/verify-email/code', 'POST', data);
+  },
+
+  resendVerificationEmail: (data: VerifyEmailResendRequest): Promise<MessageResponse> => {
+    return ApiClient.request<MessageResponse>('/verify-email/resend', 'POST', data);
   },
 };

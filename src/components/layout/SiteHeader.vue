@@ -23,6 +23,42 @@
       </template>
     </nav>
 
+    <div v-if="isLoggedIn" class="notif-slot" ref="notifEl">
+      <button
+        class="notif-btn"
+        title="Colleague requests"
+        aria-label="Open colleague requests"
+        :aria-expanded="notifMenuOpen"
+        @click="toggleNotifMenu"
+      >
+        <svg width="15" height="15" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M3.2 9.8h7.6l-.9-1.5V6.2a2.9 2.9 0 10-5.8 0v2.1l-.9 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5.6 10.4a1.5 1.5 0 002.8 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <span v-if="incomingRequests.length" class="notif-badge">{{ incomingRequests.length }}</span>
+      </button>
+
+      <Transition name="profile-menu-fade">
+        <div v-if="notifMenuOpen" class="notif-menu">
+          <p class="notif-title font-mono">Colleague requests</p>
+          <p v-if="notifError" class="notif-error">{{ notifError }}</p>
+          <div v-else-if="incomingRequests.length === 0" class="notif-empty">No pending request.</div>
+          <div v-else class="notif-list">
+            <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="notif-item">
+              <button class="notif-user" @click="goToUserFromNotif(requestUser.username)">
+                <span class="notif-avatar">{{ requestUser.username.charAt(0).toUpperCase() }}</span>
+                <span class="notif-username">{{ requestUser.username }}</span>
+              </button>
+              <div class="notif-actions">
+                <button class="notif-action notif-action--accept" :disabled="notifPendingUser === requestUser.username" @click="acceptRequestFromNotif(requestUser.username)">Accept</button>
+                <button class="notif-action" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">Deny</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </div>
+
     <div class="account-slot" ref="accountEl">
       <button
         v-if="isLoggedIn"
@@ -88,6 +124,18 @@
             <span class="mob-user-avatar">{{ profileInitial }}</span>
             <span class="mob-user-name">{{ profileName }}</span>
           </span>
+          <div class="mob-requests" v-if="incomingRequests.length">
+            <p class="mob-requests-title">Requests</p>
+            <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="mob-request-row">
+              <button class="mob-request-user" @click="goToUserFromNotif(requestUser.username)">
+                {{ requestUser.username }}
+              </button>
+              <div class="mob-request-actions">
+                <button class="mob-request-btn" :disabled="notifPendingUser === requestUser.username" @click="acceptRequestFromNotif(requestUser.username)">Accept</button>
+                <button class="mob-request-btn" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">Deny</button>
+              </div>
+            </div>
+          </div>
           <button class="mob-link" @click="goToProfile">Profile</button>
           <button class="mob-link" @click="onSettingsSoon">Settings</button>
           <button class="mob-link mob-signout" @click="handleLogout">Sign out</button>
@@ -114,6 +162,8 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
 import RgbastLogo from '../ui/RgbastLogo.vue'
 import { searchApi } from '@/api/search'
+import { colleaguesApi } from '@/api/colleagues'
+import type { ColleagueUserItem } from '@/api/types'
 
 const props = defineProps<{
   user?: { username: string; firstname?: string | null; lastname?: string | null } | null
@@ -168,22 +218,38 @@ const newPaletteTo = computed(() => {
 /** Whether the mobile sidebar is visually open. */
 const mobileOpen = ref(false)
 const profileMenuOpen = ref(false)
+const notifMenuOpen = ref(false)
+const incomingRequests = ref<ColleagueUserItem[]>([])
+const notifError = ref('')
+const notifPendingUser = ref<string | null>(null)
 
 /** Reference to the sidebar element for GSAP animations. */
 const sidebarEl  = ref<HTMLElement | null>(null)
 const accountEl = ref<HTMLElement | null>(null)
+const notifEl = ref<HTMLElement | null>(null)
 
 onMounted(() => {
   if (sidebarEl.value) gsap.set(sidebarEl.value, { x: '100%' })
   document.addEventListener('pointerdown', onGlobalPointerDown)
+  window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
+  if (isLoggedIn.value) {
+    void loadIncomingRequests()
+  }
 })
 
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onGlobalPointerDown)
+  window.removeEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
 })
 
 function toggleProfileMenu(): void {
   profileMenuOpen.value = !profileMenuOpen.value
+  if (profileMenuOpen.value) notifMenuOpen.value = false
+}
+
+function toggleNotifMenu(): void {
+  notifMenuOpen.value = !notifMenuOpen.value
+  if (notifMenuOpen.value) profileMenuOpen.value = false
 }
 
 function goToProfile(): void {
@@ -199,11 +265,16 @@ function onSettingsSoon(): void {
 }
 
 function onGlobalPointerDown(event: PointerEvent): void {
-  if (!profileMenuOpen.value) return
   const target = event.target as Node | null
   if (!target) return
-  if (accountEl.value?.contains(target)) return
-  profileMenuOpen.value = false
+
+  if (profileMenuOpen.value) {
+    if (accountEl.value?.contains(target)) return
+    profileMenuOpen.value = false
+  }
+  if (notifMenuOpen.value && notifEl.value && !notifEl.value.contains(target)) {
+    notifMenuOpen.value = false
+  }
 }
 
 /**
@@ -219,6 +290,7 @@ function openSidebar() {
  */
 function closeSidebar() {
   profileMenuOpen.value = false
+  notifMenuOpen.value = false
   gsap.to(sidebarEl.value, {
     x: '100%',
     duration: 0.36,
@@ -234,8 +306,55 @@ function handleLogout() {
   localStorage.removeItem('access_token')
   searchApi.clearRecentSearches()
   profileMenuOpen.value = false
+  notifMenuOpen.value = false
+  incomingRequests.value = []
+  notifError.value = ''
   closeSidebar()
   router.push('/login')
+}
+
+async function loadIncomingRequests(): Promise<void> {
+  notifError.value = ''
+  try {
+    const payload = await colleaguesApi.listMine()
+    incomingRequests.value = payload.incoming_pending
+  } catch (e: any) {
+    incomingRequests.value = []
+    notifError.value = e?.message ?? 'Could not load requests.'
+  }
+}
+
+function onColleaguesUpdated(): void {
+  if (!isLoggedIn.value) return
+  void loadIncomingRequests()
+}
+
+async function acceptRequestFromNotif(username: string): Promise<void> {
+  notifPendingUser.value = username
+  try {
+    await colleaguesApi.accept(username)
+    window.dispatchEvent(new Event('rgbast:colleagues-updated'))
+    await loadIncomingRequests()
+  } finally {
+    notifPendingUser.value = null
+  }
+}
+
+async function denyRequestFromNotif(username: string): Promise<void> {
+  notifPendingUser.value = username
+  try {
+    await colleaguesApi.remove(username)
+    window.dispatchEvent(new Event('rgbast:colleagues-updated'))
+    await loadIncomingRequests()
+  } finally {
+    notifPendingUser.value = null
+  }
+}
+
+function goToUserFromNotif(username: string): void {
+  notifMenuOpen.value = false
+  closeSidebar()
+  void router.push(`/users/${encodeURIComponent(username)}`)
 }
 </script>
 

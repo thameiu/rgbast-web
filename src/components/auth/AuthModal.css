@@ -120,13 +120,51 @@
 .auth-input::placeholder { color: rgba(255,255,255,0.2); }
 .auth-input:focus { border-color: rgba(180,16,204,0.6); }
 .auth-modal--light .auth-input::placeholder { color: rgba(14,14,16,0.35); }
+.auth-pass-wrap {
+  position: relative;
+}
+.auth-input--with-eye {
+  padding-right: 40px;
+}
+.auth-eye-btn {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: rgba(255,255,255,0.45);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.auth-eye-btn:hover {
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.08);
+}
+.auth-modal--light .auth-eye-btn {
+  color: rgba(14,14,16,0.48);
+}
+.auth-modal--light .auth-eye-btn:hover {
+  color: rgba(14,14,16,0.76);
+  background: rgba(14,14,16,0.08);
+}
 
 .auth-hint {
   font-size: 10px;
   color: rgba(255,255,255,0.25);
   letter-spacing: 0.05em;
 }
+.auth-hint--error {
+  color: #e86c74;
+}
 .auth-modal--light .auth-hint { color: rgba(14,14,16,0.38); }
+.auth-modal--light .auth-hint--error { color: #b53b45; }
 .auth-hint-link {
   margin-top: -4px;
   align-self: flex-start;

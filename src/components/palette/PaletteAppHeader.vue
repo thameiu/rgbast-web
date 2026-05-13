@@ -9,7 +9,9 @@
       </button>
       <div class="divider"></div>
       <div class="palette-title-wrap">
-        <span class="palette-name font-display">{{ paletteTitle }}</span>
+        <button class="palette-name font-display" title="Palette information" @click="$emit('openPaletteInfo')">
+          {{ paletteTitle }}
+        </button>
         <button
           v-if="ownerUsername"
           class="palette-owner-link"
@@ -456,6 +458,7 @@ const emit = defineEmits<{
   undo: []
   redo: []
   openOwnerProfile: []
+  openPaletteInfo: []
 }>()
 
 /** Whether the branch dropdown flyout is open. */

@@ -5,6 +5,53 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RGBAST — version control for color</title>
+    <meta property="og:title" content="RGBAST — version control for color">
+    <meta name="twitter:title" content="RGBAST — version control for color">
+
+    <script>
+      (function () {
+        const DEFAULT_TITLE = 'RGBAST — version control for color';
+        const url = new URL(window.location.href);
+        const parts = url.pathname.split('/').filter(Boolean).map((p) => decodeURIComponent(p));
+        const qTitle = (url.searchParams.get('title') || '').trim();
+        const qOwner = (url.searchParams.get('owner') || '').trim();
+
+        function setHeadTitle(value) {
+          const next = value || DEFAULT_TITLE;
+          document.title = next;
+
+          let og = document.head.querySelector('meta[property="og:title"]');
+          if (!og) {
+            og = document.createElement('meta');
+            og.setAttribute('property', 'og:title');
+            document.head.appendChild(og);
+          }
+          og.setAttribute('content', next);
+
+          let tw = document.head.querySelector('meta[name="twitter:title"]');
+          if (!tw) {
+            tw = document.createElement('meta');
+            tw.setAttribute('name', 'twitter:title');
+            document.head.appendChild(tw);
+          }
+          tw.setAttribute('content', next);
+        }
+
+        if (parts[0] === 'users' && parts[1]) {
+          const username = qOwner || parts[1];
+          if (parts.length >= 3) {
+            const isNew = parts[2] === 'new';
+            const pathTitle = parts[parts.length - 1] || '';
+            const paletteTitle = qTitle || pathTitle;
+            if (isNew) setHeadTitle('New palette - RGBAST');
+            else if (paletteTitle) setHeadTitle(`${paletteTitle} by ${username} - RGBAST`);
+            else setHeadTitle(`Palette by ${username} - RGBAST`);
+          } else {
+            setHeadTitle(`@${username} - RGBAST`);
+          }
+        }
+      })();
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

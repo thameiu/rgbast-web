@@ -29,7 +29,27 @@
           </label>
           <label class="auth-field">
             <span class="auth-label font-mono">Password</span>
-            <input v-model="loginForm.password" class="auth-input" type="password" required placeholder="••••••••" />
+            <div class="auth-pass-wrap">
+              <input
+                v-model="loginForm.password"
+                class="auth-input auth-input--with-eye"
+                :type="showLoginPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+              />
+              <button type="button" class="auth-eye-btn" @click="showLoginPassword = !showLoginPassword">
+                <svg v-if="showLoginPassword" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M6.1 6.2A2.8 2.8 0 019.9 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M13.4 9.8C12.2 11.3 10.2 12.5 8 12.5c-3.3 0-6-2.5-7-4.5.4-.8 1-1.7 1.8-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4.4 4.6C5.4 4 6.6 3.5 8 3.5c3.3 0 6 2.5 7 4.5-.2.3-.5.8-.9 1.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M1.7 8c1-2 3.7-4.5 6.3-4.5S13.3 6 14.3 8c-1 2-3.7 4.5-6.3 4.5S2.7 10 1.7 8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+              </button>
+            </div>
           </label>
           <RouterLink to="/forgot-password" class="auth-hint-link" @click="$emit('cancel')">Forgot password?</RouterLink>
           <p v-if="loginError" class="auth-error">{{ loginError }}</p>
@@ -62,12 +82,57 @@
           </label>
           <label class="auth-field">
             <span class="auth-label font-mono">Password</span>
-            <input v-model="regForm.password" class="auth-input" type="password" required placeholder="••••••••" />
+            <div class="auth-pass-wrap">
+              <input
+                v-model="regForm.password"
+                class="auth-input auth-input--with-eye"
+                :type="showRegisterPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+              />
+              <button type="button" class="auth-eye-btn" @click="showRegisterPassword = !showRegisterPassword">
+                <svg v-if="showRegisterPassword" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M6.1 6.2A2.8 2.8 0 019.9 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M13.4 9.8C12.2 11.3 10.2 12.5 8 12.5c-3.3 0-6-2.5-7-4.5.4-.8 1-1.7 1.8-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4.4 4.6C5.4 4 6.6 3.5 8 3.5c3.3 0 6 2.5 7 4.5-.2.3-.5.8-.9 1.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M1.7 8c1-2 3.7-4.5 6.3-4.5S13.3 6 14.3 8c-1 2-3.7 4.5-6.3 4.5S2.7 10 1.7 8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+              </button>
+            </div>
             <span class="auth-hint font-mono">Uppercase · lowercase · number · symbol · 8+</span>
+          </label>
+          <label class="auth-field">
+            <span class="auth-label font-mono">Confirm password</span>
+            <div class="auth-pass-wrap">
+              <input
+                v-model="regForm.confirmPassword"
+                class="auth-input auth-input--with-eye"
+                :type="showRegisterConfirmPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+              />
+              <button type="button" class="auth-eye-btn" @click="showRegisterConfirmPassword = !showRegisterConfirmPassword">
+                <svg v-if="showRegisterConfirmPassword" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M6.1 6.2A2.8 2.8 0 019.9 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M13.4 9.8C12.2 11.3 10.2 12.5 8 12.5c-3.3 0-6-2.5-7-4.5.4-.8 1-1.7 1.8-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4.4 4.6C5.4 4 6.6 3.5 8 3.5c3.3 0 6 2.5 7 4.5-.2.3-.5.8-.9 1.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M1.7 8c1-2 3.7-4.5 6.3-4.5S13.3 6 14.3 8c-1 2-3.7 4.5-6.3 4.5S2.7 10 1.7 8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+              </button>
+            </div>
+            <span v-if="passwordsMismatch" class="auth-hint auth-hint--error">Passwords do not match.</span>
           </label>
           <p v-if="regError" class="auth-error">{{ regError }}</p>
           <p v-if="regSuccess" class="auth-success">{{ regSuccess }}</p>
-          <button class="auth-submit" type="submit" :disabled="isSubmitting">
+          <button class="auth-submit" type="submit" :disabled="isSubmitting || passwordsMismatch">
             {{ isSubmitting ? 'Creating…' : 'Create account' }}
             <span aria-hidden="true">→</span>
           </button>
@@ -114,7 +179,7 @@
  *        cancel — when the user dismisses the modal
  * Used in: PaletteView
  */
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { authApi, usersApi } from '@/api'
 import RgbastLogo from '../ui/RgbastLogo.vue'
@@ -133,6 +198,7 @@ const isSubmitting = ref(false)
 
 /** Login form reactive state. */
 const loginForm = ref({ username: '', password: '' })
+const showLoginPassword = ref(false)
 
 /** Error message for the login form. */
 const loginError = ref('')
@@ -141,7 +207,12 @@ const resendSubmitting = ref(false)
 const showResendVerification = ref(false)
 
 /** Registration form reactive state. */
-const regForm = ref({ username: '', email: '', password: '' })
+const regForm = ref({ username: '', email: '', password: '', confirmPassword: '' })
+const showRegisterPassword = ref(false)
+const showRegisterConfirmPassword = ref(false)
+const passwordsMismatch = computed(
+  () => !!regForm.value.password && !!regForm.value.confirmPassword && regForm.value.password !== regForm.value.confirmPassword,
+)
 const registerStep = ref<'form' | 'code'>('form')
 const verifyCode = ref('')
 
@@ -154,11 +225,16 @@ function switchAuthTab(next: 'login' | 'register') {
   loginError.value = ''
   loginInfo.value = ''
   showResendVerification.value = false
+  showLoginPassword.value = false
+  showRegisterPassword.value = false
+  showRegisterConfirmPassword.value = false
   if (next === 'register') return
   registerStep.value = 'form'
   verifyCode.value = ''
   regError.value = ''
   regSuccess.value = ''
+  showRegisterPassword.value = false
+  showRegisterConfirmPassword.value = false
 }
 
 /**
@@ -205,6 +281,10 @@ async function handleResendVerification() {
  * Submits the registration form and shows a verification-email notice.
  */
 async function doRegister() {
+  if (passwordsMismatch.value) {
+    regError.value = 'Passwords do not match.'
+    return
+  }
   isSubmitting.value = true
   regError.value = ''
   regSuccess.value = ''
@@ -221,6 +301,7 @@ async function doRegister() {
     registerStep.value = 'code'
     regSuccess.value = 'Account created. Enter the verification code sent by email.'
     regForm.value.password = ''
+    regForm.value.confirmPassword = ''
   } catch (e: any) {
     regError.value = e.message ?? 'Registration failed.'
   } finally {

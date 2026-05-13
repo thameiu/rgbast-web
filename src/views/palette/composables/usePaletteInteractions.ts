@@ -1,6 +1,7 @@
 import { ref, nextTick } from 'vue'
 import type { Ref } from 'vue'
 import type { WorkingColor } from './usePaletteContext'
+import { MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
 
 export interface InteractionContext {
   colors: Ref<WorkingColor[]>
@@ -74,6 +75,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Add a new random color to the palette editor.
   function addColor(): void {
+    if (ctx.colors.value.length >= MAX_PALETTE_COLORS) return
     actions.captureForUndo()
     ctx.colors.value.push({ hex: randomHex(), label: null, _key: ctx.mkKey() })
   }

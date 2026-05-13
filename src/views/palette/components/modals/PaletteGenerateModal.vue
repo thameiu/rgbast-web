@@ -120,7 +120,11 @@
         >
           <span class="gen-harmony-label">{{ opt.label }}</span>
           <span class="gen-harmony-desc">{{ opt.desc }}</span>
-          <span v-if="genHarmony === opt.value" class="gen-harmony-check">check</span>
+          <span v-if="genHarmony === opt.value" class="gen-harmony-check" aria-hidden="true">
+            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+              <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
         </button>
       </div>
     </Transition>

@@ -133,15 +133,57 @@
 
           <label class="field">
             <span class="field-label font-mono">Password</span>
-            <input
-              v-model="form.password"
-              type="password"
-              required
-              placeholder="••••••••"
-              class="field-input"
-            />
+            <div class="password-input-wrap">
+              <input
+                v-model="form.password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+                class="field-input field-input--with-eye"
+              />
+              <button type="button" class="password-eye-btn" @click="showPassword = !showPassword">
+                <svg v-if="showPassword" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M6.1 6.2A2.8 2.8 0 019.9 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M13.4 9.8C12.2 11.3 10.2 12.5 8 12.5c-3.3 0-6-2.5-7-4.5.4-.8 1-1.7 1.8-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4.4 4.6C5.4 4 6.6 3.5 8 3.5c3.3 0 6 2.5 7 4.5-.2.3-.5.8-.9 1.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M1.7 8c1-2 3.7-4.5 6.3-4.5S13.3 6 14.3 8c-1 2-3.7 4.5-6.3 4.5S2.7 10 1.7 8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+              </button>
+            </div>
             <span class="hint font-mono">
               Uppercase · lowercase · number · symbol · 8+
+            </span>
+          </label>
+
+          <label class="field">
+            <span class="field-label font-mono">Confirm password</span>
+            <div class="password-input-wrap">
+              <input
+                v-model="form.confirmPassword"
+                :type="showConfirmPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+                class="field-input field-input--with-eye"
+              />
+              <button type="button" class="password-eye-btn" @click="showConfirmPassword = !showConfirmPassword">
+                <svg v-if="showConfirmPassword" width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 2l12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M6.1 6.2A2.8 2.8 0 019.9 10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                  <path d="M13.4 9.8C12.2 11.3 10.2 12.5 8 12.5c-3.3 0-6-2.5-7-4.5.4-.8 1-1.7 1.8-2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M4.4 4.6C5.4 4 6.6 3.5 8 3.5c3.3 0 6 2.5 7 4.5-.2.3-.5.8-.9 1.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <svg v-else width="15" height="15" viewBox="0 0 16 16" fill="none">
+                  <path d="M1.7 8c1-2 3.7-4.5 6.3-4.5S13.3 6 14.3 8c-1 2-3.7 4.5-6.3 4.5S2.7 10 1.7 8Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                  <circle cx="8" cy="8" r="2.2" stroke="currentColor" stroke-width="1.4"/>
+                </svg>
+              </button>
+            </div>
+            <span v-if="passwordsMismatch" class="hint hint--error font-mono">
+              Passwords do not match.
             </span>
           </label>
 
@@ -166,7 +208,7 @@
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
           <p v-if="successMessage" class="ok">{{ successMessage }}</p>
 
-          <button type="submit" :disabled="isSubmitting" class="submit">
+          <button type="submit" :disabled="isSubmitting || passwordsMismatch" class="submit">
             <span>{{ isSubmitting ? 'Creating…' : 'Create account' }}</span>
             <span aria-hidden="true">→</span>
           </button>
@@ -189,7 +231,7 @@
  * Right panel: username/email/password form with optional identity fields.
  * On success, asks the user to verify email from the mailbox link.
  */
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { usersApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
@@ -198,7 +240,10 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 onMounted(() => { document.title = 'Create account - RGBAST' })
 
 /** All form field values including optional identity details. */
-const form = ref({ username: '', email: '', password: '', firstname: '', lastname: '', birthdate: '' })
+const form = ref({ username: '', email: '', password: '', confirmPassword: '', firstname: '', lastname: '', birthdate: '' })
+const showPassword = ref(false)
+const showConfirmPassword = ref(false)
+const passwordsMismatch = computed(() => !!form.value.password && !!form.value.confirmPassword && form.value.password !== form.value.confirmPassword)
 
 /** Whether a registration request is in-flight. */
 const isSubmitting = ref(false)
@@ -214,6 +259,11 @@ async function handleRegister() {
   isSubmitting.value = true
   errorMessage.value = ''
   successMessage.value = ''
+  if (passwordsMismatch.value) {
+    errorMessage.value = 'Passwords do not match.'
+    isSubmitting.value = false
+    return
+  }
   try {
     await usersApi.create({
       username: form.value.username,
@@ -226,6 +276,7 @@ async function handleRegister() {
     })
     successMessage.value = 'Account created. Check your email and click the verification link to sign in.'
     form.value.password = ''
+    form.value.confirmPassword = ''
   } catch (error: unknown) {
     errorMessage.value = error instanceof Error ? error.message : 'Registration failed.'
   } finally {

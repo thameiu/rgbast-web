@@ -45,10 +45,11 @@
       @redo="undo.doRedo"
       @openImagePalette="openImagePaletteModal"
       @openOwnerProfile="openOwnerProfile"
+      @openPaletteInfo="openPaletteInfoModal"
     />
 
     <div v-if="ctx.loading.value" class="loading-screen">
-      <AppLoader message="Loading palette..." />
+      <AppLoader message="Loading palette..." textTone="light" />
     </div>
 
     <div v-else-if="ctx.error.value" class="error-screen">
@@ -116,6 +117,7 @@
       :folders="ctx.folders.value"
       :saveComment="save.saveComment.value"
       :saveError="save.saveError.value"
+      :titleErrorMessage="saveTitleErrorMessage"
       :createNewBranch="save.createNewBranch.value"
       :newBranchName="save.newBranchName.value"
       :isSaving="save.isSaving.value"
@@ -140,6 +142,7 @@
       :folders="ctx.folders.value"
       :isSaving="save.isEditing.value"
       :error="save.editError.value"
+      :titleErrorMessage="editTitleErrorMessage"
       @close="save.showEditModal.value = false"
       @save="save.doEditPalette"
       @update:title="save.editTitle.value = $event"
@@ -252,6 +255,21 @@
       @openHistory="openHistoryHelpFromModal"
     />
 
+    <Teleport to="body">
+      <div v-if="showPaletteInfoModal" class="palette-info-overlay" @click.self="showPaletteInfoModal = false">
+        <div class="palette-info-modal">
+          <button class="palette-info-close" @click="showPaletteInfoModal = false">×</button>
+          <p class="palette-info-title font-display">{{ ctx.paletteTitle.value }}</p>
+          <p v-if="ctx.history.value?.owner_username || ctx.username.value" class="palette-info-owner">
+            by {{ ctx.history.value?.owner_username ?? ctx.username.value }}
+          </p>
+          <div class="palette-info-description">
+            {{ (ctx.history.value?.description ?? ctx.pendingDescription.value)?.trim() || 'No description.' }}
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <PaletteMobileSidebar
       :open="ctx.mobileSidebarOpen.value"
       :currentBranchId="ctx.currentBranchId.value"
@@ -304,7 +322,7 @@ import PaletteImageModal from './components/modals/PaletteImageModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
 import PaletteHelpModal from './components/PaletteHelpModal.vue'
-import { ref, watch, onMounted, onUnmounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { foldersApi } from '@/api/folders'
 import { colorApi } from '@/api/color'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
@@ -326,6 +344,8 @@ import {
   parseColorsFromText,
 } from '@/utils/paletteColorFormats'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
+import { getPaletteTitleError, MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
+import { setPageTitle } from '@/utils/seo'
 
 // PaletteView component: orchestrates the palette editor UI and feature modules.
 const ctx = usePaletteContext()
@@ -372,6 +392,14 @@ const COPY_FORMAT_KEY = 'rgbast_palette_copy_format_v1'
 const displaySettings = ref<PaletteDisplaySettings>({ ...DEFAULT_PALETTE_DISPLAY_SETTINGS })
 const copyFormat = ref<PaletteColorFormat>(DEFAULT_PALETTE_COPY_FORMAT)
 const isMobileViewport = ref(false)
+const showPaletteInfoModal = ref(false)
+
+const saveTitleErrorMessage = computed(() =>
+  ctx.isNewPalette.value ? getPaletteTitleError(ctx.pendingTitle.value) : null,
+)
+const editTitleErrorMessage = computed(() =>
+  save.showEditModal.value ? getPaletteTitleError(save.editTitle.value) : null,
+)
 
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
@@ -559,6 +587,10 @@ function openOwnerProfile(): void {
   void ctx.router.push(`/users/${encodeURIComponent(owner)}`)
 }
 
+function openPaletteInfoModal(): void {
+  showPaletteInfoModal.value = true
+}
+
 function deleteLastColorShortcut(): void {
   const lastIdx = ctx.colors.value.length - 1
   if (lastIdx < 0) return
@@ -620,12 +652,16 @@ async function readClipboardColors(): Promise<string[]> {
 function applyClipboardColors(hexes: string[], mode: 'add' | 'replace'): void {
   if (!hexes.length) return
   undo.captureForUndo()
-  const nextColors = hexes.map(hex => ({ hex, label: null, _key: ctx.mkKey() }))
+  const nextColors = hexes
+    .slice(0, MAX_PALETTE_COLORS)
+    .map(hex => ({ hex, label: null, _key: ctx.mkKey() }))
   if (mode === 'replace') {
     ctx.colors.value = nextColors
     return
   }
-  ctx.colors.value = [...ctx.colors.value, ...nextColors]
+  const slotsLeft = Math.max(0, MAX_PALETTE_COLORS - ctx.colors.value.length)
+  if (!slotsLeft) return
+  ctx.colors.value = [...ctx.colors.value, ...nextColors.slice(0, slotsLeft)]
 }
 
 function toggleDisplayFormat(format: PaletteColorFormat): void {
@@ -702,6 +738,7 @@ function onEscapeKey(event: KeyboardEvent): void {
   if (save.showEditModal.value) { save.showEditModal.value = false; return }
   if (ctx.showSaveModal.value) { ctx.showSaveModal.value = false; return }
   if (helpModalOpen.value) { helpModalOpen.value = false; return }
+  if (showPaletteInfoModal.value) { showPaletteInfoModal.value = false; return }
   if (tutorial.showTutorial.value) { tutorial.closeTutorial(); return }
   if (ctx.mobileSidebarOpen.value) { ctx.mobileSidebarOpen.value = false; return }
 }
@@ -758,7 +795,9 @@ async function extractPaletteFromImage(): Promise<void> {
     const resp = await colorApi.generatePaletteFromImage(imagePaletteFile.value, imagePaletteCount.value)
     if (!resp.colors.length) throw new Error('No dominant colors could be extracted.')
     undo.captureForUndo()
-    ctx.colors.value = resp.colors.map(c => ({ hex: c.hex, label: null, _key: ctx.mkKey() }))
+    ctx.colors.value = resp.colors
+      .slice(0, MAX_PALETTE_COLORS)
+      .map(c => ({ hex: c.hex, label: null, _key: ctx.mkKey() }))
     closeImagePaletteModal()
   } catch (e: any) {
     imagePaletteError.value = e.message ?? 'Could not extract colors from image.'
@@ -789,12 +828,12 @@ watch(
   [ctx.paletteTitle, () => ctx.history.value?.owner_username, ctx.isNewPalette],
   () => {
     if (ctx.isNewPalette.value) {
-      document.title = 'New palette - RGBAST'
+      setPageTitle('New palette - RGBAST')
     } else {
       const owner = ctx.history.value?.owner_username
-      document.title = owner
+      setPageTitle(owner
         ? `${ctx.paletteTitle.value} by ${owner} - RGBAST`
-        : `${ctx.paletteTitle.value} - RGBAST`
+        : `${ctx.paletteTitle.value} - RGBAST`)
     }
   },
   { immediate: true },

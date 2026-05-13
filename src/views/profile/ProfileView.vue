@@ -157,6 +157,7 @@ import type { ColleagueRelationStatus } from '@/api/types'
 import IconUsers from '@/components/icons/IconUsers.vue'
 import IconClock3 from '@/components/icons/IconClock3.vue'
 import IconMail from '@/components/icons/IconMail.vue'
+import { setPageTitle } from '@/utils/seo'
 
 const route = useRoute()
 const router = useRouter()
@@ -243,6 +244,23 @@ const colleaguesCountLabel = computed(() => {
   const count = Number(profileUser.value?.colleagues_count ?? 0)
   return `${count} ${count === 1 ? 'Colleague' : 'Colleagues'}`
 })
+
+function syncProfilePageTitle(): void {
+  const username = profileUser.value?.username || profileUsername.value
+  if (loading.value && username) {
+    setPageTitle(`@${username} - RGBAST`)
+    return
+  }
+  if (profileUser.value) {
+    setPageTitle(`@${profileUser.value.username} - RGBAST`)
+    return
+  }
+  if (errorMessage.value && username) {
+    setPageTitle(`Profile ${username} - RGBAST`)
+    return
+  }
+  setPageTitle('Profile - RGBAST')
+}
 
 async function loadViewerUser() {
   const token = localStorage.getItem('access_token')
@@ -347,6 +365,14 @@ watch(
   async () => {
     await loadProfile()
   },
+)
+
+watch(
+  [loading, errorMessage, profileUser, profileUsername],
+  () => {
+    syncProfilePageTitle()
+  },
+  { immediate: true },
 )
 
 async function onPrimaryColleagueAction(): Promise<void> {

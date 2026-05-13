@@ -14,6 +14,7 @@
           maxlength="50"
           @input="$emit('update:title', ($event.target as HTMLInputElement).value)"
         />
+        <p v-if="titleErrorMessage" class="modal-error">{{ titleErrorMessage }}</p>
 
         <label class="field-label">Description</label>
         <textarea
@@ -37,7 +38,7 @@
 
         <div class="modal-actions">
           <button class="modal-btn cancel" @click="$emit('close')">Cancel</button>
-          <button class="modal-btn confirm" :disabled="isSaving" @click="$emit('save')">
+          <button class="modal-btn confirm" :disabled="isSaving || !!titleErrorMessage" @click="$emit('save')">
             {{ isSaving ? 'Updating...' : 'Update palette' }}
           </button>
         </div>
@@ -58,6 +59,7 @@ defineProps<{
   folders: FolderResponse[]
   isSaving: boolean
   error: string
+  titleErrorMessage?: string | null
 }>()
 
 defineEmits<{

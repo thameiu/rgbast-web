@@ -1,5 +1,5 @@
 <template>
-  <div class="app-loader">
+  <div class="app-loader" :class="textTone === 'light' ? 'app-loader--light' : 'app-loader--dark'">
     <div class="spinner-ring">
       <svg
         xmlns="http://www.w3.org/2000/svg"
@@ -32,7 +32,10 @@
  * Props: message (string) — subtitle text shown below the spinner
  * Used in: DashboardView, ColorView, PaletteView
  */
-withDefaults(defineProps<{ message?: string }>(), { message: 'Loading…' })
+withDefaults(
+  defineProps<{ message?: string; textTone?: 'light' | 'dark' }>(),
+  { message: 'Loading…', textTone: 'dark' },
+)
 </script>
 
 <style src="./AppLoader.css" scoped></style>

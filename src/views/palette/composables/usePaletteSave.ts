@@ -3,6 +3,7 @@ import { palettesApi } from '@/api/palettes'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteColorSave, PaletteUpdate } from '@/api/types'
 import type { PaletteContext } from './usePaletteContext'
+import { getPaletteTitleError, MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
 
 export interface SaveActions {
   loadHistory: () => Promise<void>
@@ -86,6 +87,8 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
 
   // Open the save modal or auth modal depending on login state.
   function requestSave(): void {
+    if (!ctx.isOwned.value) return
+    if (!ctx.hasUnsavedChanges.value) return
     if (ctx.currentBranchId.value !== null) createNewBranch.value = false
     if (!localStorage.getItem('access_token')) {
       ctx.showAuthModal.value = true
@@ -105,6 +108,17 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
   // Save the current palette snapshot or create a new palette.
   async function doSave(): Promise<void> {
     if (ctx.isNewPalette.value ? !ctx.pendingTitle.value.trim() : !saveComment.value.trim()) return
+    if (ctx.colors.value.length > MAX_PALETTE_COLORS) {
+      saveError.value = `Palette cannot contain more than ${MAX_PALETTE_COLORS} colors.`
+      return
+    }
+    if (ctx.isNewPalette.value) {
+      const titleError = getPaletteTitleError(ctx.pendingTitle.value)
+      if (titleError) {
+        saveError.value = titleError
+        return
+      }
+    }
     isSaving.value = true
     saveError.value = ''
     try {
@@ -314,6 +328,11 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
 
   async function doEditPalette(): Promise<void> {
     if (ctx.paletteId.value === null) return
+    const titleError = editTitle.value.trim() ? getPaletteTitleError(editTitle.value) : null
+    if (titleError) {
+      editError.value = titleError
+      return
+    }
     isEditing.value = true
     editError.value = ''
     try {

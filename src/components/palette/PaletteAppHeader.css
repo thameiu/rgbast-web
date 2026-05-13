@@ -307,6 +307,11 @@
 }
 
 .palette-name {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 26px;
@@ -321,6 +326,9 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+}
+.palette-name:hover {
+  color: #d8d8ff;
 }
 .palette-title-wrap {
   display: flex;

@@ -15,8 +15,9 @@
             maxlength="50"
             autofocus
             @input="$emit('update:pendingTitle', ($event.target as HTMLInputElement).value)"
-            @keydown.enter="$emit('save')"
+            @keydown.enter="!titleErrorMessage && $emit('save')"
           />
+          <p v-if="titleErrorMessage" class="modal-error">{{ titleErrorMessage }}</p>
           <label class="field-label">Description</label>
           <textarea
             :value="pendingDescription"
@@ -133,6 +134,7 @@
             :disabled="
               isSaving ||
               (isNewPalette ? !pendingTitle.trim() : !saveComment.trim()) ||
+              !!titleErrorMessage ||
               ((((selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot) || selectedSnapshotCtx?.isMerged)) && !newBranchName.trim())
             "
             @click="$emit('save')"
@@ -164,6 +166,7 @@ defineProps<{
   createNewBranch: boolean
   newBranchName: string
   isSaving: boolean
+  titleErrorMessage?: string | null
   selectedSnapshotCtx: SnapshotContext | null
   isSelectedLatestMainSnapshot: boolean
 }>()

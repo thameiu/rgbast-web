@@ -178,7 +178,8 @@
           <h3 class="modal-title font-display">Edit Palette</h3>
           <div class="edit-field">
             <label class="edit-label">Name</label>
-            <input class="edit-input" v-model="editDraftTitle" @keydown.enter="saveEditPalette" />
+            <input class="edit-input" v-model="editDraftTitle" @keydown.enter="!editTitleErrorMessage && saveEditPalette()" />
+            <p v-if="editTitleErrorMessage" class="modal-error">{{ editTitleErrorMessage }}</p>
           </div>
           <div class="edit-field">
             <label class="edit-label">Description</label>
@@ -196,7 +197,7 @@
           <p v-if="editError" class="modal-error">{{ editError }}</p>
           <div class="modal-actions">
             <button class="modal-btn cancel" @click="editTarget = null">Cancel</button>
-            <button class="modal-btn primary" :disabled="isSavingEdit || !editDraftTitle.trim()" @click="saveEditPalette">
+            <button class="modal-btn primary" :disabled="isSavingEdit || !!editTitleErrorMessage" @click="saveEditPalette">
               {{ isSavingEdit ? 'Saving…' : 'Save changes' }}
             </button>
           </div>
@@ -210,8 +211,33 @@
         <div class="modal">
           <h3 class="modal-title font-display">Delete Folder</h3>
           <p class="modal-sub">
-            Delete <strong>{{ deleteFolderTarget.name }}</strong>? Subfolders will also be deleted. Palettes inside will be moved to root.
+            Delete <strong>{{ deleteFolderTarget.name }}</strong>? Subfolders are always deleted.
           </p>
+          <div class="edit-field">
+            <label class="edit-label">Palettes inside this folder tree</label>
+            <div class="folder-delete-options">
+              <label class="check-row">
+                <input
+                  type="radio"
+                  name="delete-folder-palette-strategy"
+                  value="move_root"
+                  :checked="deleteFolderPaletteStrategy === 'move_root'"
+                  @change="deleteFolderPaletteStrategy = 'move_root'"
+                />
+                <span>Move palettes to root</span>
+              </label>
+              <label class="check-row">
+                <input
+                  type="radio"
+                  name="delete-folder-palette-strategy"
+                  value="delete"
+                  :checked="deleteFolderPaletteStrategy === 'delete'"
+                  @change="deleteFolderPaletteStrategy = 'delete'"
+                />
+                <span>Delete palettes too</span>
+              </label>
+            </div>
+          </div>
           <p v-if="deleteFolderError" class="modal-error">{{ deleteFolderError }}</p>
           <div class="modal-actions">
             <button class="modal-btn cancel" @click="deleteFolderTarget = null">Cancel</button>
@@ -249,6 +275,7 @@ import FolderTree from '@/components/folder/FolderTree.vue'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
+import { getPaletteTitleError } from '@/utils/paletteConstraints'
 
 const router = useRouter()
 const loading = ref(true)
@@ -273,6 +300,7 @@ const deleteError = ref('')
 const deleteFolderTarget = ref<FolderResponse | null>(null)
 const deleteFolderError = ref('')
 const isDeletingFolder = ref(false)
+const deleteFolderPaletteStrategy = ref<'move_root' | 'delete'>('move_root')
 const bcrumbTimer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const editTarget = ref<PaletteCache | null>(null)
@@ -281,6 +309,7 @@ const editDraftDesc = ref('')
 const editDraftFolderId = ref<number | null>(null)
 const isSavingEdit = ref(false)
 const editError = ref('')
+const editTitleErrorMessage = computed(() => getPaletteTitleError(editDraftTitle.value))
 const colleaguesCount = ref(0)
 const showColleaguesModal = ref(false)
 
@@ -378,6 +407,34 @@ function getFolderAncestors(folderId: number): number[] {
     id = folder?.parent_folder_id ?? null
   }
   return path
+}
+
+function refreshPaletteFolderPaths(): void {
+  for (const palette of palettes.value) {
+    if (palette.folder_id == null) {
+      palette.folder_path = []
+      continue
+    }
+    const ancestors = getFolderAncestors(palette.folder_id)
+    palette.folder_path = ancestors
+      .map(id => folders.value.find(f => f.id === id)?.name ?? '')
+      .filter(Boolean)
+  }
+}
+
+function getDescendantFolderIds(rootFolderId: number): Set<number> {
+  const descendants = new Set<number>()
+  const stack: number[] = [rootFolderId]
+  while (stack.length) {
+    const folderId = stack.pop()!
+    descendants.add(folderId)
+    for (const folder of folders.value) {
+      if (folder.parent_folder_id === folderId && !descendants.has(folder.id)) {
+        stack.push(folder.id)
+      }
+    }
+  }
+  return descendants
 }
 
 function onBreadcrumbDragenter(key: 'root' | number) {
@@ -529,7 +586,11 @@ function openEditPalette(p: DashboardPaletteCard) {
 async function saveEditPalette() {
   if (!editTarget.value) return
   const title = editDraftTitle.value.trim()
-  if (!title) return
+  const titleError = getPaletteTitleError(title)
+  if (titleError) {
+    editError.value = titleError
+    return
+  }
   isSavingEdit.value = true
   editError.value = ''
   try {
@@ -560,21 +621,29 @@ async function saveEditPalette() {
 
 async function onCreateFolder(payload: { name: string; parentId: number | null }) {
   try {
-    await foldersApi.create({ name: payload.name, parent_folder_id: payload.parentId })
-    await loadFolders()
+    const created = await foldersApi.create({ name: payload.name, parent_folder_id: payload.parentId })
+    folders.value.push(created)
+    folders.value.sort((a, b) => a.name.localeCompare(b.name))
+    refreshPaletteFolderPaths()
   } catch { /* ignore — tree already closed the input */ }
 }
 
 async function onRenameFolder(payload: { id: number; name: string }) {
   try {
-    await foldersApi.update(payload.id, { name: payload.name })
-    await loadFolders()
+    const updated = await foldersApi.update(payload.id, { name: payload.name })
+    const idx = folders.value.findIndex(f => f.id === payload.id)
+    if (idx >= 0) {
+      folders.value[idx] = updated
+      folders.value.sort((a, b) => a.name.localeCompare(b.name))
+      refreshPaletteFolderPaths()
+    }
   } catch {}
 }
 
 function openDeleteFolder(folder: FolderResponse) {
   deleteFolderTarget.value = folder
   deleteFolderError.value = ''
+  deleteFolderPaletteStrategy.value = 'move_root'
 }
 
 async function doDeleteFolder() {
@@ -582,11 +651,39 @@ async function doDeleteFolder() {
   isDeletingFolder.value = true
   deleteFolderError.value = ''
   try {
-    await foldersApi.delete(deleteFolderTarget.value.id)
+    const targetId = deleteFolderTarget.value.id
+    const targetIds = getDescendantFolderIds(targetId)
+    const response = await foldersApi.delete(targetId, deleteFolderPaletteStrategy.value)
+
+    folders.value = folders.value.filter(folder => !targetIds.has(folder.id))
+
+    if (deleteFolderPaletteStrategy.value === 'delete') {
+      const deletedIds = new Set(response.deleted_palette_ids)
+      palettes.value = palettes.value.filter(palette => !deletedIds.has(palette.id))
+      for (const paletteId of deletedIds) {
+        paletteDraftsApi.removeByPaletteId(paletteId)
+      }
+    } else {
+      const movedIds = new Set(response.moved_palette_ids)
+      for (const palette of palettes.value) {
+        if (movedIds.has(palette.id) || (palette.folder_id != null && targetIds.has(palette.folder_id))) {
+          palette.folder_id = null
+          palette.folder_path = []
+        }
+      }
+    }
+
+    if (typeof activeFolderKey.value === 'number' && targetIds.has(activeFolderKey.value)) {
+      activeFolderKey.value = 'all'
+    }
+
+    if (user.value?.username) {
+      const serverIds = new Set(palettes.value.map(p => p.id))
+      applyDraftsToState(paletteDraftsApi.listByOwner(user.value.username), serverIds)
+    }
+
     deleteFolderTarget.value = null
-    if (typeof activeFolderKey.value === 'number') activeFolderKey.value = 'all'
-    await loadFolders()
-    await loadDashboard()
+    refreshPaletteFolderPaths()
   } catch (e: any) {
     deleteFolderError.value = e.message ?? 'Delete failed'
   } finally {

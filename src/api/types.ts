@@ -101,6 +101,14 @@ export interface FolderResponse {
   created_at: string;
 }
 
+export interface FolderDeleteResponse {
+  folder_id: number;
+  palette_strategy: 'move_root' | 'delete';
+  deleted_folder_ids: number[];
+  deleted_palette_ids: number[];
+  moved_palette_ids: number[];
+}
+
 // ── Palettes ──────────────────────────────────────────────────────────────────
 
 /** A single color entry within a palette (hex without #, optional label). */

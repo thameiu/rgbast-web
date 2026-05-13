@@ -24,7 +24,11 @@
             >
               <span class="msb-dot msb-dot-main"></span>
               <span class="msb-branch-name">main</span>
-              <span v-if="currentBranchId === null" class="msb-check">check</span>
+              <span v-if="currentBranchId === null" class="msb-branch-check" aria-hidden="true">
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                  <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
             </button>
             <template v-for="(br, idx) in activeBranches" :key="br.id">
               <button
@@ -34,7 +38,11 @@
               >
                 <span class="msb-dot" :style="{ background: branchColor(idx) }"></span>
                 <span class="msb-branch-name">{{ br.title }}</span>
-                <span v-if="currentBranchId === br.id" class="msb-check">check</span>
+                <span v-if="currentBranchId === br.id" class="msb-branch-check" aria-hidden="true">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+                    <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
               </button>
               <button
                 v-if="currentBranchId === br.id"

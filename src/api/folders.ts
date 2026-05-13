@@ -1,5 +1,5 @@
 import { ApiClient } from './client';
-import type { FolderCreate, FolderResponse, FolderUpdate } from './types';
+import type { FolderCreate, FolderDeleteResponse, FolderResponse, FolderUpdate } from './types';
 
 /** Folder management API calls. */
 export const foldersApi = {
@@ -19,7 +19,10 @@ export const foldersApi = {
   },
 
   /** Delete a folder by id. */
-  delete: (folderId: number): Promise<{ folder_id: number }> => {
-    return ApiClient.request<{ folder_id: number }>(`/folders/${folderId}`, 'DELETE');
+  delete: (folderId: number, paletteStrategy: 'move_root' | 'delete' = 'move_root'): Promise<FolderDeleteResponse> => {
+    return ApiClient.request<FolderDeleteResponse>(
+      `/folders/${folderId}?palette_strategy=${encodeURIComponent(paletteStrategy)}`,
+      'DELETE',
+    );
   },
 };

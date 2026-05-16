@@ -125,7 +125,7 @@ import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
 
 // LandingView component: marketing home page with a demo history graph.
-onMounted(() => { document.title = 'RGBAST — version control for color' })
+onMounted(() => { document.title = 'RGBAST - version control for color' })
 
 const featureEls: HTMLElement[] = []
 let featureObserver: IntersectionObserver | null = null

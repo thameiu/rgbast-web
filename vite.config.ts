@@ -9,6 +9,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   base:"/",
   envPrefix: ['VITE_', 'BACKEND_'],
+  server: {
+    allowedHosts: ['reflected-anybody-denote.ngrok-free.dev'],
+  },
   plugins: [
     vue(),
     vueDevTools(),

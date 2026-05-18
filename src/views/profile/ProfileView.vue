@@ -157,7 +157,7 @@ import type { ColleagueRelationStatus } from '@/api/types'
 import IconUsers from '@/components/icons/IconUsers.vue'
 import IconClock3 from '@/components/icons/IconClock3.vue'
 import IconMail from '@/components/icons/IconMail.vue'
-import { setPageTitle } from '@/utils/seo'
+import { setPageSeo } from '@/utils/seo'
 
 const route = useRoute()
 const router = useRouter()
@@ -248,18 +248,35 @@ const colleaguesCountLabel = computed(() => {
 function syncProfilePageTitle(): void {
   const username = profileUser.value?.username || profileUsername.value
   if (loading.value && username) {
-    setPageTitle(`@${username} - RGBAST`)
+    setPageSeo({
+      title: `@${username} - RGBAST`,
+      description: `Loading RGBAST profile @${username} with public palettes and folder organization.`,
+      keywords: ['profile', 'user palettes', username, 'RGBAST user'],
+    })
     return
   }
   if (profileUser.value) {
-    setPageTitle(`@${profileUser.value.username} - RGBAST`)
+    const fullNamePart = [profileUser.value.firstname, profileUser.value.lastname].filter(Boolean).join(' ')
+    setPageSeo({
+      title: `@${profileUser.value.username} - RGBAST`,
+      description: `View ${profileUser.value.username}'s RGBAST profile${fullNamePart ? ` (${fullNamePart})` : ''} and browse public palettes by latest snapshots.`,
+      keywords: ['profile', 'public palettes', profileUser.value.username, fullNamePart],
+    })
     return
   }
   if (errorMessage.value && username) {
-    setPageTitle(`Profile ${username} - RGBAST`)
+    setPageSeo({
+      title: `Profile ${username} - RGBAST`,
+      description: `Profile page for ${username} on RGBAST.`,
+      keywords: ['profile', username, 'RGBAST'],
+    })
     return
   }
-  setPageTitle('Profile - RGBAST')
+  setPageSeo({
+    title: 'Profile - RGBAST',
+    description: 'Browse RGBAST designer profiles and their public palettes.',
+    keywords: ['designer profile', 'palette profile', 'RGBAST'],
+  })
 }
 
 async function loadViewerUser() {

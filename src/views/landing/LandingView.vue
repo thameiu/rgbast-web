@@ -123,9 +123,16 @@ import RgbBackground from '@/components/layout/RgbBackground.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
+import { setPageSeo } from '@/utils/seo'
 
 // LandingView component: marketing home page with a demo history graph.
-onMounted(() => { document.title = 'RGBAST - version control for color' })
+onMounted(() => {
+  setPageSeo({
+    title: 'RGBAST - version control for color',
+    description: 'Generate advanced color palettes, version every change with branches and snapshots, and explore accessibility with the RGBAST color explorer.',
+    keywords: ['palette versioning', 'color workflow', 'palette history', 'color accessibility', 'color explorer'],
+  })
+})
 
 const featureEls: HTMLElement[] = []
 let featureObserver: IntersectionObserver | null = null

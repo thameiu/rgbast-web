@@ -180,10 +180,17 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import { setPageSeo } from '@/utils/seo'
 
 const router = useRouter()
 const route = useRoute()
-onMounted(() => { document.title = 'Sign in - RGBAST' })
+onMounted(() => {
+  setPageSeo({
+    title: 'Sign in - RGBAST',
+    description: 'Sign in to RGBAST to access your palette dashboard, version history, and collaboration features.',
+    keywords: ['login', 'sign in', 'palette account', 'RGBAST authentication'],
+  })
+})
 
 /** Form field values. */
 const form = ref({ username: '', password: '' })

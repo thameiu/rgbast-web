@@ -345,7 +345,7 @@ import {
 } from '@/utils/paletteColorFormats'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import { getPaletteTitleError, MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
-import { setPageTitle } from '@/utils/seo'
+import { setPageSeo } from '@/utils/seo'
 
 // PaletteView component: orchestrates the palette editor UI and feature modules.
 const ctx = usePaletteContext()
@@ -823,17 +823,40 @@ function setGenPickerAnchorRect(value: DOMRect | null): void {
   generator.genPickerAnchorRect.value = value
 }
 
-// Update the browser tab title whenever the palette name or owner changes.
+// Update SEO metadata whenever the palette identity changes.
 watch(
-  [ctx.paletteTitle, () => ctx.history.value?.owner_username, ctx.isNewPalette],
+  [ctx.paletteTitle, () => ctx.history.value?.owner_username, ctx.isNewPalette, ctx.currentColorsSig],
   () => {
     if (ctx.isNewPalette.value) {
-      setPageTitle('New palette - RGBAST')
+      setPageSeo({
+        title: 'New palette - RGBAST',
+        description: 'Create a new palette in RGBAST, generate colors, label swatches, and save a versioned snapshot.',
+        keywords: ['new palette', 'palette creation', 'palette editor', 'color generator'],
+      })
     } else {
       const owner = ctx.history.value?.owner_username
-      setPageTitle(owner
+      const title = owner
         ? `${ctx.paletteTitle.value} by ${owner} - RGBAST`
-        : `${ctx.paletteTitle.value} - RGBAST`)
+        : `${ctx.paletteTitle.value} - RGBAST`
+      const colorsPreview = ctx.colors.value
+        .slice(0, 4)
+        .map(color => `#${color.hex.toUpperCase()}`)
+        .join(', ')
+      setPageSeo({
+        title,
+        description: owner
+          ? `Browse palette "${ctx.paletteTitle.value}" by ${owner} on RGBAST. ${colorsPreview ? `Key colors: ${colorsPreview}. ` : ''}Explore history, branches, and accessibility.`
+          : `Browse palette "${ctx.paletteTitle.value}" on RGBAST. ${colorsPreview ? `Key colors: ${colorsPreview}. ` : ''}Explore history, branches, and accessibility.`,
+        keywords: [
+          'palette',
+          'color palette',
+          'palette history',
+          'palette branches',
+          ctx.paletteTitle.value,
+          ...(owner ? [owner] : []),
+          ...ctx.colors.value.slice(0, 6).map(color => color.hex.toUpperCase()),
+        ],
+      })
     }
   },
   { immediate: true },

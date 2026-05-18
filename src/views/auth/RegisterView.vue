@@ -236,8 +236,15 @@ import { RouterLink } from 'vue-router'
 import { usersApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import { setPageSeo } from '@/utils/seo'
 
-onMounted(() => { document.title = 'Create account - RGBAST' })
+onMounted(() => {
+  setPageSeo({
+    title: 'Create account - RGBAST',
+    description: 'Create your RGBAST account to generate palettes, track snapshot history, branch color experiments, and manage folders.',
+    keywords: ['register', 'create account', 'palette account', 'color workspace signup'],
+  })
+})
 
 /** All form field values including optional identity details. */
 const form = ref({ username: '', email: '', password: '', confirmPassword: '', firstname: '', lastname: '', birthdate: '' })

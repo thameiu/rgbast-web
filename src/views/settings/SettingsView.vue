@@ -60,6 +60,7 @@ import { authApi } from '@/api'
 import { usersApi } from '@/api/users'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import { searchApi } from '@/api/search'
+import { setPageSeo } from '@/utils/seo'
 
 const router = useRouter()
 
@@ -75,7 +76,11 @@ const deleteConfirm = ref('')
 const deleteError = ref('')
 
 onMounted(async () => {
-  document.title = 'Settings - RGBAST'
+  setPageSeo({
+    title: 'Settings - RGBAST',
+    description: 'Manage your RGBAST account settings, update profile information, and control your account lifecycle.',
+    keywords: ['account settings', 'profile settings', 'RGBAST account', 'user preferences'],
+  })
   try {
     const me = await authApi.checkAuth()
     viewer.value = me

@@ -152,6 +152,7 @@ import type { PaletteCache, PaletteSearchItem, UserSearchItem } from '@/api/type
 import type { RecentSearchEntry } from '@/api/search'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
+import { setPageSeo } from '@/utils/seo'
 
 const router = useRouter()
 const viewerUser = ref<any>(null)
@@ -311,6 +312,11 @@ function onGlobalPointerDown(event: PointerEvent) {
 }
 
 onMounted(async () => {
+  setPageSeo({
+    title: 'Search - RGBAST',
+    description: 'Search RGBAST users and palettes by title or colors, with exact and similar color matching.',
+    keywords: ['palette search', 'search colors', 'find palettes', 'find designers', 'color matching'],
+  })
   const savedScope = localStorage.getItem(SEARCH_SCOPE_KEY)
   if (savedScope === 'users' || savedScope === 'palettes') {
     scope.value = savedScope

@@ -276,6 +276,7 @@ import FolderPicker from '@/components/folder/FolderPicker.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
 import { getPaletteTitleError } from '@/utils/paletteConstraints'
+import { setPageSeo } from '@/utils/seo'
 
 const router = useRouter()
 const loading = ref(true)
@@ -517,7 +518,11 @@ async function loadFolders() {
 }
 
 onMounted(() => {
-  document.title = 'Dashboard - RGBAST'
+  setPageSeo({
+    title: 'Dashboard - RGBAST',
+    description: 'Access your RGBAST workspace: organize folders, manage palettes, continue from local drafts, and track recent palette snapshots.',
+    keywords: ['palette dashboard', 'palette manager', 'color folders', 'palette drafts', 'workspace'],
+  })
   window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdatedEvent)
   void loadDashboard()
 })

@@ -378,6 +378,7 @@ import ColorPicker from '@/components/palette/ColorPicker.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
 import { useColorView } from './composables/useColorView'
+import { setPageSeo } from '@/utils/seo'
 
 // ColorView component: orchestrates the color explorer layout and state.
 const view = useColorView()
@@ -421,7 +422,14 @@ const {
 
 const pickerMode = ref<'2d' | '3d'>('2d')
 
-watch(displayHex, hex => { document.title = `#${hex.toUpperCase()} - RGBAST` }, { immediate: true })
+watch(displayHex, hex => {
+  const normalized = hex.toUpperCase()
+  setPageSeo({
+    title: `#${normalized} - RGBAST`,
+    description: `Explore color #${normalized}: RGB/HSL/CMYK spaces, accessibility contrast checks, color blindness simulations, and 3D color picker tools.`,
+    keywords: ['color selection', 'hex color', 'rgb converter', 'hsl converter', 'cmyk converter', normalized],
+  })
+}, { immediate: true })
 </script>
 
 <style src="./ColorView.css" scoped></style>

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /settings
+Disallow: /auth/complete
+Disallow: /reset-password
+Disallow: /forgot-password
+
+Sitemap: https://api.rgbast.com/sitemap.xml

@@ -126,7 +126,7 @@
 
 <script setup lang="ts">
 /**
- * HistoryGraph — Git-like branching history visualization for a palette.
+ * HistoryGraph - Git-like branching history visualization for a palette.
  * Renders an SVG graph of commit nodes (lanes) with cubic-bezier edges,
  * branch filter pill, color-cube swatches, and a revert button.
  * Props: history, selectedId, showRevertButton.

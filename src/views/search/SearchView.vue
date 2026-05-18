@@ -121,7 +121,7 @@
           >
             <span class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
             <span class="user-name">{{ user.username }}</span>
-            <span class="user-full">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '—' }}</span>
+            <span class="user-full">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '-' }}</span>
           </button>
         </div>
       </section>

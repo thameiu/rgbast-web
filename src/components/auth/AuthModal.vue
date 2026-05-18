@@ -173,10 +173,10 @@
 
 <script setup lang="ts">
 /**
- * AuthModal — Inline auth gate shown when an unauthenticated user tries to save a palette.
+ * AuthModal - Inline auth gate shown when an unauthenticated user tries to save a palette.
  * Provides login/register tabs inside a teleported overlay.
- * Emits: authenticated — on successful login
- *        cancel — when the user dismisses the modal
+ * Emits: authenticated - on successful login
+ *        cancel - when the user dismisses the modal
  * Used in: PaletteView
  */
 import { computed, ref } from 'vue'

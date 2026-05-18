@@ -137,7 +137,7 @@ body {
   text-transform: uppercase;
 }
 
-/* Sora "mono" — used for labels, metadata, tags */
+/* Sora "mono" - used for labels, metadata, tags */
 .font-mono {
   font-family: var(--font-mono);
   font-weight: 500;

@@ -9,7 +9,7 @@
 
     <!-- Left panel -->
     <aside class="panel">
-      <!-- Large concentric rings — full-panel background -->
+      <!-- Large concentric rings - full-panel background -->
       <div class="rings" aria-hidden="true">
         <span class="ring r1"></span>
         <span class="ring r2"></span>
@@ -36,7 +36,7 @@
         <!-- Scattered palette cards -->
         <div class="panel-art" aria-hidden="true">
 
-          <!-- 2clock — top-left, small -->
+          <!-- 2clock - top-left, small -->
           <div class="pc" style="left:3%;top:4%;transform:rotate(11deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#FF331E"></span>
@@ -46,7 +46,7 @@
             <div class="pc-foot"><span class="pc-name">2clock</span></div>
           </div>
 
-          <!-- gmanagr — top-right, small -->
+          <!-- gmanagr - top-right, small -->
           <div class="pc" style="right:2%;top:6%;transform:rotate(-9deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#CDD5F4"></span>
@@ -58,7 +58,7 @@
             <div class="pc-foot"><span class="pc-name">gmanagr</span></div>
           </div>
 
-          <!-- ErgoSix — center, biggest -->
+          <!-- ErgoSix - center, biggest -->
           <div class="pc pc--big" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(-3deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#FBFFFB"></span>
@@ -70,7 +70,7 @@
             <div class="pc-foot"><span class="pc-name">ErgoSix</span></div>
           </div>
 
-          <!-- RGBAST — bottom-left, medium -->
+          <!-- RGBAST - bottom-left, medium -->
           <div class="pc pc--med" style="left:2%;bottom:6%;transform:rotate(7deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#B410CC"></span>
@@ -83,7 +83,7 @@
             <div class="pc-foot"><span class="pc-name">RGBAST</span></div>
           </div>
 
-          <!-- E-Tron 3D — bottom-right, small -->
+          <!-- E-Tron 3D - bottom-right, small -->
           <div class="pc" style="right:3%;bottom:9%;transform:rotate(-12deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#1CF1FF"></span>
@@ -171,7 +171,7 @@
 
 <script setup lang="ts">
 /**
- * LoginView — Two-column sign-in page.
+ * LoginView - Two-column sign-in page.
  * Left panel: decorative scattered palette cards with concentric rings.
  * Right panel: username/password form that calls authApi.login and redirects to /dashboard.
  */

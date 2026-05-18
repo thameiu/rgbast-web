@@ -199,11 +199,11 @@ export function useColorView() {
   /** Human-readable description of the Bast score. */
   const bastDescription = computed(() => {
     const s = colorInfo.value?.bast_score ?? 0
-    if (s < 10) return 'Crystal clear — this colour has a well-known, unambiguous name.'
-    if (s < 30) return 'Mostly nameable — sits close to a recognisable colour family.'
-    if (s < 55) return 'Elusive — drifting between known categories, hard to pin down.'
-    if (s < 75) return 'Genuinely ambiguous — no obvious name, lives in the in-between.'
-    return 'Truly unnamed — no clear category, a colour of uncertain origin.'
+    if (s < 10) return 'Crystal clear - this colour has a well-known, unambiguous name.'
+    if (s < 30) return 'Mostly nameable - sits close to a recognisable colour family.'
+    if (s < 55) return 'Elusive - drifting between known categories, hard to pin down.'
+    if (s < 75) return 'Genuinely ambiguous - no obvious name, lives in the in-between.'
+    return 'Truly unnamed - no clear category, a colour of uncertain origin.'
   })
 
   /** Array of color space cards derived from the API response. */

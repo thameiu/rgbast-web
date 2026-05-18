@@ -128,8 +128,8 @@
 
 <script setup lang="ts">
 /**
- * Main — Legacy Tailwind dashboard shell with inline user loading.
- * Emits: logout — when the user signs out or session is invalid
+ * Main - Legacy Tailwind dashboard shell with inline user loading.
+ * Emits: logout - when the user signs out or session is invalid
  * Used in: (legacy component; DashboardView uses a custom implementation)
  */
 import { ref, onMounted } from 'vue';

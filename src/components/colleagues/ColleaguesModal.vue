@@ -38,7 +38,7 @@
                     <span class="colleagues-avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
                     <span class="colleagues-meta">
                       <span class="colleagues-username">{{ user.username }}</span>
-                      <span class="colleagues-name">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '—' }}</span>
+                      <span class="colleagues-name">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '-' }}</span>
                     </span>
                   </button>
 

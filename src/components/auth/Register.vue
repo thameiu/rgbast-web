@@ -95,8 +95,8 @@
 
 <script setup lang="ts">
 /**
- * Register — Tailwind-styled registration form card with password strength meter.
- * Emits: navigate (target: string) — request to navigate to another auth page
+ * Register - Tailwind-styled registration form card with password strength meter.
+ * Emits: navigate (target: string) - request to navigate to another auth page
  * Used in: (legacy standalone component, see RegisterView for the main auth flow)
  */
 import { ref, computed } from 'vue';
@@ -147,8 +147,8 @@ const strengthTextColor = computed(() => {
 
 /** Human-readable password strength description. */
 const strengthLabel = computed(() => {
-  if (passwordScore.value <= 2) return 'Weak — add uppercase, lowercase, number and special character (#?!@$%^&*-.)';
-  if (passwordScore.value <= 4) return 'Almost there — keep going';
+  if (passwordScore.value <= 2) return 'Weak - add uppercase, lowercase, number and special character (#?!@$%^&*-.)';
+  if (passwordScore.value <= 4) return 'Almost there - keep going';
   return 'Strong password';
 });
 

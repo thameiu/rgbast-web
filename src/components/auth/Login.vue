@@ -63,9 +63,9 @@
 
 <script setup lang="ts">
 /**
- * Login — Tailwind-styled login form card.
- * Emits: navigate (target: string) — request to navigate to another auth page
- *        login-success — after a successful login
+ * Login - Tailwind-styled login form card.
+ * Emits: navigate (target: string) - request to navigate to another auth page
+ *        login-success - after a successful login
  * Used in: (legacy standalone component, see LoginView for the main auth flow)
  */
 import { ref } from 'vue';

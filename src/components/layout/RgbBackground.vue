@@ -1,5 +1,5 @@
 <template>
-  <!-- Centering wrapper — no transforms so GSAP can freely rotate the SVG -->
+  <!-- Centering wrapper - no transforms so GSAP can freely rotate the SVG -->
   <div class="rgb-wrap" aria-hidden="true">
     <svg
       ref="svgRef"
@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 /**
- * RgbBackground — Animated background SVG of three overlapping RGB circles.
+ * RgbBackground - Animated background SVG of three overlapping RGB circles.
  * Rotates on scroll using GSAP ScrollTrigger. Fixed-positioned, pointer-events none.
  * Used in: LandingView
  */

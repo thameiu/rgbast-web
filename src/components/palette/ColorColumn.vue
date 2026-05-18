@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 /**
- * ColorColumn — Full-height (desktop) or full-width (mobile) color column
+ * ColorColumn - Full-height (desktop) or full-width (mobile) color column
  * in the palette editor.
  * Clicking the body or hex text opens the inline ColorPicker popover.
  * The 6-dot drag handle emits dragStart on pointerdown for pointer-based

@@ -209,7 +209,7 @@
 
           <!-- Color spaces -->
           <div class="card">
-            <span class="card-label">Color Spaces <span class="card-label-hint">— click any to copy</span></span>
+            <span class="card-label">Color Spaces <span class="card-label-hint">- click any to copy</span></span>
             <div class="spaces-grid">
               <button
                 v-for="sp in colorSpaces"
@@ -238,7 +238,7 @@
 
               <span class="cc-vs">vs</span>
 
-              <!-- Right: comparison color — inactive until picked, picker opens on click -->
+              <!-- Right: comparison color - inactive until picked, picker opens on click -->
               <div
                 ref="contrastSwatchEl"
                 class="cc-swatch cc-swatch--compare"

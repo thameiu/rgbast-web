@@ -378,7 +378,7 @@
 
 <script setup lang="ts">
 /**
- * PaletteAppHeader — Fixed top bar for the palette editor.
+ * PaletteAppHeader - Fixed top bar for the palette editor.
  * Shows back button, palette title, branch selector (desktop), undo/redo,
  * history toggle, generate split-button, and save/clone action.
  * On mobile the center and right groups are hidden; a compact mobile-right

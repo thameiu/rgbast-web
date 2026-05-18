@@ -630,7 +630,7 @@ async function onCreateFolder(payload: { name: string; parentId: number | null }
     folders.value.push(created)
     folders.value.sort((a, b) => a.name.localeCompare(b.name))
     refreshPaletteFolderPaths()
-  } catch { /* ignore — tree already closed the input */ }
+  } catch { /* ignore - tree already closed the input */ }
 }
 
 async function onRenameFolder(payload: { id: number; name: string }) {

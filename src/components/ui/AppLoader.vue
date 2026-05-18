@@ -27,9 +27,9 @@
 
 <script setup lang="ts">
 /**
- * AppLoader — Full-screen loading state. Displays the RGBAST logo spinning
+ * AppLoader - Full-screen loading state. Displays the RGBAST logo spinning
  * in 3×120° steps with brief pauses between segments.
- * Props: message (string) — subtitle text shown below the spinner
+ * Props: message (string) - subtitle text shown below the spinner
  * Used in: DashboardView, ColorView, PaletteView
  */
 withDefaults(

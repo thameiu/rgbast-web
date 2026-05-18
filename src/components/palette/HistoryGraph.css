@@ -77,7 +77,7 @@
   margin-top: 3px;
 }
 
-/* Change indicator — top-right of each commit row */
+/* Change indicator - top-right of each commit row */
 .change-corner {
   position: absolute;
   top: 10px; right: 12px;

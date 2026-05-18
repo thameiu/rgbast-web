@@ -151,10 +151,10 @@
 
 <script setup lang="ts">
 /**
- * SiteHeader — Fixed navigation header for public-facing pages.
+ * SiteHeader - Fixed navigation header for public-facing pages.
  * Shows brand, desktop nav links, and a GSAP-animated mobile sidebar.
- * Props: user ({ username, firstname?, lastname? } | null) — authenticated user info
- *        brandMeta (string) — optional meta text shown after the brand name
+ * Props: user ({ username, firstname?, lastname? } | null) - authenticated user info
+ *        brandMeta (string) - optional meta text shown after the brand name
  * Used in: LandingView, DashboardView, ColorView
  */
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'

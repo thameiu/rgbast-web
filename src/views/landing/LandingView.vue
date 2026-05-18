@@ -41,7 +41,7 @@
           </div>
           <div class="stat">
             <dt class="font-mono">02</dt>
-            <dd>Commit every change — nothing lost, ever.</dd>
+            <dd>Commit every change - nothing lost, ever.</dd>
           </div>
           <div class="stat">
             <dt class="font-mono">03</dt>
@@ -74,7 +74,7 @@
           <h3 class="feat-title font-display">Palette&nbsp;<span class="feat-key feat-key--atelier">Atelier</span></h3>
           <p class="feat-body">
             Build named palettes with hex swatches and custom labels.
-            Every color gets a role — not just a value.
+            Every color gets a role !
           </p>
         </article>
         <article class="feat feat--wide feat--generator" :ref="registerFeatureEl">
@@ -211,7 +211,7 @@ const dummyHistory: PaletteHistoryGraphResponse = {
       palette_id: 1,
       parent_snapshot_id: null,
       branch_id: null,
-      comment: 'Initial commit — dusk palette',
+      comment: 'Initial commit - dusk palette',
       created_at: new Date(now - 3 * 86_400_000).toISOString(),
       palette_colors: [
         { hex: '1b1b1f' },
@@ -236,7 +236,7 @@ const dummyHistory: PaletteHistoryGraphResponse = {
           palette_id: 1,
           parent_snapshot_id: 5,
           branch_id: 1,
-          comment: 'Pop the neon — max saturation',
+          comment: 'Pop the neon - max saturation',
           created_at: new Date(now - 45 * 60_000).toISOString(),
           palette_colors: [
             { hex: '0e0e10' },

@@ -23,9 +23,9 @@
 
 <script setup lang="ts">
 /**
- * RgbastLogo — Inline RGBAST SVG logo.
- * Props: size (string) — CSS width value, defaults to '36px'
- *        mono (boolean) — renders all paths as a single purple color
+ * RgbastLogo - Inline RGBAST SVG logo.
+ * Props: size (string) - CSS width value, defaults to '36px'
+ *        mono (boolean) - renders all paths as a single purple color
  * Used in: SiteHeader, AuthModal, LoginView, RegisterView, DashboardView, LandingView
  */
 withDefaults(defineProps<{ size?: string; mono?: boolean }>(), { size: '36px', mono: false })

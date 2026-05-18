@@ -67,7 +67,7 @@
 
 <script setup lang="ts">
 /**
- * ColorPicker — HSV color picker popover rendered via Teleport to body.
+ * ColorPicker - HSV color picker popover rendered via Teleport to body.
  * Features a 2D saturation/value canvas, a hue rainbow slider, and hex/RGB inputs.
  * Positioned relative to anchorRect with viewport edge-clamping.
  * Props: modelValue (6-char hex without #), anchorRect (optional DOMRect for positioning).

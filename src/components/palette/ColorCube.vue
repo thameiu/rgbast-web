@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 /**
- * ColorCube — Tiny inline color swatch square.
+ * ColorCube - Tiny inline color swatch square.
  * Props: hex (6-char hex without #), size (px, defaults to 18).
  * Used in: HistoryGraph commit rows.
  */

@@ -9,7 +9,7 @@
 
     <!-- Left panel -->
     <aside class="panel">
-      <!-- Large concentric rings — full-panel background -->
+      <!-- Large concentric rings - full-panel background -->
       <div class="rings" aria-hidden="true">
         <span class="ring r1"></span>
         <span class="ring r2"></span>
@@ -36,7 +36,7 @@
         <!-- Scattered palette cards -->
         <div class="panel-art" aria-hidden="true">
 
-          <!-- PlanMyAsso — top-left, small -->
+          <!-- PlanMyAsso - top-left, small -->
           <div class="pc" style="left:3%;top:5%;transform:rotate(10deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#FFFFFF"></span>
@@ -47,7 +47,7 @@
             <div class="pc-foot"><span class="pc-name">PlanMyAsso</span></div>
           </div>
 
-          <!-- Spendly — top-right, small -->
+          <!-- Spendly - top-right, small -->
           <div class="pc" style="right:2%;top:7%;transform:rotate(-8deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#F6EDFF"></span>
@@ -58,7 +58,7 @@
             <div class="pc-foot"><span class="pc-name">Spendly</span></div>
           </div>
 
-          <!-- Kwester — center, biggest -->
+          <!-- Kwester - center, biggest -->
           <div class="pc pc--big" style="left:50%;top:50%;transform:translate(-50%,-50%) rotate(3deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#FFA62B"></span>
@@ -68,7 +68,7 @@
             <div class="pc-foot"><span class="pc-name">Kwester</span></div>
           </div>
 
-          <!-- GGPS — bottom-left, small -->
+          <!-- GGPS - bottom-left, small -->
           <div class="pc" style="left:4%;bottom:7%;transform:rotate(-6deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#BD0000"></span>
@@ -78,7 +78,7 @@
             <div class="pc-foot"><span class="pc-name">GGPS</span></div>
           </div>
 
-          <!-- Roadica — bottom-right, small -->
+          <!-- Roadica - bottom-right, small -->
           <div class="pc" style="right:3%;bottom:10%;transform:rotate(9deg)">
             <div class="pc-strip">
               <span class="pc-col" style="background:#002232"></span>
@@ -226,7 +226,7 @@
 
 <script setup lang="ts">
 /**
- * RegisterView — Two-column account creation page.
+ * RegisterView - Two-column account creation page.
  * Left panel: decorative scattered palette cards with concentric rings.
  * Right panel: username/email/password form with optional identity fields.
  * On success, asks the user to verify email from the mailbox link.

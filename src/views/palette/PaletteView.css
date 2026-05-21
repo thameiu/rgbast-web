@@ -68,30 +68,50 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  animation: modalPop 0.2s cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.palette-info-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .palette-info-close {
-  align-self: flex-end;
-  width: 24px;
-  height: 24px;
-  border: none;
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.7);
-  background: transparent;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.66);
+  font-size: 16px;
+  line-height: 1;
   cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
 }
 
 .palette-info-close:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.28);
   color: #fff;
 }
 
 .palette-info-title {
   margin: 0;
-  font-size: 30px;
+  font-size: 33px;
+  font-family: var(--font-display);
+  font-weight: 700;
   line-height: 1;
-  text-transform: uppercase;
   color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .palette-info-owner {
@@ -102,10 +122,7 @@
 
 .palette-info-description {
   margin-top: 8px;
-  padding: 12px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding-right: 2px;
   color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   line-height: 1.5;

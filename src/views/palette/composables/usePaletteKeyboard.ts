@@ -21,6 +21,8 @@ export interface KeyboardActions {
   pasteAddFromClipboard: () => Promise<void>
   pasteReplaceFromClipboard: () => Promise<void>
   openCheatSheet: () => void
+  openShare: () => void
+  toggleDisplaySettings: () => void
 }
 
 // Wire global keyboard shortcuts for PaletteView and ensure cleanup.
@@ -128,6 +130,20 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openCheatSheet()
+      return
+    }
+
+    if (e.code === 'KeyS' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.openShare()
+      return
+    }
+
+    if (e.code === 'KeyD' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.toggleDisplaySettings()
       return
     }
 

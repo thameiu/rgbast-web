@@ -1,5 +1,5 @@
 const DEFAULT_DESCRIPTION =
-  'RGBAST is an advanced palette generator and color versioning workspace: create palettes, branch snapshots, organize them in folders, share them, and explore the accessibility and color spaces of your favorite colors.'
+  'Generate advanced color palettes in RGBAST, then version every change with snapshots, branches, folders, sharing, and color accessibility tools.'
 
 const DEFAULT_KEYWORDS = [
   'RGB',

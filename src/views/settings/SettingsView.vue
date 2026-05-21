@@ -78,7 +78,7 @@ const deleteError = ref('')
 onMounted(async () => {
   setPageSeo({
     title: 'Settings - RGBAST',
-    description: 'Manage your RGBAST account settings, update profile information, and control your account lifecycle.',
+    description: 'Manage your RGBAST account settings, profile information, and account lifecycle.',
     keywords: ['account settings', 'profile settings', 'RGBAST account', 'user preferences'],
   })
   try {

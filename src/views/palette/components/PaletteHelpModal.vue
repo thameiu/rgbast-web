@@ -85,6 +85,8 @@
             <li><span class="shortcut-keys"><kbd>Space</kbd></span><span>Generate palette instantly</span></li>
             <li><span class="shortcut-keys"><kbd>Alt</kbd><span class="shortcut-plus">+</span><kbd>Space</kbd></span><span>Open generation settings</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>I</kbd></span><span>Extract palette from image</span></li>
+            <li><span class="shortcut-keys"><kbd>S</kbd></span><span>Open share/export modal</span></li>
+            <li><span class="shortcut-keys"><kbd>D</kbd></span><span>Toggle display settings panel</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>C</kbd></span><span>Copy all palette colors</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>Paste colors and add to palette</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>Paste colors and replace palette</span></li>

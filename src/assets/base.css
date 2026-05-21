@@ -85,6 +85,18 @@
   src: url('./fonts/MangoGrotesque-BlackItalic.ttf') format('truetype');
   font-weight: 900; font-style: italic;
 }
+@font-face {
+  font-family: 'Satoshi';
+  src: url('./fonts/Satoshi-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('./fonts/Satoshi-VariableItalic.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+}
 
 :root {
   --paper:   #E9E9E9;
@@ -94,7 +106,6 @@
   --ink-3:   #55555b;
   --rule:    rgba(14, 14, 16, 0.11);
   --magenta:     #b410cc;
-  --magenta-ink: #8a0ba0;
   --cyan:   #0ec6d4;
   --yellow: #f6c343;
 
@@ -144,4 +155,3 @@ body {
   letter-spacing: 0.03em;
   font-size: 0.9em;
 }
-

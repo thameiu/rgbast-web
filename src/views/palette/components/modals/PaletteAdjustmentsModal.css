@@ -1,0 +1,124 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 220;
+  backdrop-filter: blur(4px);
+}
+
+.modal {
+  background: #13131a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 26px;
+  width: min(560px, calc(100vw - 32px));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
+  animation: modalPop 0.2s cubic-bezier(0.2, 0.9, 0.2, 1);
+  position: relative;
+}
+
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.66);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+
+.modal-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.28);
+  color: #fff;
+}
+
+.modal-title {
+  font-weight: 700;
+  font-size: 33px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 14px;
+}
+
+.adj-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.adj-row {
+  display: grid;
+  grid-template-columns: 96px 1fr 52px;
+  align-items: center;
+  gap: 10px;
+}
+
+.adj-label {
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.78);
+}
+
+.adj-slider {
+  width: 100%;
+  accent-color: #b410cc;
+  height: 4px;
+}
+
+.adj-value {
+  text-align: right;
+  font-size: 12px;
+  color: rgba(255,255,255,0.62);
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.modal-btn {
+  padding: 9px 20px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-btn.cancel {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.7);
+}
+
+.modal-btn.confirm {
+  background: #b410cc;
+  border: 1px solid transparent;
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .modal {
+    width: calc(100vw - 22px);
+    padding: 20px;
+  }
+
+  .adj-row {
+    grid-template-columns: 88px 1fr 45px;
+  }
+}

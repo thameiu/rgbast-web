@@ -332,6 +332,17 @@ export interface ColorInfoResponse {
   bast_score: number
 }
 
+export interface ColorLabelItemResponse {
+  input_hex: string
+  normalized_hex: string
+  closest_name: string | null
+  label_is_approximate: boolean
+}
+
+export interface ColorLabelsResponse {
+  labels: ColorLabelItemResponse[]
+}
+
 // ── Local cache (localStorage) ────────────────────────────────────────────────
 
 /** Minimal palette shape stored in localStorage for offline title/color preview. */

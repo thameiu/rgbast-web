@@ -426,7 +426,7 @@ watch(displayHex, hex => {
   const normalized = hex.toUpperCase()
   setPageSeo({
     title: `#${normalized} - RGBAST`,
-    description: `Explore color #${normalized}: RGB/HSL/CMYK spaces, accessibility contrast checks, color blindness simulations, and 3D color picker tools.`,
+    description: `Explore color #${normalized}: inspect RGB/HSL/CMYK spaces, accessibility contrast, color blindness simulation, and 3D picker tools.`,
     keywords: ['color selection', 'hex color', 'rgb converter', 'hsl converter', 'cmyk converter', normalized],
   })
 }, { immediate: true })

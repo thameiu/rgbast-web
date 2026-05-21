@@ -314,7 +314,7 @@ function onGlobalPointerDown(event: PointerEvent) {
 onMounted(async () => {
   setPageSeo({
     title: 'Search - RGBAST',
-    description: 'Search RGBAST users and palettes by title or colors, with exact and similar color matching.',
+    description: 'Search users and palettes on RGBAST by title or colors, with exact and similar color matching.',
     keywords: ['palette search', 'search colors', 'find palettes', 'find designers', 'color matching'],
   })
   const savedScope = localStorage.getItem(SEARCH_SCOPE_KEY)

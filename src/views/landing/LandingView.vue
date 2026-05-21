@@ -7,17 +7,17 @@
       <div class="hero-left">
         <p class="eyebrow font-mono">
           <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
-          Color design · version controlled
+          Palette generation · version controlled
         </p>
 
         <h1 class="headline font-display">
-          Commit, branch, merge
+          Generate, commit, branch
           <span class="headline-line">your <em>colors.</em></span>
         </h1>
 
         <p class="lede">
-          RGBAST is a workspace for designers who think in&nbsp;systems.
-          Draft a palette, commit it with a message, branch experiments,
+          Generate palettes first, then shape them like code.
+          Tune harmony and contrast, commit with a message, branch experiments,
           and walk back through every&nbsp;change.
         </p>
 
@@ -37,15 +37,15 @@
         <dl class="stats">
           <div class="stat">
             <dt class="font-mono">01</dt>
-            <dd>Named swatches with hex &amp; contrast metadata.</dd>
+            <dd>Generate from harmony rules, image extraction, or base colors.</dd>
           </div>
           <div class="stat">
             <dt class="font-mono">02</dt>
-            <dd>Commit every change - nothing lost, ever.</dd>
+            <dd>Commit every iteration - nothing lost, ever.</dd>
           </div>
           <div class="stat">
             <dt class="font-mono">03</dt>
-            <dd>Branch experiments without touching production.</dd>
+            <dd>Branch palette experiments without touching your main version.</dd>
           </div>
         </dl>
       </div>
@@ -69,28 +69,28 @@
 
     <section id="features" class="features">
       <div class="features-stack">
-        <article class="feat feat--wide feat--atelier" :ref="registerFeatureEl">
-          <span class="feat-num font-mono">F.01</span>
-          <h3 class="feat-title font-display">Palette&nbsp;<span class="feat-key feat-key--atelier">Atelier</span></h3>
-          <p class="feat-body">
-            Build named palettes with hex swatches and custom labels.
-            Every color gets a role !
-          </p>
-        </article>
         <article class="feat feat--wide feat--generator" :ref="registerFeatureEl">
-          <span class="feat-num font-mono">F.02</span>
+          <span class="feat-num font-mono">F.01</span>
           <h3 class="feat-title font-display">Advanced&nbsp;<span class="feat-key feat-key--generator">Generator</span></h3>
           <p class="feat-body">
-            Generate palettes with harmony strategies, contrast tuning, and
-            curated base colors. Pull dominant colors from image or SVG input,
+            Generate palettes with harmony strategies, contrast tuning,
+            curated base colors, and image or SVG extraction.
             then refine and commit what works.
+          </p>
+        </article>
+        <article class="feat feat--wide feat--atelier" :ref="registerFeatureEl">
+          <span class="feat-num font-mono">F.02</span>
+          <h3 class="feat-title font-display">Palette&nbsp;<span class="feat-key feat-key--atelier">Atelier</span></h3>
+          <p class="feat-body">
+            Generate a base, then craft named swatches with labels and structure.
+            Every color gets a role in your system.
           </p>
         </article>
         <article class="feat feat--wide feat--history" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.03</span>
           <h3 class="feat-title font-display">Versioned&nbsp;<span class="feat-key feat-key--history">History</span></h3>
           <p class="feat-body">
-            Commit every change with a message, branch experiments from any
+            Generate new variants, commit every change with a message, branch from any
             snapshot, and merge back when ready. Traverse the timeline and
             safely roll back without losing work.
           </p>
@@ -99,7 +99,7 @@
           <span class="feat-num font-mono">F.04</span>
           <h3 class="feat-title font-display">Color&nbsp;<span class="feat-key feat-key--explorer">Explorer</span></h3>
           <p class="feat-body">
-            Inspect any hex: color spaces, accessibility ratings, contrast checker,
+            Generate a palette, then inspect any hex: color spaces, accessibility ratings, contrast checker,
             color blindness simulations, and toy around with the 3D Color Picker.
           </p>
           <RouterLink to="/color/B410CC" class="feat-link font-mono">Try it →</RouterLink>
@@ -129,7 +129,7 @@ import { setPageSeo } from '@/utils/seo'
 onMounted(() => {
   setPageSeo({
     title: 'RGBAST - version control for color',
-    description: 'Generate advanced color palettes, version every change with branches and snapshots, and explore accessibility with the RGBAST color explorer.',
+    description: 'Generate advanced color palettes with harmony, image and SVG extraction, then version every change with branches and snapshots.',
     keywords: ['palette versioning', 'color workflow', 'palette history', 'color accessibility', 'color explorer'],
   })
 })

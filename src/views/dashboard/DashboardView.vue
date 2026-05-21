@@ -520,7 +520,7 @@ async function loadFolders() {
 onMounted(() => {
   setPageSeo({
     title: 'Dashboard - RGBAST',
-    description: 'Access your RGBAST workspace: organize folders, manage palettes, continue from local drafts, and track recent palette snapshots.',
+    description: 'Generate and manage palettes in your RGBAST workspace, organize folders, continue local drafts, and track recent snapshots.',
     keywords: ['palette dashboard', 'palette manager', 'color folders', 'palette drafts', 'workspace'],
   })
   window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdatedEvent)

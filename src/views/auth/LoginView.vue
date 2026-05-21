@@ -187,7 +187,7 @@ const route = useRoute()
 onMounted(() => {
   setPageSeo({
     title: 'Sign in - RGBAST',
-    description: 'Sign in to RGBAST to access your palette dashboard, version history, and collaboration features.',
+    description: 'Generate and manage color palettes by signing in to RGBAST, then access your dashboard, history, and collaboration tools.',
     keywords: ['login', 'sign in', 'palette account', 'RGBAST authentication'],
   })
 })

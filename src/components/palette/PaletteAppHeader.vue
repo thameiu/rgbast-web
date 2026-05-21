@@ -9,7 +9,7 @@
       </button>
       <div class="divider"></div>
       <div class="palette-title-wrap">
-        <button class="palette-name font-display" title="Palette information" @click="$emit('openPaletteInfo')">
+        <button class="palette-name" title="Palette information" @click="$emit('openPaletteInfo')">
           {{ paletteTitle }}
         </button>
         <button
@@ -202,11 +202,69 @@
                 <button class="header-chip-opt" :class="{ active: copyFormat === 'cmyk' }" @click="emit('setCopyFormat', 'cmyk')">CMYK</button>
               </div>
             </template>
+            <div class="header-menu-divider"></div>
+            <p class="header-menu-title">Global adjustments</p>
+            <div class="header-adjustments">
+              <label class="header-slider-row">
+                <span class="header-slider-label">Hue</span>
+                <input
+                  class="header-slider header-slider--hue"
+                  type="range"
+                  min="-180"
+                  max="180"
+                  step="1"
+                  :value="adjustments.hue"
+                  @input="onSliderInput('hue', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.hue }}</span>
+              </label>
+              <label class="header-slider-row">
+                <span class="header-slider-label">Saturation</span>
+                <input
+                  class="header-slider header-slider--saturation"
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  :value="adjustments.saturation"
+                  @input="onSliderInput('saturation', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.saturation }}</span>
+              </label>
+              <label class="header-slider-row">
+                <span class="header-slider-label">Temperature</span>
+                <input
+                  class="header-slider header-slider--temperature"
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  :value="adjustments.temperature"
+                  @input="onSliderInput('temperature', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.temperature }}</span>
+              </label>
+              <label class="header-slider-row">
+                <span class="header-slider-label">Luminosity</span>
+                <input
+                  class="header-slider header-slider--luminosity"
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  :value="adjustments.luminosity"
+                  @input="onSliderInput('luminosity', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.luminosity }}</span>
+              </label>
+              <div class="header-adjustments-actions">
+                <button class="header-adjust-btn header-adjust-btn--cancel" @click="onAdjustmentsCancel">Cancel</button>
+                <button class="header-adjust-btn header-adjust-btn--apply" @click="onAdjustmentsApply">Apply</button>
+              </div>
+            </div>
           </div>
         </Transition>
       </div>
-
-      <span v-if="snapshotHint" class="snapshot-hint">{{ snapshotHint }}</span>
       <!-- Undo / Redo arrows -->
       <div class="undo-redo-group">
         <button
@@ -258,6 +316,18 @@
           <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
           <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
           <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button
+        class="image-action-btn"
+        title="Export palette"
+        @click="$emit('openExport')"
+      >
+        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
+          <circle cx="3" cy="7" r="1.4" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="10.8" cy="3" r="1.4" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="10.8" cy="11" r="1.4" stroke="currentColor" stroke-width="1.2"/>
+          <path d="M4.2 6.2l5-2.3M4.2 7.8l5 2.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
       </button>
 
@@ -387,6 +457,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { getBranchColor } from '@/utils/branchColors'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
+import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
 
 const props = defineProps<{
   /** Display name for the current palette. */
@@ -409,8 +480,6 @@ const props = defineProps<{
   isSaving: boolean
   /** Whether the history panel is currently open. */
   historyOpen: boolean
-  /** Optional hint text shown next to the snapshot badge. */
-  snapshotHint?: string | null
   /** Whether the current user owns the palette. */
   isOwned?: boolean
   /** Whether the delete-palette action is available. */
@@ -431,6 +500,8 @@ const props = defineProps<{
   copyFormat: PaletteColorFormat
   /** Whether the copy format selector should be visible. */
   canChangeCopyFormat?: boolean
+  /** Current global color adjustments preview values. */
+  adjustments: GlobalColorAdjustments
 }>()
 
 const emit = defineEmits<{
@@ -451,10 +522,15 @@ const emit = defineEmits<{
   pasteReplace: []
   toggleDisplayFormat: [format: PaletteColorFormat]
   setCopyFormat: [format: PaletteColorFormat]
+  startAdjustmentsSession: []
+  updateAdjustments: [value: GlobalColorAdjustments]
+  applyAdjustments: []
+  cancelAdjustments: []
   hamburgerClick: []
   generate: []
   openGenerateSettings: []
   openImagePalette: []
+  openExport: []
   undo: []
   redo: []
   openOwnerProfile: []
@@ -543,11 +619,30 @@ function toggleHelpMenu(): void {
 }
 
 function toggleDisplayMenu(): void {
+  if (!displayMenuOpen.value) emit('startAdjustmentsSession')
   displayMenuOpen.value = !displayMenuOpen.value
+  if (!displayMenuOpen.value) {
+    emit('cancelAdjustments')
+    return
+  }
   if (displayMenuOpen.value) {
     helpMenuOpen.value = false
     pasteMenuOpen.value = false
   }
+}
+
+function onSliderInput(key: keyof GlobalColorAdjustments, value: number): void {
+  emit('updateAdjustments', { ...props.adjustments, [key]: value })
+}
+
+function onAdjustmentsCancel(): void {
+  emit('cancelAdjustments')
+  displayMenuOpen.value = false
+}
+
+function onAdjustmentsApply(): void {
+  emit('applyAdjustments')
+  displayMenuOpen.value = false
 }
 
 function onDocumentPointerDown(event: Event): void {
@@ -559,6 +654,7 @@ function onDocumentPointerDown(event: Event): void {
     helpMenuOpen.value = false
   }
   if (displayMenuOpen.value && displayGroupEl.value && target && !displayGroupEl.value.contains(target)) {
+    emit('cancelAdjustments')
     displayMenuOpen.value = false
   }
 }
@@ -567,18 +663,27 @@ function onDocumentKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
     pasteMenuOpen.value = false
     helpMenuOpen.value = false
+    if (displayMenuOpen.value) {
+      emit('cancelAdjustments')
+    }
     displayMenuOpen.value = false
   }
+}
+
+function onToggleDisplayShortcut(): void {
+  toggleDisplayMenu()
 }
 
 onMounted(() => {
   document.addEventListener('pointerdown', onDocumentPointerDown, { capture: true })
   document.addEventListener('keydown', onDocumentKeydown, { capture: true })
+  window.addEventListener('palette-shortcut-toggle-display', onToggleDisplayShortcut)
 })
 
 onUnmounted(() => {
   document.removeEventListener('pointerdown', onDocumentPointerDown, { capture: true })
   document.removeEventListener('keydown', onDocumentKeydown, { capture: true })
+  window.removeEventListener('palette-shortcut-toggle-display', onToggleDisplayShortcut)
 })
 </script>
 

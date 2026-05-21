@@ -5,11 +5,11 @@
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RGBAST - version control for color</title>
-    <meta name="description" content="RGBAST is an advanced palette generator and color versioning workspace: create palettes, branch snapshots, organize them in folders, share them, and explore the accessibility and color spaces of your favorite colors.">
+    <meta name="description" content="Generate advanced color palettes with RGBAST, then version every change with snapshots, branches, folders, sharing, and accessibility tooling.">
     <meta name="keywords" content="RGBAST, RGB palette, color palette, palette generator, color picker, 3D color picker, accessibility contrast, brand colors, design system, color explorer">
     <link rel="canonical" href="https://rgbast.com/">
     <meta property="og:title" content="RGBAST - version control for color">
-    <meta property="og:description" content="RGBAST is an advanced palette generator and color versioning workspace: create palettes, branch snapshots, organize them in folders, share them, and explore the accessibility and color spaces of your favorite colors.">
+    <meta property="og:description" content="Generate advanced color palettes with RGBAST, then version every change with snapshots, branches, folders, sharing, and accessibility tooling.">
     <meta property="og:image" content="https://rgbast.com/preview.png">
     <meta property="og:image:secure_url" content="https://rgbast.com/preview.png">
     <meta property="og:image:type" content="image/png">
@@ -18,13 +18,13 @@
     <meta property="og:url" content="https://rgbast.com/">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="RGBAST - version control for color">
-    <meta name="twitter:description" content="RGBAST is an advanced palette generator and color versioning workspace: create palettes, branch snapshots, organize them in folders, share them, and explore the accessibility and color spaces of your favorite colors.">
+    <meta name="twitter:description" content="Generate advanced color palettes with RGBAST, then version every change with snapshots, branches, folders, sharing, and accessibility tooling.">
     <meta name="twitter:image" content="https://rgbast.com/preview.png">
 
     <script>
       (function () {
         const DEFAULT_TITLE = 'RGBAST - version control for color';
-        const DEFAULT_DESC = 'RGBAST is an advanced palette generator and color versioning workspace: create palettes, branch snapshots, organize them in folders, share them, and explore the accessibility and color spaces of your favorite colors.';
+        const DEFAULT_DESC = 'Generate advanced color palettes with RGBAST, then version every change with snapshots, branches, folders, sharing, and accessibility tooling.';
         const url = new URL(window.location.href);
         const parts = url.pathname.split('/').filter(Boolean).map((p) => decodeURIComponent(p));
         const qTitle = (url.searchParams.get('title') || '').trim();
@@ -73,7 +73,7 @@
         if (parts[0] === 'search') {
           applySeo(
             'Search - RGBAST',
-            'Search users and palettes on RGBAST by title and colors, with exact and similar color matching.'
+            'Search users and palettes on RGBAST with exact and similar color matching.'
           );
           return;
         }
@@ -88,12 +88,12 @@
         }
 
         if (parts[0] === 'login') {
-          applySeo('Sign in - RGBAST', 'Sign in to RGBAST to access your palettes, snapshots, and dashboard.');
+          applySeo('Sign in - RGBAST', 'Generate and manage palettes in RGBAST by signing in to access your snapshots and dashboard.');
           return;
         }
 
         if (parts[0] === 'register') {
-          applySeo('Create account - RGBAST', 'Create your RGBAST account to generate palettes and track color history.');
+          applySeo('Create account - RGBAST', 'Generate your first palettes on RGBAST by creating an account and tracking color history.');
           return;
         }
 
@@ -116,7 +116,7 @@
             } else if (paletteTitle) {
               applySeo(
                 `${paletteTitle} by ${username} - RGBAST`,
-                `Browse palette "${paletteTitle}" by ${username} on RGBAST and explore its color history.`
+                `Generate-inspired palette "${paletteTitle}" by ${username} on RGBAST, with version history and branch context.`
               );
             } else {
               applySeo(

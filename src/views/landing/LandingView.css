@@ -47,7 +47,7 @@
 }
 .headline em {
   font-style: italic;
-  color: var(--magenta-ink);
+  color: var(--magenta);
 }
 .headline-line {
   display: block;
@@ -278,11 +278,12 @@
 .feat--color { border-top-color: #616bd0; }
 .feat-key {
   font-style: italic;
+  color: var(--magenta);
 }
-.feat-key--atelier { color: #b410cc; }
-.feat-key--generator { color: #0ec6d4; }
-.feat-key--history { color: #f6c343; }
-.feat-key--explorer { color: #616bd0; }
+.feat-key--atelier { color: var(--magenta); }
+.feat-key--generator { color: var(--magenta); }
+.feat-key--history { color: var(--magenta); }
+.feat-key--explorer { color: var(--magenta); }
 .feat-link {
   display: inline-block;
   margin-top: 18px;

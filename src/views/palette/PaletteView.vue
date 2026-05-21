@@ -10,7 +10,6 @@
       :hasUnsavedChanges="ctx.hasUnsavedChanges.value"
       :isSaving="save.isSaving.value"
       :historyOpen="ctx.historyOpen.value"
-      :snapshotHint="ctx.snapshotCommitHint.value"
       :isOwned="ctx.isOwned.value"
       :isNewPalette="ctx.isNewPalette.value"
       :canDelete="ctx.isOwned.value && !ctx.isNewPalette.value"
@@ -21,6 +20,7 @@
       :copyFeedback="copyFeedbackActive"
       :displaySettings="displaySettings"
       :copyFormat="copyFormat"
+      :adjustments="globalAdjustments"
       :canChangeCopyFormat="!isMobileViewport"
       @back="goBackOrDashboard"
       @save="save.requestSave"
@@ -44,6 +44,11 @@
       @undo="undo.doUndo"
       @redo="undo.doRedo"
       @openImagePalette="openImagePaletteModal"
+      @openExport="openExportModal"
+      @startAdjustmentsSession="startAdjustmentsSession"
+      @updateAdjustments="onAdjustmentsChange"
+      @cancelAdjustments="cancelAdjustments"
+      @applyAdjustments="applyAdjustments"
       @openOwnerProfile="openOwnerProfile"
       @openPaletteInfo="openPaletteInfoModal"
     />
@@ -237,6 +242,15 @@
       @submit="extractPaletteFromImage"
     />
 
+    <PaletteExportModal
+      :open="exportModalOpen"
+      :paletteTitle="ctx.paletteTitle.value"
+      :colors="ctx.colors.value"
+      :isSavedPalette="!ctx.isNewPalette.value"
+      :shareUrl="sharePaletteUrl"
+      @close="exportModalOpen = false"
+    />
+
     <PaletteTutorialOverlay
       :show="tutorial.showTutorial.value"
       :tutorialFocus="tutorial.tutorialFocus.value"
@@ -258,8 +272,10 @@
     <Teleport to="body">
       <div v-if="showPaletteInfoModal" class="palette-info-overlay" @click.self="showPaletteInfoModal = false">
         <div class="palette-info-modal">
-          <button class="palette-info-close" @click="showPaletteInfoModal = false">×</button>
-          <p class="palette-info-title font-display">{{ ctx.paletteTitle.value }}</p>
+          <div class="palette-info-head">
+            <p class="palette-info-title">{{ ctx.paletteTitle.value }}</p>
+            <button class="palette-info-close" @click="showPaletteInfoModal = false">x</button>
+          </div>
           <p v-if="ctx.history.value?.owner_username || ctx.username.value" class="palette-info-owner">
             by {{ ctx.history.value?.owner_username ?? ctx.username.value }}
           </p>
@@ -282,7 +298,8 @@
       :isNewPalette="ctx.isNewPalette.value"
       :copyFeedback="copyFeedbackActive"
       :displaySettings="displaySettings"
-      @close="ctx.mobileSidebarOpen.value = false"
+      :adjustments="globalAdjustments"
+      @close="closeMobileSidebar"
       @switchBranch="switchBranchWithUndo"
       @merge="save.confirmMerge"
       @openHelpHistory="openHistoryHelp"
@@ -298,6 +315,11 @@
       @generate="generator.doGenerate"
       @openGenerateSettings="generator.generateOpen.value = true"
       @openImagePalette="openImagePaletteModal"
+      @openExport="openExportModal"
+      @startAdjustmentsSession="startAdjustmentsSession"
+      @updateAdjustments="onAdjustmentsChange"
+      @cancelAdjustments="cancelAdjustments"
+      @applyAdjustments="applyAdjustments"
       @edit="save.openEditPalette"
     />
 
@@ -319,6 +341,7 @@ import PaletteDeleteBranchModal from './components/modals/PaletteDeleteBranchMod
 import PaletteRevertModal from './components/modals/PaletteRevertModal.vue'
 import PaletteGenerateModal from './components/modals/PaletteGenerateModal.vue'
 import PaletteImageModal from './components/modals/PaletteImageModal.vue'
+import PaletteExportModal from './components/modals/PaletteExportModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
 import PaletteHelpModal from './components/PaletteHelpModal.vue'
@@ -346,6 +369,11 @@ import {
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import { getPaletteTitleError, MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
 import { setPageSeo } from '@/utils/seo'
+import {
+  applyAdjustmentsToHex,
+  isNeutralAdjustments,
+  type GlobalColorAdjustments,
+} from '@/utils/paletteColorAdjustments'
 
 // PaletteView component: orchestrates the palette editor UI and feature modules.
 const ctx = usePaletteContext()
@@ -386,6 +414,7 @@ const imagePaletteFile = ref<File | null>(null)
 const helpModalOpen = ref(false)
 const helpModalMode = ref<'generation' | 'cheatsheet'>('cheatsheet')
 const copyFeedbackActive = ref(false)
+const exportModalOpen = ref(false)
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null
 const DISPLAY_SETTINGS_KEY = 'rgbast_palette_display_settings_v1'
 const COPY_FORMAT_KEY = 'rgbast_palette_copy_format_v1'
@@ -393,6 +422,13 @@ const displaySettings = ref<PaletteDisplaySettings>({ ...DEFAULT_PALETTE_DISPLAY
 const copyFormat = ref<PaletteColorFormat>(DEFAULT_PALETTE_COPY_FORMAT)
 const isMobileViewport = ref(false)
 const showPaletteInfoModal = ref(false)
+const globalAdjustments = ref<GlobalColorAdjustments>({
+  hue: 0,
+  saturation: 0,
+  temperature: 0,
+  luminosity: 0,
+})
+const adjustmentsBaseColors = ref<Array<{ hex: string; label: string | null; _key: string }> | null>(null)
 
 const saveTitleErrorMessage = computed(() =>
   ctx.isNewPalette.value ? getPaletteTitleError(ctx.pendingTitle.value) : null,
@@ -536,6 +572,8 @@ usePaletteKeyboard(
     pasteAddFromClipboard,
     pasteReplaceFromClipboard,
     openCheatSheet: openCheatSheetHelp,
+    openShare: openExportModal,
+    toggleDisplaySettings: toggleDisplaySettingsShortcut,
   },
 )
 
@@ -564,6 +602,20 @@ function setGenPaletteDropIdx(value: number | null): void {
 function openImagePaletteModal(): void {
   imagePaletteOpen.value = true
   imagePaletteError.value = ''
+}
+
+function openExportModal(): void {
+  exportModalOpen.value = true
+}
+
+function toggleDisplaySettingsShortcut(): void {
+  window.dispatchEvent(new CustomEvent('palette-shortcut-toggle-display'))
+}
+
+function startAdjustmentsSession(): void {
+  if (adjustmentsBaseColors.value) return
+  adjustmentsBaseColors.value = ctx.colors.value.map(c => ({ ...c }))
+  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
 }
 
 function openEditPaletteShortcut(): void {
@@ -608,6 +660,11 @@ function closeImagePaletteModal(): void {
   imagePaletteError.value = ''
 }
 
+function closeMobileSidebar(): void {
+  cancelAdjustments()
+  ctx.mobileSidebarOpen.value = false
+}
+
 function openHistoryHelp(): void {
   tutorial.openTutorial()
 }
@@ -629,6 +686,51 @@ function openHistoryHelpFromModal(): void {
 
 function closeHelpModal(): void {
   helpModalOpen.value = false
+}
+
+function buildAdjustedColorsFromBase(): Array<{ hex: string; label: string | null; _key: string }> {
+  const base = adjustmentsBaseColors.value ?? ctx.colors.value
+  return base.map(color => ({
+    ...color,
+    hex: applyAdjustmentsToHex(color.hex, globalAdjustments.value),
+  }))
+}
+
+function onAdjustmentsChange(next: GlobalColorAdjustments): void {
+  if (!adjustmentsBaseColors.value) startAdjustmentsSession()
+  globalAdjustments.value = next
+  if (!adjustmentsBaseColors.value) return
+  ctx.colors.value = buildAdjustedColorsFromBase()
+}
+
+function cancelAdjustments(): void {
+  if (adjustmentsBaseColors.value) {
+    ctx.colors.value = adjustmentsBaseColors.value.map(c => ({ ...c }))
+  }
+  adjustmentsBaseColors.value = null
+  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+}
+
+function applyAdjustments(): void {
+  if (!adjustmentsBaseColors.value) {
+    globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+    return
+  }
+
+  const appliedAdjustments = { ...globalAdjustments.value }
+  const base = adjustmentsBaseColors.value.map(c => ({ ...c }))
+  const next = buildAdjustedColorsFromBase()
+  adjustmentsBaseColors.value = null
+  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+
+  if (isNeutralAdjustments(appliedAdjustments)) {
+    ctx.colors.value = base
+    return
+  }
+
+  ctx.colors.value = base
+  undo.captureForUndo()
+  ctx.colors.value = next
 }
 
 function paletteToClipboardText(): string {
@@ -729,6 +831,7 @@ function onEscapeKey(event: KeyboardEvent): void {
   event.stopImmediatePropagation()
 
   if (ctx.showAuthModal.value) { ctx.showAuthModal.value = false; return }
+  if (exportModalOpen.value) { exportModalOpen.value = false; return }
   if (imagePaletteOpen.value) { closeImagePaletteModal(); return }
   if (generator.generateOpen.value) { generator.generateOpen.value = false; return }
   if (save.showRevertModal.value) { save.showRevertModal.value = false; return }
@@ -740,8 +843,14 @@ function onEscapeKey(event: KeyboardEvent): void {
   if (helpModalOpen.value) { helpModalOpen.value = false; return }
   if (showPaletteInfoModal.value) { showPaletteInfoModal.value = false; return }
   if (tutorial.showTutorial.value) { tutorial.closeTutorial(); return }
-  if (ctx.mobileSidebarOpen.value) { ctx.mobileSidebarOpen.value = false; return }
+  if (ctx.mobileSidebarOpen.value) { closeMobileSidebar(); return }
 }
+
+const sharePaletteUrl = computed(() => {
+  if (ctx.isNewPalette.value) return ''
+  if (typeof window === 'undefined') return ''
+  return window.location.href
+})
 
 onMounted(() => {
   loadLocalDisplaySettings()
@@ -830,7 +939,7 @@ watch(
     if (ctx.isNewPalette.value) {
       setPageSeo({
         title: 'New palette - RGBAST',
-        description: 'Create a new palette in RGBAST, generate colors, label swatches, and save a versioned snapshot.',
+        description: 'Generate colors for a new palette in RGBAST, label swatches, and save a versioned snapshot.',
         keywords: ['new palette', 'palette creation', 'palette editor', 'color generator'],
       })
     } else {
@@ -845,8 +954,8 @@ watch(
       setPageSeo({
         title,
         description: owner
-          ? `Browse palette "${ctx.paletteTitle.value}" by ${owner} on RGBAST. ${colorsPreview ? `Key colors: ${colorsPreview}. ` : ''}Explore history, branches, and accessibility.`
-          : `Browse palette "${ctx.paletteTitle.value}" on RGBAST. ${colorsPreview ? `Key colors: ${colorsPreview}. ` : ''}Explore history, branches, and accessibility.`,
+          ? `Generate-inspired palette "${ctx.paletteTitle.value}" by ${owner} on RGBAST. ${colorsPreview ? `Key colors: ${colorsPreview}. ` : ''}Explore history, branches, and accessibility.`
+          : `Generate-inspired palette "${ctx.paletteTitle.value}" on RGBAST. ${colorsPreview ? `Key colors: ${colorsPreview}. ` : ''}Explore history, branches, and accessibility.`,
         keywords: [
           'palette',
           'color palette',

@@ -30,7 +30,7 @@
               : (palette.folder_path?.length ? '/ ' + palette.folder_path.join(' / ') : '/')
           }}
         </p>
-        <h3 class="card-title font-display">
+        <h3 class="card-title">
           {{ palette.title }}
           <span v-if="palette.hasUnsavedDraft" class="card-unsaved-dot" title="Unsaved local changes"></span>
         </h3>

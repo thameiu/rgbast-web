@@ -137,7 +137,7 @@
 }
 .panel-title em {
   font-style: italic;
-  color: var(--magenta-ink);
+  color: var(--magenta);
 }
 .panel-copy {
   margin-top: 16px;

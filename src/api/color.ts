@@ -1,5 +1,11 @@
 import { ApiClient } from './client'
-import type { ColorContrastCheckResponse, ColorInfoResponse, PaletteGenerateRequest, PaletteGenerateResponse } from './types'
+import type {
+  ColorContrastCheckResponse,
+  ColorInfoResponse,
+  ColorLabelsResponse,
+  PaletteGenerateRequest,
+  PaletteGenerateResponse,
+} from './types'
 
 export const colorApi = {
   async getColorInfo(hex: string): Promise<ColorInfoResponse> {
@@ -21,5 +27,11 @@ export const colorApi = {
     form.append('image', image)
     form.append('count', String(count))
     return ApiClient.postForm<PaletteGenerateResponse>('/color/palette/from-image', form)
+  },
+
+  async getColorLabels(hexes: string[]): Promise<ColorLabelsResponse> {
+    const params = new URLSearchParams()
+    hexes.forEach((hex) => params.append('hex', hex.replace('#', '')))
+    return ApiClient.get<ColorLabelsResponse>(`/color/labels?${params.toString()}`)
   },
 }

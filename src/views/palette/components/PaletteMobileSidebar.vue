@@ -124,6 +124,15 @@
               </svg>
               Palette from image
             </button>
+            <button class="msb-action" @click="$emit('openExport'); $emit('close')">
+              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
+                <circle cx="3" cy="7" r="1.4" stroke="currentColor" stroke-width="1.2"/>
+                <circle cx="10.8" cy="3" r="1.4" stroke="currentColor" stroke-width="1.2"/>
+                <circle cx="10.8" cy="11" r="1.4" stroke="currentColor" stroke-width="1.2"/>
+                <path d="M4.2 6.2l5-2.3M4.2 7.8l5 2.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Export palette
+            </button>
             <button class="msb-action" :class="{ 'msb-action-copy--copied': copyFeedback }" @click="$emit('copyPalette')">
               <svg v-if="copyFeedback" width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -172,6 +181,65 @@
               <span>CMYK</span>
             </label>
           </div>
+          <div class="msb-display-adjustments">
+            <div class="msb-display-adjust-title">Global adjustments</div>
+            <label class="msb-slider-row">
+              <span class="msb-slider-label">Hue</span>
+              <input
+                class="msb-slider msb-slider--hue"
+                type="range"
+                min="-180"
+                max="180"
+                step="1"
+                :value="adjustments.hue"
+                @input="onSliderInput('hue', Number(($event.target as HTMLInputElement).value))"
+              >
+              <span class="msb-slider-value">{{ adjustments.hue }}</span>
+            </label>
+            <label class="msb-slider-row">
+              <span class="msb-slider-label">Saturation</span>
+              <input
+                class="msb-slider msb-slider--saturation"
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                :value="adjustments.saturation"
+                @input="onSliderInput('saturation', Number(($event.target as HTMLInputElement).value))"
+              >
+              <span class="msb-slider-value">{{ adjustments.saturation }}</span>
+            </label>
+            <label class="msb-slider-row">
+              <span class="msb-slider-label">Temperature</span>
+              <input
+                class="msb-slider msb-slider--temperature"
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                :value="adjustments.temperature"
+                @input="onSliderInput('temperature', Number(($event.target as HTMLInputElement).value))"
+              >
+              <span class="msb-slider-value">{{ adjustments.temperature }}</span>
+            </label>
+            <label class="msb-slider-row">
+              <span class="msb-slider-label">Luminosity</span>
+              <input
+                class="msb-slider msb-slider--luminosity"
+                type="range"
+                min="-100"
+                max="100"
+                step="1"
+                :value="adjustments.luminosity"
+                @input="onSliderInput('luminosity', Number(($event.target as HTMLInputElement).value))"
+              >
+              <span class="msb-slider-value">{{ adjustments.luminosity }}</span>
+            </label>
+            <div class="msb-adjust-actions">
+              <button class="msb-adjust-btn msb-adjust-btn--cancel" @click="emit('cancelAdjustments')">Cancel</button>
+              <button class="msb-adjust-btn msb-adjust-btn--apply" @click="emit('applyAdjustments')">Apply</button>
+            </div>
+          </div>
 
           <div class="msb-divider"></div>
 
@@ -195,8 +263,9 @@
 <script setup lang="ts">
 // PaletteMobileSidebar component: renders the mobile action sidebar for PaletteView.
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
+import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
 
-defineProps<{
+const props = defineProps<{
   open: boolean
   currentBranchId: number | null
   activeBranches: Array<{ id: number; title: string; is_merged: boolean }>
@@ -208,10 +277,11 @@ defineProps<{
   isNewPalette: boolean
   copyFeedback?: boolean
   displaySettings: PaletteDisplaySettings
+  adjustments: GlobalColorAdjustments
 }>()
 
 // Emits: close sidebar and action events triggered from the menu.
-defineEmits<{
+const emit = defineEmits<{
   (e: 'close'): void
   (e: 'switchBranch', id: number | null): void
   (e: 'merge', id: number): void
@@ -228,8 +298,18 @@ defineEmits<{
   (e: 'generate'): void
   (e: 'openGenerateSettings'): void
   (e: 'openImagePalette'): void
+  (e: 'startAdjustmentsSession'): void
+  (e: 'updateAdjustments', value: GlobalColorAdjustments): void
+  (e: 'cancelAdjustments'): void
+  (e: 'applyAdjustments'): void
+  (e: 'openExport'): void
   (e: 'edit'): void
 }>()
+
+function onSliderInput(key: keyof GlobalColorAdjustments, value: number): void {
+  emit('startAdjustmentsSession')
+  emit('updateAdjustments', { ...props.adjustments, [key]: value })
+}
 </script>
 
 <style scoped src="./PaletteMobileSidebar.css"></style>

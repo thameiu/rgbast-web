@@ -166,7 +166,7 @@
   font-weight: 700;
   line-height: 1;
 }
-.content-title em { font-style: italic; color: var(--magenta-ink); }
+.content-title em { font-style: italic; color: var(--magenta); }
 
 /* Palettes section */
 .palettes-section { display: grid; gap: 16px; }

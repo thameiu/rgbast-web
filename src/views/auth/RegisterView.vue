@@ -241,7 +241,7 @@ import { setPageSeo } from '@/utils/seo'
 onMounted(() => {
   setPageSeo({
     title: 'Create account - RGBAST',
-    description: 'Create your RGBAST account to generate palettes, track snapshot history, branch color experiments, and manage folders.',
+    description: 'Generate color palettes from day one by creating your RGBAST account, then track snapshots, branch experiments, and manage folders.',
     keywords: ['register', 'create account', 'palette account', 'color workspace signup'],
   })
 })

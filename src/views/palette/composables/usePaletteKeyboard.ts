@@ -127,28 +127,28 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       }
     }
 
-    if (e.code === 'KeyH' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (key === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openCheatSheet()
       return
     }
 
-    if (e.code === 'KeyS' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (key === 's' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openShare()
       return
     }
 
-    if (e.code === 'KeyA' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (key === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openAccessibilityAudit()
       return
     }
 
-    if (e.code === 'KeyD' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (key === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.toggleDisplaySettings()

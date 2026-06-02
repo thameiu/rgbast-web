@@ -60,7 +60,7 @@ const SHARK_TALE_QUOTES = [
   'Keep shining, bright star.',
   "We're in this together, buddy.",
   "That's a certified banger right there.",
-]
+] as const
 
 function clampByte(value: number): number {
   return Math.max(0, Math.min(255, Math.round(value)))

@@ -101,7 +101,10 @@
 .card-edit-btn:hover { background: rgba(14,14,16,0.75) !important; color: #fff; }
 
 .card-strip { display: flex; height: 80px; flex-shrink: 0; }
-.strip-swatch { flex: 1; }
+.strip-swatch {
+  flex: 1 1 0;
+  min-width: 0;
+}
 .strip-empty {
   flex: 1;
   background: var(--paper-2);

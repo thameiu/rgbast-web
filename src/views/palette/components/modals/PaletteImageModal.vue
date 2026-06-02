@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal image-modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close image modal" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Palette From Image</h3>
 
         <p class="image-help">
@@ -34,7 +36,7 @@
                 title="Remove image"
                 @click.prevent.stop="removeFile"
               >
-                ×
+                <AppIcon name="x" :size="14" />
               </button>
             </div>
             <p class="dropzone-caption">{{ fileName }}</p>
@@ -42,10 +44,7 @@
 
           <template v-else>
             <div class="dropzone-placeholder">
-              <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                <path d="M13 17V7M8.5 11.5L13 7l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                <rect x="4" y="17.5" width="18" height="4.5" rx="2.2" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
+              <AppIcon name="upload" :size="26" />
               <p class="dropzone-title">Drag &amp; drop an image here</p>
               <p class="dropzone-sub">or click to browse</p>
             </div>
@@ -90,6 +89,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 
 const props = defineProps<{

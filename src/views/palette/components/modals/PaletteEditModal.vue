@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay">
       <div class="modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close edit modal" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Edit Palette</h3>
         <p class="modal-sub">Update name, description, or folder placement.</p>
 
@@ -48,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
 import type { FolderResponse } from '@/api/types'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
 

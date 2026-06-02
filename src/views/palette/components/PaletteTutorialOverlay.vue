@@ -5,7 +5,9 @@
       <div class="tutorial-card" :class="tutorialCardClass">
         <div class="tutorial-top">
           <span class="tutorial-step">Step {{ tutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
-          <button class="tutorial-close" @click="$emit('close')">x</button>
+          <button class="tutorial-close" type="button" aria-label="Close tutorial" @click="$emit('close')">
+            <AppIcon name="x" :size="16" />
+          </button>
         </div>
 
         <h3 class="tutorial-title font-display">{{ currentTutorial.title }}</h3>
@@ -28,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
 import type { TutorialStep, TutorialFocus } from '../composables/usePaletteTutorial'
 
 // PaletteTutorialOverlay component: shows the guided tutorial overlay for PaletteView.

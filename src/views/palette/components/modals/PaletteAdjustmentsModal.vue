@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay">
       <div class="modal">
-        <button class="modal-close-btn" @click="$emit('cancel')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close adjustments modal" @click="$emit('cancel')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Global Adjustments</h3>
 
         <div class="adj-grid">
@@ -73,7 +75,10 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
 import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
+
+type AdjustmentSliderKey = 'hue' | 'saturation' | 'temperature' | 'luminosity'
 
 const props = defineProps<{
   open: boolean
@@ -86,7 +91,7 @@ const emit = defineEmits<{
   (e: 'cancel'): void
 }>()
 
-function emitUpdate(key: keyof GlobalColorAdjustments, value: number): void {
+function emitUpdate(key: AdjustmentSliderKey, value: number): void {
   emit('update:adjustments', { ...props.adjustments, [key]: value })
 }
 </script>

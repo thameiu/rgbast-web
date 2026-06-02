@@ -73,19 +73,22 @@
 }
 
 .tutorial-close {
+  width: 24px;
+  height: 24px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.65);
-  font-size: 18px;
+  color: rgba(255, 255, 255, 0.66);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  transition: color 0.18s ease-in-out, transform 0.18s ease-in-out;
 }
 
 .tutorial-close:hover {
-  background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  transform: scale(1.05);
 }
 
 .tutorial-title {

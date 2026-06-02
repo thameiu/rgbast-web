@@ -22,6 +22,7 @@ export interface KeyboardActions {
   pasteReplaceFromClipboard: () => Promise<void>
   openCheatSheet: () => void
   openShare: () => void
+  openAccessibilityAudit: () => void
   toggleDisplaySettings: () => void
 }
 
@@ -137,6 +138,13 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openShare()
+      return
+    }
+
+    if (e.code === 'KeyA' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      if (!e.repeat) actions.openAccessibilityAudit()
       return
     }
 

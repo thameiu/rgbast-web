@@ -186,6 +186,17 @@
   gap: 8px;
 }
 
+.msb-vision-block {
+  display: grid;
+  gap: 8px;
+}
+
+.msb-vision-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .msb-display-adjust-title {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.58);

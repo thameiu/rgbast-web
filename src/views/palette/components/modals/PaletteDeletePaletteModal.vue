@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close delete palette modal" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Delete Palette</h3>
         <p class="modal-sub">
           Delete <strong>{{ paletteTitle }}</strong>? All snapshots and branches will be permanently lost.
@@ -20,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
+
 // PaletteDeletePaletteModal component: confirms palette deletion in PaletteView.
 defineProps<{
   open: boolean

@@ -4,7 +4,9 @@
       <div class="help-modal">
         <div class="help-modal-top">
           <h3 class="help-modal-title font-display">{{ mode === 'generation' ? 'Generation Guide' : 'Shortcut Cheat Sheet' }}</h3>
-          <button class="help-close-btn" @click="$emit('close')">x</button>
+          <button class="help-close-btn" type="button" aria-label="Close help modal" @click="$emit('close')">
+            <AppIcon name="x" :size="16" />
+          </button>
         </div>
 
         <div v-if="mode === 'generation'" class="help-modal-body">
@@ -86,6 +88,7 @@
             <li><span class="shortcut-keys"><kbd>Alt</kbd><span class="shortcut-plus">+</span><kbd>Space</kbd></span><span>Open generation settings</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>I</kbd></span><span>Extract palette from image</span></li>
             <li><span class="shortcut-keys"><kbd>S</kbd></span><span>Open share/export modal</span></li>
+            <li><span class="shortcut-keys"><kbd>A</kbd></span><span>Open accessibility audit</span></li>
             <li><span class="shortcut-keys"><kbd>D</kbd></span><span>Toggle display settings panel</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>C</kbd></span><span>Copy all palette colors</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>Paste colors and add to palette</span></li>
@@ -104,6 +107,8 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
+
 defineProps<{
   open: boolean
   mode: 'generation' | 'cheatsheet'

@@ -355,7 +355,7 @@
   background: var(--ink);
   color: var(--paper);
   border: none;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   display: inline-flex;

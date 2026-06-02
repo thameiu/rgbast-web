@@ -554,7 +554,7 @@ function newPalette() {
   router.push({
     name: 'palette',
     params: { username: user.value.username, pathMatch: 'new' },
-    state: { folderId },
+    state: { folderId, hasFolderPreset: true },
   })
 }
 

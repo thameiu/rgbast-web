@@ -10,11 +10,12 @@
           title="Delete branch (Del)"
           @click="emit('deleteBranch', activeBranchId!)"
         >
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1.5 3h9M4.5 3V1.5h3V3M3.5 3l.5 7.5M6 3v7.5M8.5 3l-.5 7.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="trash" :size="12" />
         </button>
-        <button class="filter-clear" @click="activeBranchId = null">× clear</button>
+        <button class="filter-clear" @click="activeBranchId = null">
+          <AppIcon name="clear" :size="12" />
+          clear
+        </button>
       </div>
     </div>
 
@@ -136,6 +137,7 @@
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import type { PaletteHistoryGraphResponse, PaletteCommitResponse } from '@/api/types'
 import { getLaneColor } from '@/utils/branchColors'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import ColorCube from './ColorCube.vue'
 
 const props = defineProps<{

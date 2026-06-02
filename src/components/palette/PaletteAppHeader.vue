@@ -2,10 +2,8 @@
   <header class="pal-header" :class="{ 'focus-header': tutorialFocus === 'header' }">
     <!-- Left: back + title -->
     <div class="left-group">
-      <button class="back-btn" @click="$emit('back')" title="Back to dashboard">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M10 3L5 8l5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+      <button class="back-btn" @click="$emit('back')" title="Back to previous page">
+        <AppIcon name="arrow-left" :size="16" />
       </button>
       <div class="divider"></div>
       <div class="palette-title-wrap">
@@ -36,16 +34,9 @@
         :class="{ open: branchOpen, 'focus-ring': tutorialFocus === 'branches' }"
         @click="branchOpen = !branchOpen"
       >
-        <svg class="branch-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="3" cy="3" r="2" stroke="currentColor" stroke-width="1.4"/>
-          <circle cx="3" cy="11" r="2" stroke="currentColor" stroke-width="1.4"/>
-          <circle cx="11" cy="3" r="2" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M3 5v4M3 5c0 0 8 0 8-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+        <AppIcon class="branch-icon" name="git-branch" :size="15" />
         <span class="branch-name">{{ currentBranch }}</span>
-        <svg class="chevron" width="10" height="10" viewBox="0 0 10 10" fill="none" :class="{ rotated: branchOpen }">
-          <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <AppIcon class="chevron" name="chevron-down" :size="10" :class="{ rotated: branchOpen }" />
       </div>
 
       <Teleport to="body">
@@ -58,7 +49,9 @@
           >
             <span class="branch-dot main-dot"></span>
             main
-            <span v-if="currentBranchId === null" class="active-check">✓</span>
+            <span v-if="currentBranchId === null" class="active-check" aria-hidden="true">
+              <AppIcon name="check" :size="12" />
+            </span>
           </button>
           <template v-for="br in activeBranches" :key="br.id">
             <button
@@ -68,7 +61,9 @@
             >
               <span class="branch-dot" :style="{ background: branchColor(br.id) }"></span>
               {{ br.title }}
-              <span v-if="currentBranchId === br.id" class="active-check">✓</span>
+              <span v-if="currentBranchId === br.id" class="active-check" aria-hidden="true">
+                <AppIcon name="check" :size="12" />
+              </span>
             </button>
             <button
               v-if="currentBranchId === br.id"
@@ -87,10 +82,8 @@
           title="Help"
           @click.stop="toggleHelpMenu"
         >
-          <span class="help-glyph">?</span>
-          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-            <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="help-circle" :size="14" />
+          <AppIcon name="chevron-down" :size="10" />
         </button>
         <Transition name="header-dd">
           <div v-if="helpMenuOpen" class="header-dropdown-menu help-menu">
@@ -113,13 +106,7 @@
         title="Copy palette colors (Ctrl+C)"
         @click="emit('copyPalette')"
       >
-        <svg v-if="copyFeedback" width="13" height="13" viewBox="0 0 14 14" fill="none">
-          <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        <svg v-else width="13" height="13" viewBox="0 0 14 14" fill="none">
-          <rect x="4.2" y="3.2" width="7.2" height="8.6" rx="1.4" stroke="currentColor" stroke-width="1.2"/>
-          <path d="M3.4 9.8H2.8A1.2 1.2 0 011.6 8.6V2.8A1.2 1.2 0 012.8 1.6h5.8A1.2 1.2 0 019.8 2.8v.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
+        <AppIcon :name="copyFeedback ? 'check' : 'copy'" :size="13" />
       </button>
 
       <div ref="pasteGroupEl" class="header-dropdown-group">
@@ -129,10 +116,7 @@
             title="Paste colors and add to palette (Ctrl+V)"
             @click="emit('pasteAdd')"
           >
-            <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <path d="M9.8 2.4h.7A1.5 1.5 0 0112 3.9v7.7a1.5 1.5 0 01-1.5 1.5H4a1.5 1.5 0 01-1.5-1.5V3.9A1.5 1.5 0 014 2.4h.7" stroke="currentColor" stroke-width="1.2"/>
-              <rect x="5.1" y="1.3" width="3.8" height="2.3" rx=".7" stroke="currentColor" stroke-width="1.2"/>
-            </svg>
+            <AppIcon name="clipboard" :size="13" />
           </button>
           <button
             class="paste-menu-toggle"
@@ -140,9 +124,7 @@
             title="Paste options"
             @click.stop="togglePasteMenu"
           >
-            <svg width="9" height="9" viewBox="0 0 10 10" fill="none">
-              <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <AppIcon name="chevron-down" :size="9" />
           </button>
         </div>
         <Transition name="header-dd">
@@ -166,12 +148,7 @@
           title="Display settings"
           @click.stop="toggleDisplayMenu"
         >
-          <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-            <path d="M2 3.2h10M2 7h10M2 10.8h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-            <circle cx="5" cy="3.2" r="1.4" fill="#0e0e14" stroke="currentColor" stroke-width="1.2"/>
-            <circle cx="9" cy="7" r="1.4" fill="#0e0e14" stroke="currentColor" stroke-width="1.2"/>
-            <circle cx="4" cy="10.8" r="1.4" fill="#0e0e14" stroke="currentColor" stroke-width="1.2"/>
-          </svg>
+          <AppIcon name="sliders" :size="13" />
         </button>
         <Transition name="header-dd">
           <div v-if="displayMenuOpen" class="header-dropdown-menu display-menu">
@@ -257,6 +234,14 @@
                 />
                 <span class="header-slider-value">{{ adjustments.luminosity }}</span>
               </label>
+              <div class="header-adjustments-vision">
+                <span class="header-slider-label">Daltonism</span>
+                <div class="header-inline-options">
+                  <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'protanopia' }" @click="onDaltonismToggle('protanopia')">Protanopia</button>
+                  <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'deuteranopia' }" @click="onDaltonismToggle('deuteranopia')">Deuteranopia</button>
+                  <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'tritanopia' }" @click="onDaltonismToggle('tritanopia')">Tritanopia</button>
+                </div>
+              </div>
               <div class="header-adjustments-actions">
                 <button class="header-adjust-btn header-adjust-btn--cancel" @click="onAdjustmentsCancel">Cancel</button>
                 <button class="header-adjust-btn header-adjust-btn--apply" @click="onAdjustmentsApply">Apply</button>
@@ -273,10 +258,7 @@
           title="Undo (Ctrl+Z)"
           @click="$emit('undo')"
         >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M2.5 5H8a3 3 0 010 6H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4.5 2.5L2 5l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="undo" :size="13" />
         </button>
         <button
           class="undo-redo-btn"
@@ -284,27 +266,18 @@
           title="Redo (Ctrl+Y)"
           @click="$emit('redo')"
         >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M10.5 5H5a3 3 0 000 6h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8.5 2.5L11 5l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="redo" :size="13" />
         </button>
       </div>
 
       <!-- Generate split-button -->
       <div class="gen-btn-group">
         <button class="gen-instant-btn" @click="$emit('generate')" title="Generate palette (Space)">
-          <svg width="13" height="13" viewBox="0 0 15 15" fill="none">
-            <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-            <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="sparkles" :size="13" />
           Generate
         </button>
         <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" title="Generate settings (Alt+Space)">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <circle cx="6" cy="6" r="1.8" stroke="currentColor" stroke-width="1.2"/>
-            <path d="M6 1v1.2M6 9.8V11M1 6h1.2M9.8 6H11M2.2 2.2l.85.85M8.95 8.95l.85.85M9.8 2.2l-.85.85M3.05 8.95l-.85.85" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-          </svg>
+          <AppIcon name="settings" :size="12" />
         </button>
       </div>
       <button
@@ -312,34 +285,30 @@
         title="Extract palette from image"
         @click="$emit('openImagePalette')"
       >
-        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-          <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
-          <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
-          <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <AppIcon name="image" :size="13" />
       </button>
       <button
         class="image-action-btn"
         title="Export palette"
         @click="$emit('openExport')"
       >
-        <svg width="13" height="13" viewBox="0 0 14 14" fill="none">
-          <circle cx="3" cy="7" r="1.4" stroke="currentColor" stroke-width="1.2"/>
-          <circle cx="10.8" cy="3" r="1.4" stroke="currentColor" stroke-width="1.2"/>
-          <circle cx="10.8" cy="11" r="1.4" stroke="currentColor" stroke-width="1.2"/>
-          <path d="M4.2 6.2l5-2.3M4.2 7.8l5 2.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
+        <AppIcon name="share" :size="13" />
       </button>
 
+      <button
+        class="icon-action-btn"
+        title="Accessibility audit (A)"
+        @click="$emit('openAccessibilityAudit')"
+      >
+        <AppIcon name="search" :size="13" />
+      </button>
       <button
         v-if="isOwned && canDelete"
         class="action-btn danger-icon"
         title="Delete palette"
         @click="$emit('deletePalette')"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <AppIcon name="trash" :size="14" />
       </button>
       <button
         v-if="!isNewPalette"
@@ -347,10 +316,7 @@
         @click="$emit('toggleHistory')"
         :class="{ active: historyOpen, 'focus-ring': tutorialFocus === 'history' }"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <AppIcon name="history" :size="14" />
         History
       </button>
       <button
@@ -359,10 +325,7 @@
         title="Edit palette"
         @click="$emit('edit')"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M2.5 9.5L9.5 2.5l2 2-7 7H2.5v-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-          <path d="M8.8 3.2l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-        </svg>
+        <AppIcon name="edit" :size="14" />
         Edit
       </button>
       <button
@@ -372,10 +335,7 @@
         :class="{ 'focus-ring': tutorialFocus === 'save' }"
         @click="$emit('save')"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M2 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+        <AppIcon name="download" :size="14" />
         {{ isSaving ? 'Saving…' : 'Save snapshot' }}
       </button>
       <button
@@ -383,10 +343,7 @@
         class="action-btn clone"
         @click="$emit('clone')"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-          <rect x="1" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M5 1h7a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-        </svg>
+        <AppIcon name="clone" :size="14" />
         Clone palette
       </button>
     </div>
@@ -401,10 +358,7 @@
           title="Undo (Ctrl+Z)"
           @click="$emit('undo')"
         >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M2.5 5H8a3 3 0 010 6H5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M4.5 2.5L2 5l2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="undo" :size="13" />
         </button>
         <button
           class="mobile-nav-btn"
@@ -412,10 +366,7 @@
           title="Redo (Ctrl+Y)"
           @click="$emit('redo')"
         >
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M10.5 5H5a3 3 0 000 6h3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M8.5 2.5L11 5l-2.5 2.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon name="redo" :size="13" />
         </button>
       </div>
       <button
@@ -425,10 +376,7 @@
         aria-label="Toggle history"
         @click="$emit('toggleHistory')"
       >
-        <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-          <circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/>
-          <path d="M7 4.5V7l2 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <AppIcon name="history" :size="15" />
       </button>
       <button
         class="hamburger-btn"
@@ -455,9 +403,12 @@
  * group is shown instead (undo/redo controls, history, and hamburger).
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { getBranchColor } from '@/utils/branchColors'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
+
+type AdjustmentSliderKey = 'hue' | 'saturation' | 'temperature' | 'luminosity'
 
 const props = defineProps<{
   /** Display name for the current palette. */
@@ -535,6 +486,7 @@ const emit = defineEmits<{
   redo: []
   openOwnerProfile: []
   openPaletteInfo: []
+  openAccessibilityAudit: []
 }>()
 
 /** Whether the branch dropdown flyout is open. */
@@ -631,8 +583,15 @@ function toggleDisplayMenu(): void {
   }
 }
 
-function onSliderInput(key: keyof GlobalColorAdjustments, value: number): void {
+function onSliderInput(key: AdjustmentSliderKey, value: number): void {
   emit('updateAdjustments', { ...props.adjustments, [key]: value })
+}
+
+function onDaltonismToggle(mode: GlobalColorAdjustments['daltonism']): void {
+  emit('updateAdjustments', {
+    ...props.adjustments,
+    daltonism: props.adjustments.daltonism === mode ? 'none' : mode,
+  })
 }
 
 function onAdjustmentsCancel(): void {

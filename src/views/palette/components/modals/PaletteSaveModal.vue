@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay">
       <div class="modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close save modal" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">{{ isNewPalette ? 'Create Palette' : 'Save Snapshot' }}</h3>
         <p v-if="!isNewPalette" class="modal-sub">Saving to: <strong>{{ currentBranchName }}</strong></p>
 
@@ -148,6 +150,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
 import type { FolderResponse } from '@/api/types'
 import type { SnapshotContext } from '../../composables/usePaletteContext'
 import FolderPicker from '@/components/folder/FolderPicker.vue'

@@ -272,6 +272,33 @@
   background: rgba(255, 255, 255, 0.5);
   box-shadow: 0 0 0 3px rgba(14, 14, 16, 0.06);
 }
+.password-input-wrap {
+  position: relative;
+}
+.field-input--with-eye {
+  padding-right: 44px;
+}
+.password-eye-btn {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition: color .15s, background .15s;
+}
+.password-eye-btn:hover {
+  color: var(--ink);
+  background: rgba(14, 14, 16, 0.06);
+}
 
 .err {
   padding: 10px 12px;
@@ -320,7 +347,7 @@
   background: var(--ink);
   color: var(--paper);
   border: none;
-  border-radius: 999px;
+  border-radius: 10px;
   font-weight: 600;
   font-size: 14px;
   display: inline-flex;

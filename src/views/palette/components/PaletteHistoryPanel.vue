@@ -4,7 +4,9 @@
     <aside v-if="historyOpen" class="history-panel" :class="{ 'tutorial-focus': isTutorialFocus }">
       <div class="history-header">
         <h2 class="history-title font-display">History</h2>
-        <button class="close-btn" @click="$emit('close')">x</button>
+        <button class="close-btn" type="button" aria-label="Close history panel" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
       </div>
       <HistoryGraph
         v-if="historyForDisplay"
@@ -23,6 +25,7 @@
 
 <script setup lang="ts">
 import type { PaletteHistoryGraphResponse } from '@/api/types'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 
 // PaletteHistoryPanel component: renders the history side panel and mobile backdrop for PaletteView.

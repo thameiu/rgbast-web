@@ -93,6 +93,12 @@ function getTokenUsername(): string | null {
 
 let keyCounter = 0
 
+function getNavigationState(): Record<string, unknown> {
+  if (typeof window === 'undefined') return {}
+  const state = window.history.state
+  return state && typeof state === 'object' ? (state as Record<string, unknown>) : {}
+}
+
 // Generate a unique key for palette columns in PaletteView lists.
 function mkKey(): string {
   keyCounter += 1
@@ -406,6 +412,7 @@ export function usePaletteContext(): PaletteContext {
 
   // Initialize a draft palette in PaletteView when the route id is "new".
   function initNewPaletteDraft(): void {
+    const navigationState = getNavigationState()
     history.value = null
     paletteId.value = null
     latestSnapshotId.value = null
@@ -415,10 +422,9 @@ export function usePaletteContext(): PaletteContext {
     error.value = null
     void loadFolders()
     pendingDescription.value = ''
-    pendingFolderId.value =
-      typeof window !== 'undefined' ? (window.history.state?.folderId ?? null) : null
+    pendingFolderId.value = typeof navigationState.folderId === 'number' ? navigationState.folderId : null
 
-    const clonedColors = (window.history.state?.clonedColors ?? []) as PaletteColorSave[]
+    const clonedColors = (navigationState.clonedColors ?? []) as PaletteColorSave[]
     if (Array.isArray(clonedColors) && clonedColors.length > 0) {
       colors.value = wrapColors(clonedColors)
     } else {

@@ -51,6 +51,7 @@
       @applyAdjustments="applyAdjustments"
       @openOwnerProfile="openOwnerProfile"
       @openPaletteInfo="openPaletteInfoModal"
+      @openAccessibilityAudit="openAccessibilityAuditModal"
     />
 
     <div v-if="ctx.loading.value" class="loading-screen">
@@ -269,12 +270,22 @@
       @openHistory="openHistoryHelpFromModal"
     />
 
+    <PaletteAccessibilityModal
+      :open="showAccessibilityAuditModal"
+      :colors="ctx.colors.value"
+      :selectedIndex="accessibilityAuditIndex"
+      @close="closeAccessibilityAuditModal"
+      @update:selectedIndex="setAccessibilityAuditIndex"
+    />
+
     <Teleport to="body">
       <div v-if="showPaletteInfoModal" class="palette-info-overlay" @click.self="showPaletteInfoModal = false">
         <div class="palette-info-modal">
           <div class="palette-info-head">
             <p class="palette-info-title">{{ ctx.paletteTitle.value }}</p>
-            <button class="palette-info-close" @click="showPaletteInfoModal = false">x</button>
+            <button class="palette-info-close" type="button" aria-label="Close palette information" @click="showPaletteInfoModal = false">
+              <AppIcon name="x" :size="16" />
+            </button>
           </div>
           <p v-if="ctx.history.value?.owner_username || ctx.username.value" class="palette-info-owner">
             by {{ ctx.history.value?.owner_username ?? ctx.username.value }}
@@ -321,6 +332,7 @@
       @cancelAdjustments="cancelAdjustments"
       @applyAdjustments="applyAdjustments"
       @edit="save.openEditPalette"
+      @openAccessibilityAudit="openAccessibilityAuditModal"
     />
 
   </div>
@@ -345,6 +357,8 @@ import PaletteExportModal from './components/modals/PaletteExportModal.vue'
 import PaletteTutorialOverlay from './components/PaletteTutorialOverlay.vue'
 import PaletteMobileSidebar from './components/PaletteMobileSidebar.vue'
 import PaletteHelpModal from './components/PaletteHelpModal.vue'
+import PaletteAccessibilityModal from './components/PaletteAccessibilityModal.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { foldersApi } from '@/api/folders'
 import { colorApi } from '@/api/color'
@@ -427,8 +441,11 @@ const globalAdjustments = ref<GlobalColorAdjustments>({
   saturation: 0,
   temperature: 0,
   luminosity: 0,
+  daltonism: 'none',
 })
 const adjustmentsBaseColors = ref<Array<{ hex: string; label: string | null; _key: string }> | null>(null)
+const showAccessibilityAuditModal = ref(false)
+const accessibilityAuditIndex = ref(0)
 
 const saveTitleErrorMessage = computed(() =>
   ctx.isNewPalette.value ? getPaletteTitleError(ctx.pendingTitle.value) : null,
@@ -439,6 +456,12 @@ const editTitleErrorMessage = computed(() =>
 
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
+
+function getNavigationState(): Record<string, unknown> {
+  if (typeof window === 'undefined') return {}
+  const state = window.history.state
+  return state && typeof state === 'object' ? (state as Record<string, unknown>) : {}
+}
 
 function goBackOrDashboard(): void {
   if (window.history.length > 1) {
@@ -490,9 +513,13 @@ function hydrateDraftIfReady(): void {
   ctx.savedColorsSig.value = draft.savedColorsSig
 
   if (ctx.isNewPalette.value) {
+    const navigationState = getNavigationState()
+    const hasFolderPreset = navigationState.hasFolderPreset === true
     ctx.pendingTitle.value = draft.pendingTitle || ctx.pendingTitle.value
     ctx.pendingDescription.value = draft.pendingDescription
-    ctx.pendingFolderId.value = draft.pendingFolderId
+    ctx.pendingFolderId.value = hasFolderPreset
+      ? (typeof navigationState.folderId === 'number' ? navigationState.folderId : null)
+      : draft.pendingFolderId
   }
 
   undo.undoPast.value = draft.undoPast.map(fromDraftHistorySnapshot)
@@ -573,6 +600,7 @@ usePaletteKeyboard(
     pasteReplaceFromClipboard,
     openCheatSheet: openCheatSheetHelp,
     openShare: openExportModal,
+    openAccessibilityAudit: openAccessibilityAuditModal,
     toggleDisplaySettings: toggleDisplaySettingsShortcut,
   },
 )
@@ -615,7 +643,7 @@ function toggleDisplaySettingsShortcut(): void {
 function startAdjustmentsSession(): void {
   if (adjustmentsBaseColors.value) return
   adjustmentsBaseColors.value = ctx.colors.value.map(c => ({ ...c }))
-  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0, daltonism: 'none' }
 }
 
 function openEditPaletteShortcut(): void {
@@ -641,6 +669,19 @@ function openOwnerProfile(): void {
 
 function openPaletteInfoModal(): void {
   showPaletteInfoModal.value = true
+}
+
+function openAccessibilityAuditModal(): void {
+  accessibilityAuditIndex.value = Math.max(0, Math.min(ctx.colors.value.length - 1, accessibilityAuditIndex.value))
+  showAccessibilityAuditModal.value = true
+}
+
+function closeAccessibilityAuditModal(): void {
+  showAccessibilityAuditModal.value = false
+}
+
+function setAccessibilityAuditIndex(index: number): void {
+  accessibilityAuditIndex.value = Math.max(0, Math.min(ctx.colors.value.length - 1, index))
 }
 
 function deleteLastColorShortcut(): void {
@@ -708,12 +749,12 @@ function cancelAdjustments(): void {
     ctx.colors.value = adjustmentsBaseColors.value.map(c => ({ ...c }))
   }
   adjustmentsBaseColors.value = null
-  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0, daltonism: 'none' }
 }
 
 function applyAdjustments(): void {
   if (!adjustmentsBaseColors.value) {
-    globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+    globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0, daltonism: 'none' }
     return
   }
 
@@ -721,7 +762,7 @@ function applyAdjustments(): void {
   const base = adjustmentsBaseColors.value.map(c => ({ ...c }))
   const next = buildAdjustedColorsFromBase()
   adjustmentsBaseColors.value = null
-  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0 }
+  globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0, daltonism: 'none' }
 
   if (isNeutralAdjustments(appliedAdjustments)) {
     ctx.colors.value = base
@@ -841,6 +882,7 @@ function onEscapeKey(event: KeyboardEvent): void {
   if (save.showEditModal.value) { save.showEditModal.value = false; return }
   if (ctx.showSaveModal.value) { ctx.showSaveModal.value = false; return }
   if (helpModalOpen.value) { helpModalOpen.value = false; return }
+  if (showAccessibilityAuditModal.value) { closeAccessibilityAuditModal(); return }
   if (showPaletteInfoModal.value) { showPaletteInfoModal.value = false; return }
   if (tutorial.showTutorial.value) { tutorial.closeTutorial(); return }
   if (ctx.mobileSidebarOpen.value) { closeMobileSidebar(); return }
@@ -1018,6 +1060,19 @@ watch(
 watch(copyFormat, (value) => {
   localStorage.setItem(COPY_FORMAT_KEY, value)
 })
+
+watch(
+  () => ctx.colors.value.length,
+  (count) => {
+    if (!count) {
+      accessibilityAuditIndex.value = 0
+      return
+    }
+    if (accessibilityAuditIndex.value > count - 1) {
+      accessibilityAuditIndex.value = count - 1
+    }
+  },
+)
 
 // Initialize palette loading when the route changes.
 ctx.startRouteWatch(undo.clearHistory)

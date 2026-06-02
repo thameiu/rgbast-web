@@ -8,9 +8,7 @@
         <div class="msb-top">
           <span class="msb-title font-display">Menu</span>
           <button class="msb-close" @click="$emit('close')">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            </svg>
+            <AppIcon name="x" :size="16" />
           </button>
         </div>
 
@@ -25,9 +23,7 @@
               <span class="msb-dot msb-dot-main"></span>
               <span class="msb-branch-name">main</span>
               <span v-if="currentBranchId === null" class="msb-branch-check" aria-hidden="true">
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                  <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <AppIcon name="check" :size="12" />
               </span>
             </button>
             <template v-for="(br, idx) in activeBranches" :key="br.id">
@@ -39,9 +35,7 @@
                 <span class="msb-dot" :style="{ background: branchColor(idx) }"></span>
                 <span class="msb-branch-name">{{ br.title }}</span>
                 <span v-if="currentBranchId === br.id" class="msb-branch-check" aria-hidden="true">
-                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                    <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
+                  <AppIcon name="check" :size="12" />
                 </span>
               </button>
               <button
@@ -66,17 +60,11 @@
               :disabled="isSaving || !hasUnsavedChanges"
               @click="$emit('requestSave'); $emit('close')"
             >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <path d="M7 2v7M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M2 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
+              <AppIcon name="download" :size="16" />
               {{ isSaving ? 'Saving...' : 'Save snapshot' }}
             </button>
             <button v-if="isOwned" class="msb-action" @click="$emit('edit'); $emit('close')">
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-                <path d="M2.5 9.5L9.5 2.5l2 2-7 7H2.5v-2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                <path d="M8.8 3.2l2 2" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-              </svg>
+              <AppIcon name="edit" :size="15" />
               Edit palette
             </button>
             <button
@@ -84,9 +72,7 @@
               class="msb-action msb-action-danger"
               @click="$emit('deletePalette'); $emit('close')"
             >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <path d="M2 4h10M5.5 4V2.5h3V4M5 4l.5 8.5M7 4v8.5M9 4l-.5 8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <AppIcon name="trash" :size="16" />
               Delete palette
             </button>
             <button
@@ -94,68 +80,41 @@
               class="msb-action msb-action-clone"
               @click="$emit('clonePalette'); $emit('close')"
             >
-              <svg width="16" height="16" viewBox="0 0 14 14" fill="none">
-                <rect x="1" y="4" width="8" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
-                <path d="M5 1h7a1 1 0 011 1v8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
-              </svg>
+              <AppIcon name="clone" :size="16" />
               Clone palette
             </button>
 
             <div class="msb-gen-group">
               <button class="msb-gen-main" @click="$emit('generate'); $emit('close')">
-                <svg width="14" height="14" viewBox="0 0 15 15" fill="none">
-                  <path d="M7.5 1.5l1.2 3.3L12 6l-3.3 1.2L7.5 10.5 6.3 7.2 3 6l3.3-1.2L7.5 1.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                  <path d="M12 10l.6 1.4L14 12l-1.4.6L12 14l-.6-1.4L10 12l1.4-.6L12 10z" stroke="currentColor" stroke-width="1.1" stroke-linejoin="round"/>
-                </svg>
+                <AppIcon name="sparkles" :size="14" />
                 Generate
               </button>
               <button class="msb-gen-settings" @click="$emit('openGenerateSettings'); $emit('close')">
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="1.8" stroke="currentColor" stroke-width="1.2"/>
-                  <path d="M6 1v1.2M6 9.8V11M1 6h1.2M9.8 6H11M2.2 2.2l.85.85M8.95 8.95l.85.85M9.8 2.2l-.85.85M3.05 8.95l-.85.85" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-                </svg>
+                <AppIcon name="settings" :size="12" />
               </button>
             </div>
             <button class="msb-action" @click="$emit('openImagePalette'); $emit('close')">
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-                <rect x="1.4" y="2.2" width="11.2" height="9.6" rx="1.8" stroke="currentColor" stroke-width="1.3"/>
-                <circle cx="4.6" cy="5.2" r="1" fill="currentColor"/>
-                <path d="M2.8 10l2.8-2.4 1.9 1.6 1.8-1.5 2 2.3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <AppIcon name="image" :size="15" />
               Palette from image
             </button>
             <button class="msb-action" @click="$emit('openExport'); $emit('close')">
-              <svg width="15" height="15" viewBox="0 0 14 14" fill="none">
-                <circle cx="3" cy="7" r="1.4" stroke="currentColor" stroke-width="1.2"/>
-                <circle cx="10.8" cy="3" r="1.4" stroke="currentColor" stroke-width="1.2"/>
-                <circle cx="10.8" cy="11" r="1.4" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M4.2 6.2l5-2.3M4.2 7.8l5 2.3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
+              <AppIcon name="share" :size="15" />
               Export palette
             </button>
+            <button class="msb-action" @click="$emit('openAccessibilityAudit'); $emit('close')">
+              <AppIcon name="search" :size="15" />
+              Accessibility audit
+            </button>
             <button class="msb-action" :class="{ 'msb-action-copy--copied': copyFeedback }" @click="$emit('copyPalette')">
-              <svg v-if="copyFeedback" width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <svg v-else width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <rect x="4.2" y="3.2" width="7.2" height="8.6" rx="1.4" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M3.4 9.8H2.8A1.2 1.2 0 011.6 8.6V2.8A1.2 1.2 0 012.8 1.6h5.8A1.2 1.2 0 019.8 2.8v.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
+              <AppIcon :name="copyFeedback ? 'check' : 'copy'" :size="14" />
               Copy colors
             </button>
             <button class="msb-action" @click="$emit('pasteAdd'); $emit('close')">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M9.8 2.4h.7A1.5 1.5 0 0112 3.9v7.7a1.5 1.5 0 01-1.5 1.5H4a1.5 1.5 0 01-1.5-1.5V3.9A1.5 1.5 0 014 2.4h.7" stroke="currentColor" stroke-width="1.2"/>
-                <rect x="5.1" y="1.3" width="3.8" height="2.3" rx=".7" stroke="currentColor" stroke-width="1.2"/>
-              </svg>
+              <AppIcon name="clipboard" :size="14" />
               Paste colors (add)
             </button>
             <button class="msb-action" @click="$emit('pasteReplace'); $emit('close')">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M9.8 2.4h.7A1.5 1.5 0 0112 3.9v7.7a1.5 1.5 0 01-1.5 1.5H4a1.5 1.5 0 01-1.5-1.5V3.9A1.5 1.5 0 014 2.4h.7" stroke="currentColor" stroke-width="1.2"/>
-                <rect x="5.1" y="1.3" width="3.8" height="2.3" rx=".7" stroke="currentColor" stroke-width="1.2"/>
-                <path d="M4.4 6.9h5.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-              </svg>
+              <AppIcon name="clipboard" :size="14" />
               Paste colors (replace)
             </button>
           </div>
@@ -235,6 +194,14 @@
               >
               <span class="msb-slider-value">{{ adjustments.luminosity }}</span>
             </label>
+            <div class="msb-vision-block">
+              <div class="msb-display-adjust-title">Daltonism</div>
+              <div class="msb-vision-options">
+                <button class="msb-adjust-btn" :class="{ 'msb-adjust-btn--apply': adjustments.daltonism === 'protanopia' }" @click="onDaltonismToggle('protanopia')">Protanopia</button>
+                <button class="msb-adjust-btn" :class="{ 'msb-adjust-btn--apply': adjustments.daltonism === 'deuteranopia' }" @click="onDaltonismToggle('deuteranopia')">Deuteranopia</button>
+                <button class="msb-adjust-btn" :class="{ 'msb-adjust-btn--apply': adjustments.daltonism === 'tritanopia' }" @click="onDaltonismToggle('tritanopia')">Tritanopia</button>
+              </div>
+            </div>
             <div class="msb-adjust-actions">
               <button class="msb-adjust-btn msb-adjust-btn--cancel" @click="emit('cancelAdjustments')">Cancel</button>
               <button class="msb-adjust-btn msb-adjust-btn--apply" @click="emit('applyAdjustments')">Apply</button>
@@ -246,11 +213,11 @@
           <div class="msb-section-label">Help</div>
           <div class="msb-actions">
             <button class="msb-action" @click="$emit('openHelpHistory'); $emit('close')">
-              <span class="msb-help-glyph">?</span>
+              <AppIcon name="help-circle" :size="14" />
               History
             </button>
             <button class="msb-action" @click="$emit('openHelpGeneration'); $emit('close')">
-              <span class="msb-help-glyph">?</span>
+              <AppIcon name="help-circle" :size="14" />
               Generation
             </button>
           </div>
@@ -262,8 +229,11 @@
 
 <script setup lang="ts">
 // PaletteMobileSidebar component: renders the mobile action sidebar for PaletteView.
+import AppIcon from '@/components/icons/AppIcon.vue'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
+
+type AdjustmentSliderKey = 'hue' | 'saturation' | 'temperature' | 'luminosity'
 
 const props = defineProps<{
   open: boolean
@@ -304,11 +274,20 @@ const emit = defineEmits<{
   (e: 'applyAdjustments'): void
   (e: 'openExport'): void
   (e: 'edit'): void
+  (e: 'openAccessibilityAudit'): void
 }>()
 
-function onSliderInput(key: keyof GlobalColorAdjustments, value: number): void {
+function onSliderInput(key: AdjustmentSliderKey, value: number): void {
   emit('startAdjustmentsSession')
   emit('updateAdjustments', { ...props.adjustments, [key]: value })
+}
+
+function onDaltonismToggle(mode: GlobalColorAdjustments['daltonism']): void {
+  emit('startAdjustmentsSession')
+  emit('updateAdjustments', {
+    ...props.adjustments,
+    daltonism: props.adjustments.daltonism === mode ? 'none' : mode,
+  })
 }
 </script>
 

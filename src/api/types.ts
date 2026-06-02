@@ -343,6 +343,38 @@ export interface ColorLabelsResponse {
   labels: ColorLabelItemResponse[]
 }
 
+export interface PaletteAccessibilityColorInput {
+  hex: string
+  label?: string | null
+}
+
+export interface PaletteAccessibilityNamedColor {
+  input_hex: string
+  normalized_hex: string
+  closest_name: string | null
+  label_is_approximate: boolean
+  palette_label?: string | null
+}
+
+export interface PaletteAccessibilityContrastItem {
+  color: PaletteAccessibilityNamedColor
+  contrast: ColorContrastCheckResponse
+}
+
+export interface PaletteAccessibilityAuditRequest {
+  selected_hex: string
+  palette_colors: PaletteAccessibilityColorInput[]
+}
+
+export interface PaletteAccessibilityAuditResponse {
+  selected_color: ColorInfoResponse
+  selected_palette_color: PaletteAccessibilityNamedColor
+  palette_colors: PaletteAccessibilityNamedColor[]
+  contrast_on_white: ColorContrastCheckResponse
+  contrast_on_black: ColorContrastCheckResponse
+  contrast_with_palette: PaletteAccessibilityContrastItem[]
+}
+
 // ── Local cache (localStorage) ────────────────────────────────────────────────
 
 /** Minimal palette shape stored in localStorage for offline title/color preview. */

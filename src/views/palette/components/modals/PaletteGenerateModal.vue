@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal gen-modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close generation modal" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Generate</h3>
 
         <label class="field-label">Colors - {{ genCount }}</label>
@@ -31,9 +33,7 @@
         <div class="gen-harmony-wrap">
           <button ref="harmonyTriggerEl" class="gen-harmony-trigger" @click="toggleHarmonyDropdown()">
             <span>{{ harmonyLabel }}</span>
-            <svg class="gen-dd-chevron" :class="{ rotated: harmonyOpen }" width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <AppIcon class="gen-dd-chevron" name="chevron-down" :size="10" :class="{ rotated: harmonyOpen }" />
           </button>
         </div>
 
@@ -61,9 +61,7 @@
                 title="Select from palette"
                 @click.stop="toggleGenPaletteDrop(i, $event)"
               >
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                  <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+                <AppIcon name="chevron-down" :size="10" />
               </button>
             </div>
             <button class="gen-base-remove" @click="removeBaseColor(i)">x</button>
@@ -121,9 +119,7 @@
           <span class="gen-harmony-label">{{ opt.label }}</span>
           <span class="gen-harmony-desc">{{ opt.desc }}</span>
           <span v-if="genHarmony === opt.value" class="gen-harmony-check" aria-hidden="true">
-            <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
-              <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
+            <AppIcon name="check" :size="11" />
           </span>
         </button>
       </div>
@@ -134,6 +130,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import type { CSSProperties } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
 import type { WorkingColor } from '../../composables/usePaletteContext'
 

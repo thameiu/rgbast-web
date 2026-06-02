@@ -2,6 +2,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { colorApi } from '@/api/color'
 import type { ColorInfoResponse, ColorContrastCheckResponse } from '@/api/types'
+import { getSharkTaleQuote } from '@/utils/colorAccessibility'
 
 /** Hue-Saturation-Value tuple: [0-360, 0-1, 0-1]. */
 export type HSV = [number, number, number]
@@ -224,72 +225,10 @@ export function useColorView() {
     ]
   })
 
-  /** Pool of quotes used in the accessibility preview. */
-  const sharkTaleQuotes = [
-    "I'm the shark slayer!",
-    'Whale Wash. You get the whale, we do the rest.',
-    "I'm a vegetarian.",
-    "Don't you EVER take the last meatball!",
-    'Oscar, I am your father.',
-    'Thank you, fish!',
-    'I got jelly in my head.',
-    'Man, it is good to be alive!',
-    'I just wanna be somebody.',
-    'Keep it real, keep it real.',
-    'You are so beautiful!',
-    'Sykes, you beautiful fish!',
-    'Sorry, pop. Lenny had a little accident. He was born!',
-    'You live in a billboard? And I thought I was crazy!',
-    'You coming at me like that? You come at the O like that?',
-    'No, I said "What, what?" as in "What, what?',
-    'Well, for your information, I am the Sharkslayer.',
-    "That's what I'm talking about!",
-    "You're killing me, Smalls!",
-    'Just keep swimming, keep swimming.',
-    "I'm the best there ever was!",
-    'Nobody does it better than Oscar.',
-    'Stay in school, kids.',
-    "Mama's gonna make it all better.",
-    "That's not how we do things around here.",
-    'You gotta believe in yourself!',
-    "I didn't come this far to give up now.",
-    "That's hot, that's hot.",
-    'Angler fish? More like danger fish!',
-    'Plankton power!',
-    "I've got big dreams, baby.",
-    'This is my moment!',
-    "Don't mess with the coral.",
-    'Jellyfish jam session!',
-    'Living large in the reef!',
-    "That's a wrap, my fins.",
-    'You feel me?',
-    "I'm on top of the world!",
-    'Legends never die.',
-    'Keep your head in the game.',
-    "That's the way the cookie crumbles.",
-    "I'm bout to blow up!",
-    'Fame is a funny thing.',
-    'Money talks, you know?',
-    'Friends forever, no matter what.',
-    "That's just how we roll.",
-    "I'm living my best life.",
-    'Dreams do come true!',
-    'Never give up, never surrender.',
-    "That's the real deal right there.",
-    "You've got potential, kid.",
-    'This is gonna be legendary.',
-    "I'm ready for anything!",
-    "That's the ticket!",
-    'Keep shining, bright star.',
-    "We're in this together, buddy.",
-    "That's a certified banger right there.",
-  ]
-
   /** Quote deterministically selected based on the current hex. */
   const currentQuote = computed(() => {
     const hex = colorInfo.value?.normalized_hex ?? displayHex.value
-    const n = parseInt(hex.slice(0, 4), 16)
-    return sharkTaleQuotes[n % sharkTaleQuotes.length] ?? ''
+    return getSharkTaleQuote(hex)
   })
 
   // ── API fetch logic ───────────────────────────────────────────────────────

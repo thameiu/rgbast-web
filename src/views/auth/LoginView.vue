@@ -127,13 +127,18 @@
 
           <label class="field">
             <span class="field-label font-mono">Password</span>
-            <input
-              v-model="form.password"
-              type="password"
-              required
-              placeholder="••••••••"
-              class="field-input"
-            />
+            <div class="password-input-wrap">
+              <input
+                v-model="form.password"
+                :type="showPassword ? 'text' : 'password'"
+                required
+                placeholder="••••••••"
+                class="field-input field-input--with-eye"
+              />
+              <button type="button" class="password-eye-btn" @click="showPassword = !showPassword">
+                <AppIcon :name="showPassword ? 'eye-off' : 'eye'" size="15" />
+              </button>
+            </div>
           </label>
 
           <p class="forgot">
@@ -180,6 +185,7 @@ import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { setPageSeo } from '@/utils/seo'
 
 const router = useRouter()
@@ -194,6 +200,7 @@ onMounted(() => {
 
 /** Form field values. */
 const form = ref({ username: '', password: '' })
+const showPassword = ref(false)
 
 /** Whether a login request is in-flight. */
 const isSubmitting = ref(false)

@@ -15,7 +15,9 @@
     </div>
 
     <!-- Remove button -->
-    <button class="remove-btn" @click.stop="$emit('remove')" title="Remove color">×</button>
+    <button class="remove-btn" @click.stop="$emit('remove')" title="Remove color">
+      <AppIcon name="x" :size="12" />
+    </button>
 
     <!-- Clickable color body (opens picker) -->
     <div class="col-body" @click="openPicker"></div>
@@ -43,11 +45,7 @@
           :title="copiedRowKey === row.key ? 'Copied!' : `Copy ${row.key}`"
           @click.stop="copyValue(row.value, row.key)"
         >
-          <span v-if="copiedRowKey === row.key" class="copy-ok">✓</span>
-          <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="3.5" y="3.5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/>
-            <path d="M2 8V2h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon :name="copiedRowKey === row.key ? 'check' : 'copy'" :size="12" />
         </button>
       </div>
 
@@ -63,11 +61,7 @@
           :title="copiedRowKey === 'hex' ? 'Copied!' : 'Copy hex'"
           @click.stop="copyValue('#' + modelValue.hex.toUpperCase(), 'hex')"
         >
-          <span v-if="copiedRowKey === 'hex'" class="copy-ok">✓</span>
-          <svg v-else width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="3.5" y="3.5" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/>
-            <path d="M2 8V2h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <AppIcon :name="copiedRowKey === 'hex' ? 'check' : 'copy'" :size="12" />
         </button>
       </div>
     </div>
@@ -92,6 +86,7 @@
  * horizontal reordering on desktop; on mobile it starts drag after a 300ms hold.
  */
 import { ref, computed, onBeforeUnmount } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import ColorPicker from './ColorPicker.vue'
 import type { PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import { formatHexByMode } from '@/utils/paletteColorFormats'

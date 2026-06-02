@@ -1,10 +1,12 @@
 import { hexToRgb, rgbToHex } from './paletteColorFormats'
+import { applyDaltonismToHex, type DaltonismMode } from './colorAccessibility'
 
 export interface GlobalColorAdjustments {
   hue: number
   saturation: number
   temperature: number
   luminosity: number
+  daltonism: DaltonismMode
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -90,11 +92,15 @@ export function applyAdjustmentsToHex(hex: string, adjustments: GlobalColorAdjus
   const hslRgb = hslToRgb(nextHue, nextSat, nextLum)
   const tempRgb = applyTemperature(hslRgb, adjustments.temperature)
 
-  return rgbToHex(
+  const adjustedHex = rgbToHex(
     clamp(tempRgb.r, 0, 255),
     clamp(tempRgb.g, 0, 255),
     clamp(tempRgb.b, 0, 255),
   )
+
+  if (adjustments.daltonism === 'none') return adjustedHex
+
+  return applyDaltonismToHex(adjustedHex, hexToRgb(adjustedHex), adjustments.daltonism)
 }
 
 export function isNeutralAdjustments(adjustments: GlobalColorAdjustments): boolean {
@@ -102,4 +108,5 @@ export function isNeutralAdjustments(adjustments: GlobalColorAdjustments): boole
     && adjustments.saturation === 0
     && adjustments.temperature === 0
     && adjustments.luminosity === 0
+    && adjustments.daltonism === 'none'
 }

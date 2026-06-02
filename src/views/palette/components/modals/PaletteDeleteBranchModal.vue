@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" type="button" aria-label="Close delete branch modal" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Delete Branch</h3>
         <p class="modal-sub">
           Delete branch <strong>{{ branchName }}</strong>? All snapshots in this branch will be permanently lost.
@@ -20,6 +22,8 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
+
 // PaletteDeleteBranchModal component: confirms branch deletion in PaletteView.
 defineProps<{
   open: boolean

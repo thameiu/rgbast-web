@@ -46,21 +46,20 @@
 .close-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 20px;
+  color: rgba(255, 255, 255, 0.66);
   cursor: pointer;
-  width: 32px;
-  height: 32px;
-  display: flex;
+  width: 24px;
+  height: 24px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
-  transition: color 0.15s, background 0.15s;
+  padding: 0;
+  transition: color 0.18s ease-in-out, transform 0.18s ease-in-out;
 }
 
 .close-btn:hover {
   color: #fff;
-  background: rgba(255, 255, 255, 0.06);
+  transform: scale(1.05);
 }
 
 .history-empty {

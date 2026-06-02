@@ -2,7 +2,9 @@
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
       <div class="modal export-modal">
-        <button class="modal-close-btn" @click="$emit('close')">x</button>
+        <button class="modal-close-btn" @click="$emit('close')">
+          <AppIcon name="x" :size="16" />
+        </button>
         <h3 class="modal-title font-display">Export Palette</h3>
 
         <p class="modal-sub">
@@ -14,9 +16,7 @@
             <label class="field-label">Font</label>
             <button class="custom-dd-btn" :class="{ open: fontDropdownOpen }" @click="toggleFontDropdown">
               <span>{{ selectedFontLabel }}</span>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" :class="{ rotated: fontDropdownOpen }">
-                <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <AppIcon name="chevron-down" :size="10" :class="{ rotated: fontDropdownOpen }" />
             </button>
             <Transition name="header-dd">
               <div v-if="fontDropdownOpen" class="custom-dd-menu">
@@ -29,9 +29,7 @@
                 >
                   <span>{{ font.label }}</span>
                   <span v-if="fontKey === font.key" class="dd-check" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <AppIcon name="check" :size="12" />
                   </span>
                 </button>
               </div>
@@ -42,34 +40,26 @@
             <label class="field-label">Visual format</label>
             <button class="custom-dd-btn" :class="{ open: formatDropdownOpen }" @click="toggleFormatDropdown">
               <span>{{ visualFormat.toUpperCase() }}</span>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" :class="{ rotated: formatDropdownOpen }">
-                <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <AppIcon name="chevron-down" :size="10" :class="{ rotated: formatDropdownOpen }" />
             </button>
             <Transition name="header-dd">
               <div v-if="formatDropdownOpen" class="custom-dd-menu">
                 <button class="custom-dd-opt" :class="{ active: visualFormat === 'pdf' }" @click="selectFormat('pdf')">
                   <span>PDF</span>
                   <span v-if="visualFormat === 'pdf'" class="dd-check" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <AppIcon name="check" :size="12" />
                   </span>
                 </button>
                 <button class="custom-dd-opt" :class="{ active: visualFormat === 'png' }" @click="selectFormat('png')">
                   <span>PNG</span>
                   <span v-if="visualFormat === 'png'" class="dd-check" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <AppIcon name="check" :size="12" />
                   </span>
                 </button>
                 <button class="custom-dd-opt" :class="{ active: visualFormat === 'svg' }" @click="selectFormat('svg')">
                   <span>SVG</span>
                   <span v-if="visualFormat === 'svg'" class="dd-check" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <AppIcon name="check" :size="12" />
                   </span>
                 </button>
               </div>
@@ -82,26 +72,20 @@
             <label class="field-label">Orientation (A4)</label>
             <button class="custom-dd-btn" :class="{ open: orientationDropdownOpen }" @click="toggleOrientationDropdown">
               <span>{{ orientationLabel }}</span>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none" :class="{ rotated: orientationDropdownOpen }">
-                <path d="M2 3.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
+              <AppIcon name="chevron-down" :size="10" :class="{ rotated: orientationDropdownOpen }" />
             </button>
             <Transition name="header-dd">
               <div v-if="orientationDropdownOpen" class="custom-dd-menu">
                 <button class="custom-dd-opt" :class="{ active: orientation === 'portrait' }" @click="selectOrientation('portrait')">
                   <span>Portrait</span>
                   <span v-if="orientation === 'portrait'" class="dd-check" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <AppIcon name="check" :size="12" />
                   </span>
                 </button>
                 <button class="custom-dd-opt" :class="{ active: orientation === 'landscape' }" @click="selectOrientation('landscape')">
                   <span>Landscape</span>
                   <span v-if="orientation === 'landscape'" class="dd-check" aria-hidden="true">
-                    <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
-                      <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
+                    <AppIcon name="check" :size="12" />
                   </span>
                 </button>
               </div>
@@ -143,7 +127,15 @@
         ></textarea>
 
         <div class="code-actions">
-          <button class="modal-btn cancel" :disabled="!editableCode.trim()" @click="copyCode">Copy code</button>
+          <button
+            class="modal-btn cancel"
+            :class="{ 'share-btn--copied': codeCopied }"
+            :disabled="!editableCode.trim()"
+            @click="copyCode"
+          >
+            <span v-if="codeCopied">✓ Copied</span>
+            <span v-else>Copy code</span>
+          </button>
           <button class="modal-btn secondary" :disabled="!editableCode.trim()" @click="downloadCode">Download code</button>
           <button
             v-if="isSavedPalette"
@@ -152,13 +144,7 @@
             :disabled="!shareUrl"
             @click="copyShareLink"
           >
-            <svg v-if="shareCopied" width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <path d="M2.6 7.2l2.4 2.5 6.4-6.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            <svg v-else width="13" height="13" viewBox="0 0 14 14" fill="none">
-              <rect x="4.2" y="3.2" width="7.2" height="8.6" rx="1.4" stroke="currentColor" stroke-width="1.2"/>
-              <path d="M3.4 9.8H2.8A1.2 1.2 0 011.6 8.6V2.8A1.2 1.2 0 012.8 1.6h5.8A1.2 1.2 0 019.8 2.8v.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-            </svg>
+            <AppIcon :name="shareCopied ? 'check' : 'copy'" :size="13" />
             <span>{{ shareCopied ? 'Link copied !' : 'Share palette link' }}</span>
           </button>
         </div>
@@ -177,6 +163,7 @@
 
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import { colorApi } from '@/api/color'
 import {
@@ -213,7 +200,9 @@ const error = ref('')
 const isBusy = ref(false)
 const colorNameMap = ref<Record<string, string>>({})
 const shareCopied = ref(false)
+const codeCopied = ref(false)
 let shareCopiedTimer: ReturnType<typeof setTimeout> | null = null
+let codeCopiedTimer: ReturnType<typeof setTimeout> | null = null
 
 const fontDropdownOpen = ref(false)
 const formatDropdownOpen = ref(false)
@@ -343,6 +332,7 @@ onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onDocPointerDown, { capture: true })
   document.removeEventListener('keydown', onDocKeydown, { capture: true })
   if (shareCopiedTimer) clearTimeout(shareCopiedTimer)
+  if (codeCopiedTimer) clearTimeout(codeCopiedTimer)
 })
 
 async function fetchColorNames(): Promise<void> {
@@ -404,6 +394,12 @@ async function copyCode(): Promise<void> {
   if (!navigator.clipboard?.writeText) return
   try {
     await navigator.clipboard.writeText(editableCode.value)
+    codeCopied.value = true
+    if (codeCopiedTimer) clearTimeout(codeCopiedTimer)
+    codeCopiedTimer = setTimeout(() => {
+      codeCopied.value = false
+      codeCopiedTimer = null
+    }, 1100)
   } catch {
     error.value = 'Could not copy code to clipboard.'
   }

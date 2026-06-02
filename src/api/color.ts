@@ -3,6 +3,8 @@ import type {
   ColorContrastCheckResponse,
   ColorInfoResponse,
   ColorLabelsResponse,
+  PaletteAccessibilityAuditRequest,
+  PaletteAccessibilityAuditResponse,
   PaletteGenerateRequest,
   PaletteGenerateResponse,
 } from './types'
@@ -16,6 +18,12 @@ export const colorApi = {
     return ApiClient.get<ColorContrastCheckResponse>(
       `/color/${hex1.replace('#', '')}/contrast/${hex2.replace('#', '')}`
     )
+  },
+
+  async getPaletteAccessibilityAudit(
+    data: PaletteAccessibilityAuditRequest,
+  ): Promise<PaletteAccessibilityAuditResponse> {
+    return ApiClient.post<PaletteAccessibilityAuditResponse>('/color/palette/accessibility', data)
   },
 
   async generatePalette(request: PaletteGenerateRequest): Promise<PaletteGenerateResponse> {

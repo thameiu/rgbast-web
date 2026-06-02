@@ -15,7 +15,7 @@
     <div class="card-clip">
       <div class="card-strip">
         <div
-          v-for="(col, ci) in palette.palette_colors.slice(0, 6)"
+          v-for="(col, ci) in palette.palette_colors.slice(0, 15)"
           :key="ci"
           class="strip-swatch"
           :style="{ background: '#' + col.hex }"

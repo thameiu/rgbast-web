@@ -156,7 +156,7 @@
   font-weight: 700;
   color: #111114;
   border: 1px solid rgba(14, 14, 16, 0.2);
-  border-radius: 999px;
+  border-radius: 9px;
   padding: 8px 14px;
   background: rgba(255,255,255,0.58);
   transition: background 0.18s, border-color 0.18s, color 0.18s;

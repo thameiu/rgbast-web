@@ -33,15 +33,14 @@
     </TransitionGroup>
 
     <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="$emit('add')" title="Add color">
-      <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-        <path d="M10 4v12M4 10h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
+      <AppIcon name="plus" :size="20" />
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import ColorColumn from '@/components/palette/ColorColumn.vue'
 import type { WorkingColor } from '../composables/usePaletteContext'
 import type { PaletteDisplaySettings } from '@/utils/paletteColorFormats'

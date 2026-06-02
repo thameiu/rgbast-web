@@ -47,20 +47,22 @@
 }
 
 .help-close-btn {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.06);
-  color: rgba(255,255,255,0.82);
-  font-size: 16px;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: rgba(255,255,255,0.66);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: background 0.14s, border-color 0.14s;
+  transition: color 0.18s ease-in-out, transform 0.18s ease-in-out;
 }
 
 .help-close-btn:hover {
-  background: rgba(255,255,255,0.12);
-  border-color: rgba(255,255,255,0.28);
+  color: #fff;
+  transform: scale(1.05);
 }
 
 .help-modal-body {

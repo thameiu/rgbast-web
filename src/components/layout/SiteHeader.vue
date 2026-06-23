@@ -77,7 +77,6 @@
       <Transition name="profile-menu-fade">
         <div v-if="isLoggedIn && profileMenuOpen" class="profile-menu">
           <button class="profile-menu-item" @click="goToProfile">Profile</button>
-          <button class="profile-menu-item" @click="goToBookmarks">Bookmarks</button>
           <button class="profile-menu-item" @click="onSettingsSoon">Settings</button>
           <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">Sign out</button>
         </div>

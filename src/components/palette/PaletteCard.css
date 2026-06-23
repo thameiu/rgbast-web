@@ -81,7 +81,7 @@
   top: 8px;
   width: 28px;
   height: 28px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: rgba(14,14,16,0.55);
   border: 1px solid rgba(255,255,255,0.18);
   color: rgba(255,255,255,0.75);

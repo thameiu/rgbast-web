@@ -20,6 +20,8 @@
       <template v-if="isLoggedIn">
         <span class="nav-sep" aria-hidden="true"></span>
         <RouterLink to="/dashboard" class="nav-link" :class="{ 'nav-link--active': isOnDashboard }">Dashboard</RouterLink>
+        <span class="nav-sep" aria-hidden="true"></span>
+        <RouterLink to="/bookmarks" class="nav-link" :class="{ 'nav-link--active': isOnBookmarks }">Bookmarks</RouterLink>
       </template>
     </nav>
 
@@ -75,6 +77,7 @@
       <Transition name="profile-menu-fade">
         <div v-if="isLoggedIn && profileMenuOpen" class="profile-menu">
           <button class="profile-menu-item" @click="goToProfile">Profile</button>
+          <button class="profile-menu-item" @click="goToBookmarks">Bookmarks</button>
           <button class="profile-menu-item" @click="onSettingsSoon">Settings</button>
           <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">Sign out</button>
         </div>
@@ -118,6 +121,7 @@
         <RouterLink to="/search" class="mob-link" @click="closeSidebar">Search</RouterLink>
         <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">New palette</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">Dashboard</RouterLink>
+        <RouterLink v-if="isLoggedIn" to="/bookmarks" class="mob-link" :class="{ 'mob-link--active': isOnBookmarks }" @click="closeSidebar">Bookmarks</RouterLink>
 
         <template v-if="isLoggedIn">
           <span class="mob-user font-mono">
@@ -137,6 +141,7 @@
             </div>
           </div>
           <button class="mob-link" @click="goToProfile">Profile</button>
+          <button class="mob-link" @click="goToBookmarks">Bookmarks</button>
           <button class="mob-link" @click="onSettingsSoon">Settings</button>
           <button class="mob-link mob-signout" @click="handleLogout">Sign out</button>
         </template>
@@ -178,6 +183,7 @@ const isOnLanding   = computed(() => route.path === '/')
 
 /** True when the current route is the dashboard. */
 const isOnDashboard = computed(() => route.path === '/dashboard')
+const isOnBookmarks = computed(() => route.path === '/bookmarks')
 
 /** True when the current route starts with /color. */
 const isOnColor     = computed(() => route.path.startsWith('/color'))
@@ -277,6 +283,12 @@ function goToProfile(): void {
   profileMenuOpen.value = false
   closeSidebar()
   router.push(`/users/${encodeURIComponent(profileName.value)}`)
+}
+
+function goToBookmarks(): void {
+  profileMenuOpen.value = false
+  closeSidebar()
+  router.push('/bookmarks')
 }
 
 function onSettingsSoon(): void {

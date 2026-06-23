@@ -8,9 +8,20 @@
         <span class="swatch-label" :style="{ color: swatchTextColor }">
           {{ labelDisplay }}
         </span>
-        <span class="swatch-hex" :style="{ color: swatchTextColor }">
-          #{{ displayHex.toUpperCase() }}
-        </span>
+        <div class="swatch-hex-row">
+          <span class="swatch-hex" :style="{ color: swatchTextColor }">
+            #{{ displayHex.toUpperCase() }}
+          </span>
+          <button
+            class="hero-bookmark-btn"
+            :class="{ 'hero-bookmark-btn--active': !!currentBookmark }"
+            :style="{ color: swatchTextColor }"
+            :title="currentBookmark ? 'Update saved color' : 'Save color'"
+            @click="onBookmarkClick"
+          >
+            <AppIcon name="bookmark" :size="18" />
+          </button>
+        </div>
       </div>
       <transition name="hero-loader-fade">
         <div v-if="loading" class="hero-loader-overlay">
@@ -423,16 +434,42 @@
         </div>
       </div>
     </div>
+
+    <ColorBookmarkModal
+      :open="bookmarkModalOpen"
+      :hex="displayHex"
+      :label="bookmarkLabel"
+      :existing="!!currentBookmark"
+      :isSaving="bookmarkSaving"
+      :error="bookmarkError"
+      :createdAt="currentBookmark?.created_at ?? null"
+      :updatedAt="currentBookmark?.updated_at ?? null"
+      @close="closeBookmarkModal"
+      @save="saveBookmark"
+      @update:label="bookmarkLabel = $event"
+    />
+
+    <AuthModal
+      v-if="showBookmarkAuthModal"
+      theme="light"
+      @authenticated="onBookmarkAuthSuccess"
+      @cancel="onBookmarkAuthCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import type { UserMeResponse, ColorBookmarkResponse } from '@/api/types'
+import { authApi } from '@/api'
+import { colorBookmarksApi } from '@/api/colorBookmarks'
+import AuthModal from '@/components/auth/AuthModal.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
+import ColorBookmarkModal from '@/views/color/components/ColorBookmarkModal.vue'
 import { useColorView } from './composables/useColorView'
 import { setPageSeo } from '@/utils/seo'
 
@@ -486,6 +523,116 @@ const {
 } = view
 
 const pickerMode = ref<'2d' | '3d'>('2d')
+const viewerUser = ref<UserMeResponse | null>(null)
+const currentBookmark = ref<ColorBookmarkResponse | null>(null)
+const bookmarkModalOpen = ref(false)
+const showBookmarkAuthModal = ref(false)
+const bookmarkLabel = ref('')
+const bookmarkError = ref('')
+const bookmarkSaving = ref(false)
+const pendingBookmarkAfterAuth = ref(false)
+
+function buildDefaultBookmarkLabel(): string {
+  const label = labelDisplay.value?.trim().replace(/^~\s*/, '')
+  return label || `#${displayHex.value.toUpperCase()}`
+}
+
+function isBookmarkNotFound(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? '')
+  return /bookmark not found/i.test(message) || /http error 404/i.test(message)
+}
+
+async function loadBookmarkViewer(): Promise<void> {
+  const token = localStorage.getItem('access_token')
+  if (!token) {
+    viewerUser.value = null
+    currentBookmark.value = null
+    return
+  }
+  try {
+    viewerUser.value = await authApi.checkAuth()
+  } catch {
+    viewerUser.value = null
+    currentBookmark.value = null
+    localStorage.removeItem('access_token')
+  }
+}
+
+async function refreshCurrentBookmark(hex: string): Promise<void> {
+  if (!viewerUser.value) {
+    currentBookmark.value = null
+    return
+  }
+  try {
+    const bookmark = await colorBookmarksApi.getMineByHex(hex)
+    currentBookmark.value = bookmark
+    if (bookmarkModalOpen.value) {
+      bookmarkLabel.value = bookmark.label
+    }
+  } catch (error) {
+    if (isBookmarkNotFound(error)) {
+      currentBookmark.value = null
+      if (bookmarkModalOpen.value) {
+        bookmarkLabel.value = buildDefaultBookmarkLabel()
+      }
+      return
+    }
+    currentBookmark.value = null
+  }
+}
+
+async function openBookmarkModal(): Promise<void> {
+  bookmarkError.value = ''
+  bookmarkLabel.value = buildDefaultBookmarkLabel()
+  await refreshCurrentBookmark(displayHex.value)
+  bookmarkLabel.value = currentBookmark.value?.label ?? buildDefaultBookmarkLabel()
+  bookmarkModalOpen.value = true
+}
+
+function closeBookmarkModal(): void {
+  bookmarkModalOpen.value = false
+  bookmarkError.value = ''
+}
+
+function onBookmarkClick(): void {
+  if (!viewerUser.value) {
+    pendingBookmarkAfterAuth.value = true
+    showBookmarkAuthModal.value = true
+    return
+  }
+  void openBookmarkModal()
+}
+
+async function saveBookmark(): Promise<void> {
+  const label = bookmarkLabel.value.trim()
+  if (!label) return
+  bookmarkSaving.value = true
+  bookmarkError.value = ''
+  try {
+    const saved = await colorBookmarksApi.upsert(displayHex.value, { label })
+    currentBookmark.value = saved
+    bookmarkLabel.value = saved.label
+    bookmarkModalOpen.value = false
+  } catch (error: any) {
+    bookmarkError.value = error?.message ?? 'Could not save this bookmark.'
+  } finally {
+    bookmarkSaving.value = false
+  }
+}
+
+async function onBookmarkAuthSuccess(): Promise<void> {
+  showBookmarkAuthModal.value = false
+  await loadBookmarkViewer()
+  if (pendingBookmarkAfterAuth.value) {
+    pendingBookmarkAfterAuth.value = false
+    await openBookmarkModal()
+  }
+}
+
+function onBookmarkAuthCancel(): void {
+  showBookmarkAuthModal.value = false
+  pendingBookmarkAfterAuth.value = false
+}
 
 watch(displayHex, hex => {
   const normalized = hex.toUpperCase()
@@ -495,6 +642,12 @@ watch(displayHex, hex => {
     keywords: ['color selection', 'hex color', 'rgb converter', 'hsl converter', 'cmyk converter', normalized],
   })
 }, { immediate: true })
+
+watch(displayHex, () => {
+  currentBookmark.value = null
+})
+
+void loadBookmarkViewer()
 </script>
 
 <style src="./ColorView.css" scoped></style>

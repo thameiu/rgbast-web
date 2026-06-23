@@ -7,6 +7,7 @@ import ForgotPasswordView from '@/views/auth/ForgotPasswordView.vue'
 import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
 import AuthCompleteView from '@/views/auth/AuthCompleteView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
+import BookmarksView from '@/views/bookmarks/BookmarksView.vue'
 import PaletteView from '@/views/palette/PaletteView.vue'
 import ColorView from '@/views/color/ColorView.vue'
 import ProfileView from '@/views/profile/ProfileView.vue'
@@ -52,6 +53,12 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: DashboardView,
+    },
+    {
+      path: '/bookmarks',
+      name: 'bookmarks',
+      component: BookmarksView,
+      meta: { requiresAuth: true },
     },
     {
       path: '/settings',

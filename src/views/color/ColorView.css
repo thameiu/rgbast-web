@@ -56,12 +56,39 @@
   opacity: 0.75;
   line-height: 1;
 }
+.swatch-hex-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 .swatch-hex {
   font-family: 'Sora', monospace;
   font-size: clamp(28px, 4vw, 42px);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1;
+}
+.hero-bookmark-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: 9px;
+  background: rgba(255,255,255,0.16);
+  backdrop-filter: blur(12px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out, background 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+.hero-bookmark-btn:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,0.24);
+  border-color: rgba(255,255,255,0.34);
+}
+.hero-bookmark-btn--active {
+  background: rgba(255,255,255,0.28);
+  border-color: rgba(255,255,255,0.42);
 }
 .hero-loader-overlay {
   position: absolute;

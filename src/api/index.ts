@@ -4,5 +4,6 @@ export * from './palettes';
 export * from './folders';
 export * from './users';
 export * from './color';
+export * from './colorBookmarks';
 export * from './search';
 export * from './colleagues';

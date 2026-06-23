@@ -20,6 +20,9 @@
       <path d="M10 14 19 5" />
       <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" />
     </template>
+    <template v-else-if="name === 'bookmark'">
+      <path d="M7 4h10a2 2 0 0 1 2 2v14l-7-4-7 4V6a2 2 0 0 1 2-2Z" />
+    </template>
     <template v-else-if="name === 'git-branch'">
       <circle cx="7" cy="6" r="2.5" />
       <circle cx="17" cy="6" r="2.5" />
@@ -223,6 +226,7 @@ export type AppIconName =
   | 'arrow-left'
   | 'arrow-right'
   | 'external-link'
+  | 'bookmark'
   | 'git-branch'
   | 'chevron-down'
   | 'chevron-left'

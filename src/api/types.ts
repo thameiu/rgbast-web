@@ -394,6 +394,35 @@ export interface PaletteAccessibilityAuditResponse {
   contrast_with_palette: PaletteAccessibilityContrastItem[]
 }
 
+// ── Color bookmarks ───────────────────────────────────────────────────────────
+
+export interface ColorBookmarkUpsert {
+  label: string;
+}
+
+export interface ColorBookmarkResponse {
+  id: number;
+  user_id: number;
+  hex: string;
+  label: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ColorBookmarkListResponse {
+  bookmarks: ColorBookmarkResponse[];
+}
+
+export interface ColorBookmarkByUsernameResponse {
+  username: string;
+  bookmarks: ColorBookmarkResponse[];
+}
+
+export interface ColorBookmarkDeleteResponse {
+  hex: string;
+  deleted: boolean;
+}
+
 // ── Local cache (localStorage) ────────────────────────────────────────────────
 
 /** Minimal palette shape stored in localStorage for offline title/color preview. */

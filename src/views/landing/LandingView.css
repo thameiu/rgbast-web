@@ -79,7 +79,7 @@
   color: var(--paper);
   font-size: 14px;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: 10px;
   text-decoration: none;
   transition: background .2s, transform .2s;
 }
@@ -95,7 +95,7 @@
   color: var(--ink);
   font-size: 14px;
   font-weight: 600;
-  border-radius: 999px;
+  border-radius: 10px;
   text-decoration: none;
   border: 1px solid var(--rule);
   transition: border-color .2s, color .2s;
@@ -285,15 +285,25 @@
 .feat-key--history { color: var(--magenta); }
 .feat-key--explorer { color: var(--magenta); }
 .feat-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin-top: 18px;
+  padding: 7px 11px;
+  border: 1px solid rgba(180,16,204,0.22);
+  border-radius: 8px;
+  background: rgba(180,16,204,0.04);
   font-size: 12px;
   letter-spacing: 0.1em;
   color: #b410cc;
   text-decoration: none;
-  transition: opacity .2s;
+  transition: opacity .2s, background .2s, border-color .2s;
 }
-.feat-link:hover { opacity: 0.7; }
+.feat-link:hover {
+  opacity: 0.85;
+  border-color: rgba(180,16,204,0.34);
+  background: rgba(180,16,204,0.08);
+}
 
 @media (max-width: 780px) {
   .features {

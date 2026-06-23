@@ -11,6 +11,15 @@
       <path d="M5 12h14" />
       <path d="m11 18-6-6 6-6" />
     </template>
+    <template v-else-if="name === 'arrow-right'">
+      <path d="M19 12H5" />
+      <path d="m13 18 6-6-6-6" />
+    </template>
+    <template v-else-if="name === 'external-link'">
+      <path d="M14 5h5v5" />
+      <path d="M10 14 19 5" />
+      <path d="M19 13v4a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h4" />
+    </template>
     <template v-else-if="name === 'git-branch'">
       <circle cx="7" cy="6" r="2.5" />
       <circle cx="17" cy="6" r="2.5" />
@@ -200,6 +209,11 @@
       <path d="M12 8v4" />
       <path d="M12 16h.01" />
     </template>
+    <template v-else-if="name === 'info-circle'">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11.5v4" />
+      <path d="M12 8h.01" />
+    </template>
     <path v-else-if="name === 'palette'" d="M12 4a8 8 0 1 0 0 16h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h6.2A2.8 2.8 0 0 0 21 8.2 8.2 8.2 0 0 0 12 4Z" />
   </svg>
 </template>
@@ -207,6 +221,8 @@
 <script setup lang="ts">
 export type AppIconName =
   | 'arrow-left'
+  | 'arrow-right'
+  | 'external-link'
   | 'git-branch'
   | 'chevron-down'
   | 'chevron-left'
@@ -250,6 +266,7 @@ export type AppIconName =
   | 'toolbox'
   | 'leaf'
   | 'alert-circle'
+  | 'info-circle'
   | 'palette'
 
 withDefaults(defineProps<{

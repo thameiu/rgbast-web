@@ -45,7 +45,7 @@
           :title="copiedRowKey === row.key ? 'Copied!' : `Copy ${row.key}`"
           @click.stop="copyValue(row.value, row.key)"
         >
-          <AppIcon :name="copiedRowKey === row.key ? 'check' : 'copy'" :size="12" />
+          <AppIcon :name="copiedRowKey === row.key ? 'check' : 'copy'" :size="24" />
         </button>
       </div>
 
@@ -61,7 +61,7 @@
           :title="copiedRowKey === 'hex' ? 'Copied!' : 'Copy hex'"
           @click.stop="copyValue('#' + modelValue.hex.toUpperCase(), 'hex')"
         >
-          <AppIcon :name="copiedRowKey === 'hex' ? 'check' : 'copy'" :size="12" />
+          <AppIcon :name="copiedRowKey === 'hex' ? 'check' : 'copy'" :size="24" />
         </button>
       </div>
     </div>

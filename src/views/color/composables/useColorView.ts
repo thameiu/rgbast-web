@@ -1,7 +1,13 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { colorApi } from '@/api/color'
-import type { ColorInfoResponse, ColorContrastCheckResponse } from '@/api/types'
+import type {
+  ColorContrastCheckResponse,
+  ColorHexReference,
+  ColorInfoResponse,
+  ColorReferenceRow,
+  ColorRelatedSet,
+} from '@/api/types'
 import { getSharkTaleQuote } from '@/utils/colorAccessibility'
 
 /** Hue-Saturation-Value tuple: [0-360, 0-1, 0-1]. */
@@ -9,6 +15,22 @@ export type HSV = [number, number, number]
 
 /** Red-Green-Blue tuple: [0-255, 0-255, 0-255]. */
 export type RGB = [number, number, number]
+
+const LAST_WATCHED_COLOR_KEY = 'rgbast_last_watched_color'
+const COLOR_HISTORY_KEY = 'rgbast_color_history'
+
+interface DisplayColorSwatch {
+  key: string
+  hex: string
+}
+
+interface DisplayColorGroup {
+  key: string
+  title: string
+  colors: DisplayColorSwatch[]
+  leadingColors?: DisplayColorSwatch[]
+  trailingColors?: DisplayColorSwatch[]
+}
 
 /**
  * Convert a 6-char hex string to an RGB tuple.
@@ -130,6 +152,13 @@ export function useColorView() {
 
   /** Name of the color space whose value was just copied. */
   const copiedSpace = ref<string | null>(null)
+  const copiedDerivedHex = ref<string | null>(null)
+  let copiedHexTimer: ReturnType<typeof setTimeout> | null = null
+  let copiedSpaceTimer: ReturnType<typeof setTimeout> | null = null
+  let copiedDerivedTimer: ReturnType<typeof setTimeout> | null = null
+  const analyzedColors = ref<string[]>([])
+  const analyzedIndex = ref(-1)
+  let pendingHistoryTarget: string | null = null
 
   // ── Contrast check state ──────────────────────────────────────────────────
 
@@ -214,14 +243,69 @@ export function useColorView() {
     return [
       { name: 'HEX', value: `#${c.normalized_hex.toUpperCase()}` },
       { name: 'RGB', value: `${c.rgb.r}  ${c.rgb.g}  ${c.rgb.b}` },
+      { name: 'RGB %', value: `${c.rgb_percent.r.toFixed(2)}%  ${c.rgb_percent.g.toFixed(2)}%  ${c.rgb_percent.b.toFixed(2)}%` },
       { name: 'HSL', value: `${c.hsl.h.toFixed(1)}°  ${c.hsl.s.toFixed(1)}%  ${c.hsl.l.toFixed(1)}%` },
       { name: 'HSB', value: `${c.hsb.h.toFixed(1)}°  ${c.hsb.s.toFixed(1)}%  ${c.hsb.b.toFixed(1)}%` },
       { name: 'HWB', value: `${c.hwb.h.toFixed(1)}°  ${c.hwb.w.toFixed(1)}%  ${c.hwb.b.toFixed(1)}%` },
       { name: 'CMYK', value: `${c.cmyk.c.toFixed(1)}  ${c.cmyk.m.toFixed(1)}  ${c.cmyk.y.toFixed(1)}  ${c.cmyk.k.toFixed(1)}` },
+      { name: 'CMYK %', value: `${c.cmyk_percent.c.toFixed(1)}%  ${c.cmyk_percent.m.toFixed(1)}%  ${c.cmyk_percent.y.toFixed(1)}%  ${c.cmyk_percent.k.toFixed(1)}%` },
       { name: 'LAB', value: `${c.lab.l.toFixed(2)}  ${c.lab.a.toFixed(2)}  ${c.lab.b.toFixed(2)}` },
       { name: 'LCH', value: `${c.lch.l.toFixed(2)}  ${c.lch.c.toFixed(2)}  ${c.lch.h.toFixed(2)}°` },
       { name: 'LUV', value: `${c.luv.l.toFixed(2)}  ${c.luv.u.toFixed(2)}  ${c.luv.v.toFixed(2)}` },
       { name: 'XYZ', value: `${c.xyz.x.toFixed(3)}  ${c.xyz.y.toFixed(3)}  ${c.xyz.z.toFixed(3)}` },
+    ]
+  })
+
+  function swatchFromReference(prefix: string, row: ColorReferenceRow, index: number): DisplayColorSwatch {
+    return {
+      key: `${prefix}-${row.hex}-${index}`,
+      hex: row.hex,
+    }
+  }
+
+  function swatchFromHexReference(prefix: string, color: ColorHexReference, index: number): DisplayColorSwatch {
+    return {
+      key: `${prefix}-${color.hex}-${index}`,
+      hex: color.hex,
+    }
+  }
+
+  function groupFromRelatedSet(key: string, title: string, set: ColorRelatedSet): DisplayColorGroup {
+    return {
+      key,
+      title,
+      leadingColors: [swatchFromHexReference(`${key}-base`, set.base, 0)],
+      colors: set.colors.map((color, index) => swatchFromHexReference(key, color, index)),
+    }
+  }
+
+  const derivedColorGroups = computed<DisplayColorGroup[]>(() => {
+    const c = colorInfo.value
+    if (!c) return []
+
+    return [
+      {
+        key: 'shades',
+        title: 'Shades',
+        leadingColors: [{ key: `shades-base-${c.normalized_hex}`, hex: c.normalized_hex }],
+        trailingColors: [{ key: 'shades-black', hex: '000000' }],
+        colors: c.shades.map((row, index) => swatchFromReference('shade', row, index)),
+      },
+      {
+        key: 'tints',
+        title: 'Tints',
+        leadingColors: [{ key: `tints-base-${c.normalized_hex}`, hex: c.normalized_hex }],
+        trailingColors: [{ key: 'tints-white', hex: 'FFFFFF' }],
+        colors: c.tints.map((row, index) => swatchFromReference('tint', row, index)),
+      },
+      groupFromRelatedSet('complementary', 'Complementary', c.complementary),
+      groupFromRelatedSet('triadic', 'Triadic', c.triadic),
+      groupFromRelatedSet('analogous', 'Analogous', c.analogous),
+      {
+        key: 'web-safe',
+        title: 'Closest web-safe',
+        colors: [swatchFromReference('web-safe', c.closest_web_safe, 0)],
+      },
     ]
   })
 
@@ -230,6 +314,8 @@ export function useColorView() {
     const hex = colorInfo.value?.normalized_hex ?? displayHex.value
     return getSharkTaleQuote(hex)
   })
+  const canGoBackColor = computed(() => analyzedIndex.value > 0)
+  const canGoForwardColor = computed(() => analyzedIndex.value >= 0 && analyzedIndex.value < analyzedColors.value.length - 1)
 
   // ── API fetch logic ───────────────────────────────────────────────────────
 
@@ -259,7 +345,9 @@ export function useColorView() {
     loading.value = true
     error.value = null
     try {
-      colorInfo.value = await colorApi.getColorInfo(hex)
+      const response = await colorApi.getColorInfo(hex)
+      colorInfo.value = response
+      syncAnalyzedHistory(response.normalized_hex)
       if (contrastPicked.value) fetchContrastInfo()
     } catch (e: unknown) {
       error.value = e instanceof Error ? e.message : 'Failed to load colour info.'
@@ -312,6 +400,67 @@ export function useColorView() {
   )
 
   onMounted(() => fetchColorInfo(initHex))
+
+  function persistHistory(): void {
+    try {
+      localStorage.setItem(COLOR_HISTORY_KEY, JSON.stringify({
+        colors: analyzedColors.value,
+        index: analyzedIndex.value,
+      }))
+    } catch {}
+  }
+
+  function syncAnalyzedHistory(hex: string): void {
+    try {
+      localStorage.setItem(LAST_WATCHED_COLOR_KEY, hex)
+      window.dispatchEvent(new CustomEvent('rgbast:last-watched-color-changed', { detail: hex }))
+    } catch {}
+
+    if (pendingHistoryTarget === hex) {
+      const existingIndex = analyzedColors.value.indexOf(hex)
+      if (existingIndex !== -1) analyzedIndex.value = existingIndex
+      pendingHistoryTarget = null
+      persistHistory()
+      return
+    }
+
+    if (analyzedColors.value[analyzedIndex.value] === hex) {
+      persistHistory()
+      return
+    }
+
+    const nextHistory = analyzedIndex.value < analyzedColors.value.length - 1
+      ? analyzedColors.value.slice(0, analyzedIndex.value + 1)
+      : [...analyzedColors.value]
+    nextHistory.push(hex)
+    analyzedColors.value = nextHistory
+    analyzedIndex.value = nextHistory.length - 1
+    persistHistory()
+  }
+
+  function loadHistoryState(): void {
+    try {
+      const raw = localStorage.getItem(COLOR_HISTORY_KEY)
+      if (!raw) return
+      const parsed = JSON.parse(raw) as { colors?: string[]; index?: number }
+      const colors = Array.isArray(parsed.colors)
+        ? parsed.colors.map(color => normalizeHex(String(color))).filter(Boolean)
+        : []
+      if (!colors.length) return
+      analyzedColors.value = colors
+      analyzedIndex.value = Math.max(0, Math.min(typeof parsed.index === 'number' ? parsed.index : colors.length - 1, colors.length - 1))
+    } catch {}
+  }
+
+  function navigateColorHistory(direction: -1 | 1): void {
+    const nextIndex = analyzedIndex.value + direction
+    if (nextIndex < 0 || nextIndex >= analyzedColors.value.length) return
+    const nextHex = analyzedColors.value[nextIndex]
+    pendingHistoryTarget = nextHex
+    analyzedIndex.value = nextIndex
+    applyHex(nextHex)
+    persistHistory()
+  }
 
   // ── Picker drag and input handling ────────────────────────────────────────
 
@@ -394,6 +543,7 @@ export function useColorView() {
   }
 
   onMounted(() => {
+    loadHistoryState()
     window.addEventListener('mousemove', onGlobalMove)
     window.addEventListener('mouseup', onGlobalUp)
     window.addEventListener('touchmove', onGlobalMove, { passive: false })
@@ -452,13 +602,7 @@ export function useColorView() {
    * Copy the current hex to the clipboard and show a brief confirmation.
    */
   async function copyHex() {
-    try {
-      await navigator.clipboard.writeText('#' + displayHex.value)
-      copied.value = true
-      setTimeout(() => {
-        copied.value = false
-      }, 1500)
-    } catch {}
+    await copyHexValue(displayHex.value, true)
   }
 
   /**
@@ -469,11 +613,83 @@ export function useColorView() {
     try {
       await navigator.clipboard.writeText(sp.value)
       copiedSpace.value = sp.name
-      setTimeout(() => {
-        if (copiedSpace.value === sp.name) copiedSpace.value = null
-      }, 1400)
     } catch {}
+    if (copiedSpaceTimer) clearTimeout(copiedSpaceTimer)
+    copiedSpaceTimer = setTimeout(() => {
+      if (copiedSpace.value === sp.name) copiedSpace.value = null
+      copiedSpaceTimer = null
+    }, 1400)
   }
+
+  async function copyHexValue(hex: string, activateMainCopy = false): Promise<void> {
+    try {
+      await navigator.clipboard.writeText('#' + normalizeHex(hex))
+      if (activateMainCopy) copied.value = true
+      copiedDerivedHex.value = normalizeHex(hex)
+    } catch {
+      return
+    }
+    if (activateMainCopy) {
+      if (copiedHexTimer) clearTimeout(copiedHexTimer)
+      copiedHexTimer = setTimeout(() => {
+        copied.value = false
+        copiedHexTimer = null
+      }, 1500)
+    }
+    if (copiedDerivedTimer) clearTimeout(copiedDerivedTimer)
+    copiedDerivedTimer = setTimeout(() => {
+      copiedDerivedHex.value = null
+      copiedDerivedTimer = null
+    }, 1500)
+  }
+
+  function getSwatchTextColor(hex: string): string {
+    const [r, g, b] = hexToRgb(normalizeHex(hex))
+    const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+    return lum > 0.5 ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.92)'
+  }
+
+  function setCurrentColor(hex: string): void {
+    applyHex(hex)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  function onPageKeydown(event: KeyboardEvent): void {
+    const key = event.key.toLowerCase()
+    const hasPrimaryModifier = event.ctrlKey || event.metaKey
+    if (!hasPrimaryModifier || event.altKey) return
+    const target = event.target as HTMLElement | null
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return
+    if (key === 'z' && !event.shiftKey) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      navigateColorHistory(-1)
+      return
+    }
+    if (key === 'y' || (key === 'z' && event.shiftKey)) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      navigateColorHistory(1)
+      return
+    }
+    if (key !== 'c') return
+    const selection = window.getSelection()
+    if (selection && selection.toString().trim()) return
+    event.preventDefault()
+    event.stopImmediatePropagation()
+    void copyHex()
+  }
+
+  onMounted(() => {
+    document.addEventListener('keydown', onPageKeydown, { capture: true })
+  })
+
+  onUnmounted(() => {
+    document.removeEventListener('keydown', onPageKeydown, { capture: true })
+    if (copiedHexTimer) clearTimeout(copiedHexTimer)
+    if (copiedSpaceTimer) clearTimeout(copiedSpaceTimer)
+    if (copiedDerivedTimer) clearTimeout(copiedDerivedTimer)
+  })
 
   return {
     hsv,
@@ -485,6 +701,7 @@ export function useColorView() {
     error,
     copied,
     copiedSpace,
+    copiedDerivedHex,
     contrastHex,
     contrastInfo,
     contrastLoading,
@@ -497,7 +714,10 @@ export function useColorView() {
     bastColor,
     bastDescription,
     colorSpaces,
+    derivedColorGroups,
     currentQuote,
+    canGoBackColor,
+    canGoForwardColor,
     areaEl,
     hueEl,
     startAreaDrag,
@@ -509,6 +729,11 @@ export function useColorView() {
     onRgbInput,
     applyHex,
     copyHex,
+    copyHexValue,
     copySpace,
+    setCurrentColor,
+    getSwatchTextColor,
+    goToPreviousColor: () => navigateColorHistory(-1),
+    goToNextColor: () => navigateColorHistory(1),
   }
 }

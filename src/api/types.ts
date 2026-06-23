@@ -299,6 +299,17 @@ export interface ColorContrastCheckResponse {
 // ── Color info ────────────────────────────────────────────────────────────────
 
 export interface ColorInfoRGB { r: number; g: number; b: number }
+export interface ColorInfoRGBPercent { r: number; g: number; b: number }
+export interface ColorHexReference { hex: string }
+export interface ColorReferenceRow {
+  hex: string
+  rgb: ColorInfoRGB
+  cmyk: { c: number; m: number; y: number; k: number }
+}
+export interface ColorRelatedSet {
+  base: ColorHexReference
+  colors: ColorHexReference[]
+}
 
 export interface ColorInfoResponse {
   input_hex: string
@@ -306,14 +317,22 @@ export interface ColorInfoResponse {
   closest_name: string | null
   label_is_approximate: boolean
   rgb: ColorInfoRGB
+  rgb_percent: ColorInfoRGBPercent
   hsl: { h: number; s: number; l: number }
   cmyk: { c: number; m: number; y: number; k: number }
+  cmyk_percent: { c: number; m: number; y: number; k: number }
   hsb: { h: number; s: number; b: number }
   lab: { l: number; a: number; b: number }
   xyz: { x: number; y: number; z: number }
   lch: { l: number; c: number; h: number }
   luv: { l: number; u: number; v: number }
   hwb: { h: number; w: number; b: number }
+  shades: ColorReferenceRow[]
+  tints: ColorReferenceRow[]
+  complementary: ColorRelatedSet
+  triadic: ColorRelatedSet
+  analogous: ColorRelatedSet
+  closest_web_safe: ColorReferenceRow
   accessibility: {
     color_blindness: {
       protanopia:   { rgb: ColorInfoRGB; hex: string }

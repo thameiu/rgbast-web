@@ -102,7 +102,7 @@
               Export palette
             </button>
             <button class="msb-action" @click="$emit('openAccessibilityAudit'); $emit('close')">
-              <AppIcon name="search" :size="15" />
+              <AppIcon name="info-circle" :size="15" />
               Accessibility audit
             </button>
             <button class="msb-action" :class="{ 'msb-action-copy--copied': copyFeedback }" @click="$emit('copyPalette')">

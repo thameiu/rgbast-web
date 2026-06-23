@@ -12,7 +12,7 @@
         <a href="#features" class="nav-link">Features</a>
         <span class="nav-sep" aria-hidden="true"></span>
       </template>
-      <RouterLink to="/color/B410CC" class="nav-link" :class="{ 'nav-link--active': isOnColor }">Colors</RouterLink>
+      <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }">Colors</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
       <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">Search</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
@@ -114,7 +114,7 @@
           <a href="#features" class="mob-link" @click="closeSidebar">Features</a>
         </template>
 
-        <RouterLink to="/color/B410CC" class="mob-link" @click="closeSidebar">Colors</RouterLink>
+        <RouterLink :to="lastColorRoute" class="mob-link" @click="closeSidebar">Colors</RouterLink>
         <RouterLink to="/search" class="mob-link" @click="closeSidebar">Search</RouterLink>
         <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">New palette</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">Dashboard</RouterLink>
@@ -182,6 +182,7 @@ const isOnDashboard = computed(() => route.path === '/dashboard')
 /** True when the current route starts with /color. */
 const isOnColor     = computed(() => route.path.startsWith('/color'))
 const isOnSearch    = computed(() => route.path.startsWith('/search'))
+const lastWatchedColor = ref('B410CC')
 
 /** True when the user prop is set or a token exists in localStorage. */
 const isLoggedIn    = computed(() => !!props.user || !!localStorage.getItem('access_token'))
@@ -214,6 +215,7 @@ const newPaletteTo = computed(() => {
   const username = profileName.value && isLoggedIn.value ? profileName.value : 'local'
   return { name: 'palette', params: { username, pathMatch: 'new' } }
 })
+const lastColorRoute = computed(() => `/color/${lastWatchedColor.value}`)
 
 /** Whether the mobile sidebar is visually open. */
 const mobileOpen = ref(false)
@@ -229,9 +231,11 @@ const accountEl = ref<HTMLElement | null>(null)
 const notifEl = ref<HTMLElement | null>(null)
 
 onMounted(() => {
+  syncLastWatchedColor()
   if (sidebarEl.value) gsap.set(sidebarEl.value, { x: '100%' })
   document.addEventListener('pointerdown', onGlobalPointerDown)
   window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
+  window.addEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
   if (isLoggedIn.value) {
     void loadIncomingRequests()
   }
@@ -240,7 +244,24 @@ onMounted(() => {
 onBeforeUnmount(() => {
   document.removeEventListener('pointerdown', onGlobalPointerDown)
   window.removeEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
+  window.removeEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
 })
+
+function syncLastWatchedColor(): void {
+  try {
+    const stored = localStorage.getItem('rgbast_last_watched_color')
+    if (stored) lastWatchedColor.value = stored.replace('#', '').toUpperCase().slice(0, 6) || 'B410CC'
+  } catch {}
+}
+
+function onLastWatchedColorChanged(event: Event): void {
+  const detail = (event as CustomEvent<string>).detail
+  if (typeof detail === 'string' && detail.trim()) {
+    lastWatchedColor.value = detail.replace('#', '').toUpperCase().slice(0, 6)
+    return
+  }
+  syncLastWatchedColor()
+}
 
 function toggleProfileMenu(): void {
   profileMenuOpen.value = !profileMenuOpen.value

@@ -120,7 +120,7 @@
   background: transparent; border: none;
   color: var(--fg); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  padding: 2px; opacity: 0; transition: opacity 0.15s; font-size: 11px;
+  padding: 4px; opacity: 0; transition: opacity 0.15s; font-size: 11px;
   flex-shrink: 0;
 }
 .format-row:hover .copy-btn,

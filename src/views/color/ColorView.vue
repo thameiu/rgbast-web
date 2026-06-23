@@ -26,6 +26,12 @@
       <aside class="picker-col" :class="{ 'picker-col--3d': pickerMode === '3d' }">
         <div class="card picker-card" :class="{ 'picker-card--3d': pickerMode === '3d' }">
           <div class="picker-mode-tabs">
+            <button class="color-history-btn" :disabled="!canGoBackColor" title="Previous color (Ctrl+Z)" @click="goToPreviousColor">
+              <AppIcon name="arrow-left" :size="13" />
+            </button>
+            <button class="color-history-btn" :disabled="!canGoForwardColor" title="Next color (Ctrl+Y / Ctrl+Shift+Z)" @click="goToNextColor">
+              <AppIcon name="arrow-right" :size="13" />
+            </button>
             <button class="picker-mode-btn" :class="{ active: pickerMode === '2d' }" @click="pickerMode = '2d'">
               Normal
             </button>
@@ -95,7 +101,7 @@
           </div>
 
           <!-- Copy hex -->
-          <button class="copy-btn" @click="copyHex">
+          <button class="copy-btn" :class="{ 'copy-btn--copied': copied }" @click="copyHex">
             <span v-if="copied">✓ Copied</span>
             <span v-else>Copy #{{ displayHex.toUpperCase() }}</span>
           </button>
@@ -129,68 +135,6 @@
               <div v-for="i in 10" :key="i" class="skel" style="height:54px;border-radius:10px;"></div>
             </div>
           </div>
-          <!-- Contrast check skeleton -->
-          <div class="card">
-            <span class="skel" style="width:110px;height:10px;"></span>
-            <div class="cc-pair">
-              <div class="skel" style="flex:1;height:64px;border-radius:10px;"></div>
-              <div class="skel" style="width:28px;height:16px;border-radius:6px;align-self:center;"></div>
-              <div class="skel" style="flex:1;height:64px;border-radius:10px;"></div>
-            </div>
-            <div class="skel" style="height:36px;border-radius:8px;"></div>
-            <div style="display:flex;gap:8px;">
-              <span class="skel" style="width:80px;height:28px;border-radius:8px;"></span>
-              <div style="display:flex;gap:5px;margin-left:auto;">
-                <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
-                <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
-              </div>
-            </div>
-          </div>
-          <!-- Accessibility skeleton -->
-          <div class="card">
-            <span class="skel" style="width:90px;height:10px;"></span>
-            <div class="contrast-rows">
-              <div class="contrast-row">
-                <div class="skel" style="width:100%;height:88px;border-radius:12px 12px 0 0;"></div>
-                <div class="contrast-meta">
-                  <div class="contrast-meta-top" style="gap:5px;">
-                    <span class="skel" style="width:50px;height:15px;"></span>
-                    <span class="skel" style="width:40px;height:9px;"></span>
-                  </div>
-                  <div style="display:flex;gap:5px;">
-                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                    <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
-                  </div>
-                </div>
-              </div>
-              <div class="contrast-row">
-                <div class="skel" style="width:100%;height:88px;border-radius:12px 12px 0 0;"></div>
-                <div class="contrast-meta">
-                  <div class="contrast-meta-top" style="gap:5px;">
-                    <span class="skel" style="width:50px;height:15px;"></span>
-                    <span class="skel" style="width:40px;height:9px;"></span>
-                  </div>
-                  <div style="display:flex;gap:5px;">
-                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                    <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Color blindness skeleton -->
-          <div class="card">
-            <span class="skel" style="width:110px;height:10px;"></span>
-            <div class="cb-row">
-              <div v-for="i in 3" :key="i" class="cb-swatch">
-                <div class="skel" style="width:100%;height:40px;border-radius:8px;"></div>
-                <span class="skel" style="width:60%;height:9px;"></span>
-                <span class="skel" style="width:50%;height:11px;"></span>
-              </div>
-            </div>
-          </div>
         </template>
 
         <template v-if="colorInfo">
@@ -209,7 +153,7 @@
 
           <!-- Color spaces -->
           <div class="card">
-            <span class="card-label">Color Spaces <span class="card-label-hint">- click any to copy</span></span>
+            <span class="card-label">Color Spaces</span>
             <div class="spaces-grid">
               <button
                 v-for="sp in colorSpaces"
@@ -220,152 +164,263 @@
               >
                 <span class="space-name">{{ sp.name }}</span>
                 <span class="space-vals">{{ sp.value }}</span>
-                <span class="space-copy-hint">{{ copiedSpace === sp.name ? '✓' : '' }}</span>
+                <span class="space-copy-hint" aria-hidden="true">
+                  <AppIcon :name="copiedSpace === sp.name ? 'check' : 'copy'" :size="13" />
+                </span>
               </button>
             </div>
           </div>
-
-          <!-- Contrast Check -->
-          <div class="card">
-            <span class="card-label">Contrast Check</span>
-
-            <!-- Paired swatch preview -->
-            <div class="cc-pair">
-              <!-- Left: current color (static) -->
-              <div class="cc-swatch" :style="{ background: '#' + displayHex }">
-                <span class="cc-swatch-hex" :style="{ color: swatchTextColor }">#{{ displayHex.toUpperCase() }}</span>
-              </div>
-
-              <span class="cc-vs">vs</span>
-
-              <!-- Right: comparison color - inactive until picked, picker opens on click -->
-              <div
-                ref="contrastSwatchEl"
-                class="cc-swatch cc-swatch--compare"
-                :class="{ 'cc-swatch--inactive': !contrastPicked }"
-                :style="contrastPicked ? { background: '#' + contrastHex } : {}"
-                @click="openContrastPicker"
-              >
-                <template v-if="contrastPicked">
-                  <span class="cc-swatch-hex" :style="{ color: compareSwatchTextColor }">#{{ contrastHex.toUpperCase() }}</span>
-                </template>
-                <template v-else>
-                  <span class="cc-pick-hint">+ pick color</span>
-                </template>
-              </div>
-            </div>
-
-            <!-- ColorPicker popover (same as palette view) -->
-            <ColorPicker
-              v-if="contrastPickerOpen"
-              :modelValue="contrastHex"
-              :anchorRect="contrastAnchorRect ?? undefined"
-              @update:modelValue="onContrastPickerUpdate"
-              @close="contrastPickerOpen = false"
-            />
-
-            <!-- Result (only once a color has been picked) -->
-            <template v-if="contrastPicked">
-              <div v-if="contrastInfo && !contrastLoading" class="cc-result">
-                <div class="cc-ratio-row">
-                  <span class="cc-ratio">{{ contrastInfo.ratio.toFixed(2) }}:1</span>
-                  <span class="cc-ratio-label">contrast ratio</span>
-                </div>
-                <div class="cc-badge-groups">
-                  <div class="cc-badge-group">
-                    <span class="cc-badge-scope">Normal</span>
-                    <span class="badge" :class="contrastInfo.aa_normal ? 'badge--pass' : 'badge--fail'">AA</span>
-                    <span class="badge" :class="contrastInfo.aaa_normal ? 'badge--pass' : 'badge--fail'">AAA</span>
-                  </div>
-                  <div class="cc-badge-group">
-                    <span class="cc-badge-scope">Large text</span>
-                    <span class="badge" :class="contrastInfo.aa_large ? 'badge--pass' : 'badge--fail'">AA</span>
-                    <span class="badge" :class="contrastInfo.aaa_large ? 'badge--pass' : 'badge--fail'">AAA</span>
-                  </div>
-                </div>
-              </div>
-              <div v-else-if="contrastLoading" class="cc-result cc-result--loading">
-                <span class="skel" style="width:80px;height:28px;border-radius:8px;"></span>
-                <div class="cc-badge-groups">
-                  <div class="cc-badge-group">
-                    <span class="skel" style="width:36px;height:9px;border-radius:4px;"></span>
-                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                  </div>
-                  <div class="cc-badge-group">
-                    <span class="skel" style="width:52px;height:9px;border-radius:4px;"></span>
-                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                    <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </div>
-
-          <!-- Accessibility -->
-          <div class="card">
-            <span class="card-label">Accessibility</span>
-            <div class="contrast-rows">
-              <div class="contrast-row">
-                <div class="contrast-preview contrast-preview--white">
-                  <span class="contrast-quote" :style="{ color: '#' + displayHex }">
-                    "{{ currentQuote }}"
-                  </span>
-                </div>
-                <div class="contrast-meta">
-                  <div class="contrast-meta-top">
-                    <span class="contrast-ratio">{{ colorInfo.accessibility.contrast.on_white.toFixed(2) }}:1</span>
-                    <span class="contrast-bg-label">on white</span>
-                  </div>
-                  <div class="badges">
-                    <span class="badge" :class="colorInfo.accessibility.contrast.aa_on_white_normal_text ? 'badge--pass' : 'badge--fail'">AA</span>
-                    <span class="badge" :class="colorInfo.accessibility.contrast.aaa_on_white_normal_text ? 'badge--pass' : 'badge--fail'">AAA</span>
-                  </div>
-                </div>
-              </div>
-              <div class="contrast-row">
-                <div class="contrast-preview contrast-preview--black">
-                  <span class="contrast-quote" :style="{ color: '#' + displayHex }">
-                    "{{ currentQuote }}"
-                  </span>
-                </div>
-                <div class="contrast-meta">
-                  <div class="contrast-meta-top">
-                    <span class="contrast-ratio">{{ colorInfo.accessibility.contrast.on_black.toFixed(2) }}:1</span>
-                    <span class="contrast-bg-label">on black</span>
-                  </div>
-                  <div class="badges">
-                    <span class="badge" :class="colorInfo.accessibility.contrast.aa_on_black_normal_text ? 'badge--pass' : 'badge--fail'">AA</span>
-                    <span class="badge" :class="colorInfo.accessibility.contrast.aaa_on_black_normal_text ? 'badge--pass' : 'badge--fail'">AAA</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Color blindness -->
-          <div class="card">
-            <span class="card-label">Color Blindness</span>
-            <div class="cb-row">
-              <div class="cb-swatch">
-                <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.protanopia.hex }"></div>
-                <span class="cb-label">Protanopia</span>
-                <span class="cb-hex">#{{ colorInfo.accessibility.color_blindness.protanopia.hex.toUpperCase() }}</span>
-              </div>
-              <div class="cb-swatch">
-                <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.deuteranopia.hex }"></div>
-                <span class="cb-label">Deuteranopia</span>
-                <span class="cb-hex">#{{ colorInfo.accessibility.color_blindness.deuteranopia.hex.toUpperCase() }}</span>
-              </div>
-              <div class="cb-swatch">
-                <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.tritanopia.hex }"></div>
-                <span class="cb-label">Tritanopia</span>
-                <span class="cb-hex">#{{ colorInfo.accessibility.color_blindness.tritanopia.hex.toUpperCase() }}</span>
-              </div>
-            </div>
-          </div>
-
         </template>
+      </div>
+
+      <div v-if="loading && !colorInfo" class="full-width-col">
+        <!-- Contrast check skeleton -->
+        <div class="card">
+          <span class="skel" style="width:110px;height:10px;"></span>
+          <div class="cc-pair">
+            <div class="skel" style="flex:1;height:64px;border-radius:10px;"></div>
+            <div class="skel" style="width:28px;height:16px;border-radius:6px;align-self:center;"></div>
+            <div class="skel" style="flex:1;height:64px;border-radius:10px;"></div>
+          </div>
+          <div class="skel" style="height:36px;border-radius:8px;"></div>
+          <div style="display:flex;gap:8px;">
+            <span class="skel" style="width:80px;height:28px;border-radius:8px;"></span>
+            <div style="display:flex;gap:5px;margin-left:auto;">
+              <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+              <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
+              <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+              <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="skel" style="width:90px;height:10px;"></span>
+          <div class="contrast-rows">
+            <div class="contrast-row">
+              <div class="skel" style="width:100%;height:88px;border-radius:12px 12px 0 0;"></div>
+              <div class="contrast-meta">
+                <div class="contrast-meta-top" style="gap:5px;">
+                  <span class="skel" style="width:50px;height:15px;"></span>
+                  <span class="skel" style="width:40px;height:9px;"></span>
+                </div>
+                <div style="display:flex;gap:5px;">
+                  <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                  <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
+                </div>
+              </div>
+            </div>
+            <div class="contrast-row">
+              <div class="skel" style="width:100%;height:88px;border-radius:12px 12px 0 0;"></div>
+              <div class="contrast-meta">
+                <div class="contrast-meta-top" style="gap:5px;">
+                  <span class="skel" style="width:50px;height:15px;"></span>
+                  <span class="skel" style="width:40px;height:9px;"></span>
+                </div>
+                <div style="display:flex;gap:5px;">
+                  <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                  <span class="skel" style="width:32px;height:20px;border-radius:5px;"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <span class="skel" style="width:110px;height:10px;"></span>
+          <div class="cb-row">
+            <div v-for="i in 3" :key="i" class="cb-swatch">
+              <div class="skel" style="width:100%;height:40px;border-radius:8px;"></div>
+              <span class="skel" style="width:60%;height:9px;"></span>
+              <span class="skel" style="width:50%;height:11px;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div v-if="colorInfo" class="full-width-col">
+        <div class="card">
+          <span class="card-label">Color Variants</span>
+          <div class="derived-groups">
+            <section v-for="group in derivedColorGroups" :key="group.key" class="derived-group">
+              <div class="derived-head">
+                <span class="derived-title">{{ group.title }}</span>
+              </div>
+              <div class="derived-row">
+                <div
+                  v-for="swatch in [...(group.leadingColors ?? []), ...group.colors, ...(group.trailingColors ?? [])]"
+                  :key="swatch.key"
+                  class="derived-swatch"
+                  :style="{ background: '#' + swatch.hex }"
+                >
+                  <div v-if="['shades', 'tints'].includes(group.key)" class="card-tooltip derived-tooltip">
+                    <p class="card-tooltip-title">#{{ swatch.hex.toUpperCase() }}</p>
+                  </div>
+                  <div class="derived-swatch-actions">
+                    <button
+                      class="derived-action-btn"
+                      :style="{ color: getSwatchTextColor(swatch.hex) }"
+                      title="Set as current color"
+                      @click.stop="setCurrentColor(swatch.hex)"
+                    >
+                      <AppIcon name="external-link" :size="14" />
+                    </button>
+                    <button
+                      class="derived-action-btn"
+                      :class="{ 'derived-action-btn--copied': copiedDerivedHex === swatch.hex }"
+                      :style="{ color: getSwatchTextColor(swatch.hex) }"
+                      :title="copiedDerivedHex === swatch.hex ? 'Copied!' : 'Copy hex'"
+                      @click.stop="copyHexValue(swatch.hex)"
+                    >
+                      <AppIcon :name="copiedDerivedHex === swatch.hex ? 'check' : 'copy'" :size="14" />
+                    </button>
+                  </div>
+                  <span
+                    v-if="['complementary', 'triadic', 'analogous', 'web-safe'].includes(group.key)"
+                    class="derived-inline-hex"
+                    :style="{ color: getSwatchTextColor(swatch.hex) }"
+                  >
+                    #{{ swatch.hex.toUpperCase() }}
+                  </span>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-label">Contrast Check</span>
+          <div class="cc-pair">
+            <div class="cc-swatch" :style="{ background: '#' + displayHex }">
+              <span class="cc-swatch-hex" :style="{ color: swatchTextColor }">#{{ displayHex.toUpperCase() }}</span>
+            </div>
+            <span class="cc-vs">vs</span>
+            <div
+              ref="contrastSwatchEl"
+              class="cc-swatch cc-swatch--compare"
+              :class="{ 'cc-swatch--inactive': !contrastPicked }"
+              :style="contrastPicked ? { background: '#' + contrastHex } : {}"
+              @click="openContrastPicker"
+            >
+              <template v-if="contrastPicked">
+                <span class="cc-swatch-hex" :style="{ color: compareSwatchTextColor }">#{{ contrastHex.toUpperCase() }}</span>
+              </template>
+              <template v-else>
+                <span class="cc-pick-hint">+ pick color</span>
+              </template>
+            </div>
+          </div>
+          <ColorPicker
+            v-if="contrastPickerOpen"
+            :modelValue="contrastHex"
+            :anchorRect="contrastAnchorRect ?? undefined"
+            @update:modelValue="onContrastPickerUpdate"
+            @close="contrastPickerOpen = false"
+          />
+          <template v-if="contrastPicked">
+            <div v-if="contrastInfo && !contrastLoading" class="cc-result">
+              <div class="cc-ratio-row">
+                <span class="cc-ratio">{{ contrastInfo.ratio.toFixed(2) }}:1</span>
+                <span class="cc-ratio-label">contrast ratio</span>
+              </div>
+              <div class="cc-badge-groups">
+                <div class="cc-badge-group">
+                  <span class="cc-badge-scope">Normal</span>
+                  <span class="badge" :class="contrastInfo.aa_normal ? 'badge--pass' : 'badge--fail'">AA</span>
+                  <span class="badge" :class="contrastInfo.aaa_normal ? 'badge--pass' : 'badge--fail'">AAA</span>
+                </div>
+                <div class="cc-badge-group">
+                  <span class="cc-badge-scope">Large text</span>
+                  <span class="badge" :class="contrastInfo.aa_large ? 'badge--pass' : 'badge--fail'">AA</span>
+                  <span class="badge" :class="contrastInfo.aaa_large ? 'badge--pass' : 'badge--fail'">AAA</span>
+                </div>
+              </div>
+            </div>
+            <div v-else-if="contrastLoading" class="cc-result cc-result--loading">
+              <span class="skel" style="width:80px;height:28px;border-radius:8px;"></span>
+              <div class="cc-badge-groups">
+                <div class="cc-badge-group">
+                  <span class="skel" style="width:36px;height:9px;border-radius:4px;"></span>
+                  <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                  <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                </div>
+                <div class="cc-badge-group">
+                  <span class="skel" style="width:52px;height:9px;border-radius:4px;"></span>
+                  <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                  <span class="skel" style="width:28px;height:20px;border-radius:5px;"></span>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="card">
+          <span class="card-label">Accessibility</span>
+          <div class="contrast-rows">
+            <div class="contrast-row">
+              <div class="contrast-preview contrast-preview--white">
+                <span class="contrast-quote" :style="{ color: '#' + displayHex }">
+                  "{{ currentQuote }}"
+                </span>
+              </div>
+              <div class="contrast-meta">
+                <div class="contrast-meta-top">
+                  <span class="contrast-ratio">{{ colorInfo.accessibility.contrast.on_white.toFixed(2) }}:1</span>
+                  <span class="contrast-bg-label">on white</span>
+                </div>
+                <div class="badges">
+                  <span class="badge" :class="colorInfo.accessibility.contrast.aa_on_white_normal_text ? 'badge--pass' : 'badge--fail'">AA</span>
+                  <span class="badge" :class="colorInfo.accessibility.contrast.aaa_on_white_normal_text ? 'badge--pass' : 'badge--fail'">AAA</span>
+                </div>
+              </div>
+            </div>
+            <div class="contrast-row">
+              <div class="contrast-preview contrast-preview--black">
+                <span class="contrast-quote" :style="{ color: '#' + displayHex }">
+                  "{{ currentQuote }}"
+                </span>
+              </div>
+              <div class="contrast-meta">
+                <div class="contrast-meta-top">
+                  <span class="contrast-ratio">{{ colorInfo.accessibility.contrast.on_black.toFixed(2) }}:1</span>
+                  <span class="contrast-bg-label">on black</span>
+                </div>
+                <div class="badges">
+                  <span class="badge" :class="colorInfo.accessibility.contrast.aa_on_black_normal_text ? 'badge--pass' : 'badge--fail'">AA</span>
+                  <span class="badge" :class="colorInfo.accessibility.contrast.aaa_on_black_normal_text ? 'badge--pass' : 'badge--fail'">AAA</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-label">Color Blindness</span>
+          <div class="cb-row">
+            <div class="cb-swatch">
+              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.protanopia.hex }">
+                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.protanopia.hex) }">
+                  #{{ colorInfo.accessibility.color_blindness.protanopia.hex.toUpperCase() }}
+                </span>
+              </div>
+              <span class="cb-label">Protanopia</span>
+            </div>
+            <div class="cb-swatch">
+              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.deuteranopia.hex }">
+                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.deuteranopia.hex) }">
+                  #{{ colorInfo.accessibility.color_blindness.deuteranopia.hex.toUpperCase() }}
+                </span>
+              </div>
+              <span class="cb-label">Deuteranopia</span>
+            </div>
+            <div class="cb-swatch">
+              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.tritanopia.hex }">
+                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.tritanopia.hex) }">
+                  #{{ colorInfo.accessibility.color_blindness.tritanopia.hex.toUpperCase() }}
+                </span>
+              </div>
+              <span class="cb-label">Tritanopia</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -376,6 +431,7 @@ import { ref, watch } from 'vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
 import { useColorView } from './composables/useColorView'
 import { setPageSeo } from '@/utils/seo'
@@ -393,6 +449,7 @@ const {
   error,
   copied,
   copiedSpace,
+  copiedDerivedHex,
   contrastHex,
   contrastInfo,
   contrastLoading,
@@ -405,7 +462,10 @@ const {
   bastColor,
   bastDescription,
   colorSpaces,
+  derivedColorGroups,
   currentQuote,
+  canGoBackColor,
+  canGoForwardColor,
   areaEl,
   hueEl,
   startAreaDrag,
@@ -417,7 +477,12 @@ const {
   onRgbInput,
   applyHex,
   copyHex,
+  copyHexValue,
   copySpace,
+  setCurrentColor,
+  getSwatchTextColor,
+  goToPreviousColor,
+  goToNextColor,
 } = view
 
 const pickerMode = ref<'2d' | '3d'>('2d')

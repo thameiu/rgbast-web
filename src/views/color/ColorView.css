@@ -118,20 +118,169 @@
   box-shadow: 0 1px 4px rgba(0,0,0,0.05);
 }
 .card-label {
-  font-size: 10px;
+  font-family: 'Mango Grotesque', sans-serif;
+  font-size: clamp(20px, 2.2vw, 25px);
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.02em;
+  line-height: 1;
   text-transform: uppercase;
-  color: var(--ink-3);
-}
-.card-label-hint {
-  font-weight: 500;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  color: rgba(0,0,0,0.3);
-  font-size: 9px;
+  color: var(--ink);
 }
 .info-col { display: flex; flex-direction: column; gap: 14px; }
+.full-width-col {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.derived-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.derived-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow: visible;
+}
+.derived-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.derived-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.derived-row {
+  display: flex;
+  gap: 0;
+  overflow: visible;
+}
+.derived-swatch {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 114px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: box-shadow 0.15s ease-in-out;
+}
+.derived-swatch:first-child {
+  border-radius: 12px 0 0 12px;
+}
+.derived-swatch:last-child {
+  border-radius: 0 12px 12px 0;
+}
+.derived-swatch:only-child {
+  border-radius: 12px;
+}
+.derived-swatch:hover {
+  z-index: 2;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.card-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 10px;
+  padding: 10px 14px;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s;
+  box-shadow: 0 8px 28px rgba(14,14,16,.25);
+}
+.card-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 12px;
+}
+.card-tooltip-title {
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.derived-tooltip {
+  left: 50%;
+  right: auto;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 32px));
+  transform: translateX(-50%);
+}
+.derived-swatch:hover .derived-tooltip {
+  opacity: 1;
+  pointer-events: auto;
+}
+.derived-swatch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out;
+}
+.derived-swatch:hover .derived-swatch-actions,
+.derived-action-btn--copied {
+  opacity: 1;
+}
+.derived-action-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(8px);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out, background 0.15s ease-in-out;
+}
+.derived-action-btn:hover {
+  transform: scale(1.05);
+  background: rgba(255,255,255,0.3);
+}
+.derived-action-btn--copied {
+  background: rgba(255,255,255,0.32);
+}
+.derived-inline-hex {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  font-family: 'Sora', monospace;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+}
+
+@media (max-width: 768px) {
+  .derived-row {
+    overflow-x: auto;
+  }
+
+  .derived-swatch {
+    min-width: 52px;
+  }
+}
 
 /* ── Picker card ─────────────────────────────────────── */
 .picker-card {
@@ -157,6 +306,33 @@
   border: 1px solid rgba(0,0,0,0.1);
   border-radius: 8px;
   overflow: hidden;
+}
+
+.color-history-btn {
+  width: 32px;
+  border: none;
+  background: transparent;
+  color: var(--ink-3);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.12s ease-in-out, color 0.12s ease-in-out;
+}
+
+.color-history-btn + .color-history-btn,
+.color-history-btn + .picker-mode-btn {
+  border-left: 1px solid rgba(0,0,0,0.1);
+}
+
+.color-history-btn:hover:not(:disabled) {
+  background: rgba(180, 16, 204, 0.12);
+  color: var(--ink);
+}
+
+.color-history-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 
 .picker-mode-btn {
@@ -266,6 +442,12 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
   letter-spacing: 0.04em; text-transform: uppercase;
 }
 .copy-btn:hover { background: var(--paper-2); color: var(--ink); }
+.copy-btn--copied,
+.copy-btn--copied:hover {
+  background: rgba(180, 16, 204, 0.12);
+  border-color: rgba(180, 16, 204, 0.35);
+  color: var(--magenta);
+}
 
 /* ── Bast score ──────────────────────────────────────── */
 .bast-card { gap: 10px; }
@@ -321,8 +503,8 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
   border-color: rgba(0,0,0,0.14);
 }
 .space-cell.copied {
-  background: rgba(42, 157, 96, 0.08);
-  border-color: rgba(42, 157, 96, 0.3);
+  background: rgba(180, 16, 204, 0.12);
+  border-color: rgba(180, 16, 204, 0.35);
 }
 
 .space-name {
@@ -345,10 +527,18 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
 }
 .space-copy-hint {
   position: absolute;
-  top: 8px; right: 10px;
-  font-size: 11px;
-  font-weight: 700;
-  color: #2a9d60;
+  top: 8px;
+  right: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-2);
+  opacity: 0;
+  transition: opacity 0.15s ease-in-out, color 0.15s ease-in-out;
+}
+.space-cell:hover .space-copy-hint,
+.space-cell.copied .space-copy-hint {
+  opacity: 1;
 }
 
 /* ── Contrast Check card ─────────────────────────────── */
@@ -519,16 +709,24 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
 .cb-dot {
+  position: relative;
   width: 100%; height: 40px; border-radius: 8px;
   border: 1px solid rgba(0,0,0,0.08);
+}
+.cb-inline-hex {
+  position: absolute;
+  left: 10px;
+  bottom: 8px;
+  font-family: 'Sora', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 .cb-label {
   font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--ink-3);
-}
-.cb-hex {
-  font-family: 'Sora', monospace; font-size: 11px;
-  color: var(--ink-2);
 }
 
 /* ── State messages ──────────────────────────────────── */

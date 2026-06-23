@@ -300,7 +300,7 @@
         title="Accessibility audit (A)"
         @click="$emit('openAccessibilityAudit')"
       >
-        <AppIcon name="search" :size="13" />
+        <AppIcon name="info-circle" :size="13" />
       </button>
       <button
         v-if="isOwned && canDelete"

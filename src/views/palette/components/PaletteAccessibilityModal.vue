@@ -28,14 +28,14 @@
         </div>
 
         <div v-if="audit" class="audit-grid">
-          <section class="audit-card audit-card--hero" :style="{ background: '#' + audit.selected_color.normalized_hex }">
+          <section class="audit-card audit-card--hero audit-card--panel" :style="{ background: '#' + audit.selected_color.normalized_hex }">
             <div class="audit-hero-copy" :style="{ color: heroTextColor }">
               <span class="audit-selected-label">{{ selectedName }}</span>
               <span class="audit-selected-hex">#{{ audit.selected_color.normalized_hex.toUpperCase() }}</span>
             </div>
           </section>
 
-          <section class="audit-card">
+          <section class="audit-card audit-card--panel">
             <div class="audit-card-head">
               <span class="audit-card-label">Bast Score</span>
               <span class="audit-bast-value" :style="{ color: bastColor }">{{ audit.selected_color.bast_score.toFixed(1) }}</span>
@@ -89,12 +89,50 @@
           </section>
 
           <section class="audit-card audit-card--wide">
+            <span class="audit-card-label">Color Variants</span>
+            <div class="audit-derived-groups">
+              <section v-for="group in derivedColorGroups" :key="group.key" class="audit-derived-group">
+                <span class="audit-derived-title">{{ group.title }}</span>
+                <div class="audit-derived-row">
+                  <div
+                    v-for="swatch in [...(group.leadingColors ?? []), ...group.colors, ...(group.trailingColors ?? [])]"
+                    :key="swatch.key"
+                    class="audit-derived-swatch"
+                    :style="{ background: '#' + swatch.hex }"
+                  >
+                    <div v-if="['shades', 'tints'].includes(group.key)" class="card-tooltip audit-derived-tooltip">
+                      <p class="card-tooltip-title">#{{ swatch.hex.toUpperCase() }}</p>
+                    </div>
+                    <button
+                      class="audit-derived-copy"
+                      :class="{ 'audit-derived-copy--copied': copiedDerivedHex === swatch.hex }"
+                      :style="{ color: getSwatchTextColor(swatch.hex) }"
+                      :title="copiedDerivedHex === swatch.hex ? 'Copied!' : 'Copy hex'"
+                      @click="copyHexValue(swatch.hex)"
+                    >
+                      <AppIcon :name="copiedDerivedHex === swatch.hex ? 'check' : 'copy'" :size="14" />
+                    </button>
+                    <span
+                      v-if="['complementary', 'triadic', 'analogous', 'web-safe'].includes(group.key)"
+                      class="audit-derived-inline-hex"
+                      :style="{ color: getSwatchTextColor(swatch.hex) }"
+                    >
+                      #{{ swatch.hex.toUpperCase() }}
+                    </span>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section class="audit-card audit-card--wide">
             <span class="audit-card-label">Color Blindness</span>
             <div class="audit-cb-row">
               <div v-for="entry in colorBlindnessCards" :key="entry.name" class="audit-cb-card">
-                <div class="audit-cb-dot" :style="{ background: '#' + entry.hex }"></div>
+                <div class="audit-cb-dot" :style="{ background: '#' + entry.hex }">
+                  <span class="audit-cb-inline-hex" :style="{ color: getSwatchTextColor(entry.hex) }">#{{ entry.hex.toUpperCase() }}</span>
+                </div>
                 <span class="audit-cb-label">{{ entry.name }}</span>
-                <span class="audit-cb-hex">#{{ entry.hex.toUpperCase() }}</span>
               </div>
             </div>
           </section>
@@ -131,6 +169,19 @@ interface ContrastRow {
   aaa: boolean
 }
 
+interface AuditDisplaySwatch {
+  key: string
+  hex: string
+}
+
+interface AuditDisplayGroup {
+  key: string
+  title: string
+  colors: AuditDisplaySwatch[]
+  leadingColors?: AuditDisplaySwatch[]
+  trailingColors?: AuditDisplaySwatch[]
+}
+
 const props = defineProps<{
   open: boolean
   colors: AuditColor[]
@@ -145,6 +196,7 @@ defineEmits<{
 const audit = ref<PaletteAccessibilityAuditResponse | null>(null)
 const loading = ref(false)
 const copiedSpace = ref<string | null>(null)
+const copiedDerivedHex = ref<string | null>(null)
 const auditCache = new Map<string, PaletteAccessibilityAuditResponse>()
 let copyTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -164,6 +216,14 @@ const heroTextColor = computed(() => {
   const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
   return lum > 0.5 ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.92)'
 })
+
+function getSwatchTextColor(hex: string): string {
+  const r = Number.parseInt(hex.slice(0, 2), 16)
+  const g = Number.parseInt(hex.slice(2, 4), 16)
+  const b = Number.parseInt(hex.slice(4, 6), 16)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.5 ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.92)'
+}
 
 const bastColor = computed(() => {
   const s = audit.value?.selected_color.bast_score ?? 0
@@ -188,14 +248,69 @@ const colorSpaces = computed(() => {
   return [
     { name: 'HEX', value: `#${c.normalized_hex.toUpperCase()}` },
     { name: 'RGB', value: `${c.rgb.r}  ${c.rgb.g}  ${c.rgb.b}` },
+    { name: 'RGB %', value: `${c.rgb_percent.r.toFixed(2)}%  ${c.rgb_percent.g.toFixed(2)}%  ${c.rgb_percent.b.toFixed(2)}%` },
     { name: 'HSL', value: `${c.hsl.h.toFixed(1)}°  ${c.hsl.s.toFixed(1)}%  ${c.hsl.l.toFixed(1)}%` },
     { name: 'HSB', value: `${c.hsb.h.toFixed(1)}°  ${c.hsb.s.toFixed(1)}%  ${c.hsb.b.toFixed(1)}%` },
     { name: 'HWB', value: `${c.hwb.h.toFixed(1)}°  ${c.hwb.w.toFixed(1)}%  ${c.hwb.b.toFixed(1)}%` },
     { name: 'CMYK', value: `${c.cmyk.c.toFixed(1)}  ${c.cmyk.m.toFixed(1)}  ${c.cmyk.y.toFixed(1)}  ${c.cmyk.k.toFixed(1)}` },
+    { name: 'CMYK %', value: `${c.cmyk_percent.c.toFixed(1)}%  ${c.cmyk_percent.m.toFixed(1)}%  ${c.cmyk_percent.y.toFixed(1)}%  ${c.cmyk_percent.k.toFixed(1)}%` },
     { name: 'LAB', value: `${c.lab.l.toFixed(2)}  ${c.lab.a.toFixed(2)}  ${c.lab.b.toFixed(2)}` },
     { name: 'LCH', value: `${c.lch.l.toFixed(2)}  ${c.lch.c.toFixed(2)}  ${c.lch.h.toFixed(2)}°` },
     { name: 'LUV', value: `${c.luv.l.toFixed(2)}  ${c.luv.u.toFixed(2)}  ${c.luv.v.toFixed(2)}` },
     { name: 'XYZ', value: `${c.xyz.x.toFixed(3)}  ${c.xyz.y.toFixed(3)}  ${c.xyz.z.toFixed(3)}` },
+  ]
+})
+
+const derivedColorGroups = computed<AuditDisplayGroup[]>(() => {
+  const c = audit.value?.selected_color
+  if (!c) return []
+  return [
+    {
+      key: 'shades',
+      title: 'Shades',
+      leadingColors: [{ key: `audit-shades-base-${c.normalized_hex}`, hex: c.normalized_hex }],
+      trailingColors: [{ key: 'audit-shades-black', hex: '000000' }],
+      colors: c.shades.map((row, index) => ({
+        key: `shade-${row.hex}-${index}`,
+        hex: row.hex,
+      })),
+    },
+    {
+      key: 'tints',
+      title: 'Tints',
+      leadingColors: [{ key: `audit-tints-base-${c.normalized_hex}`, hex: c.normalized_hex }],
+      trailingColors: [{ key: 'audit-tints-white', hex: 'FFFFFF' }],
+      colors: c.tints.map((row, index) => ({
+        key: `tint-${row.hex}-${index}`,
+        hex: row.hex,
+      })),
+    },
+    {
+      key: 'complementary',
+      title: 'Complementary',
+      leadingColors: [{ key: `comp-base-${c.complementary.base.hex}`, hex: c.complementary.base.hex }],
+      colors: c.complementary.colors.map((row, index) => ({ key: `comp-${row.hex}-${index}`, hex: row.hex })),
+    },
+    {
+      key: 'triadic',
+      title: 'Triadic',
+      leadingColors: [{ key: `tri-base-${c.triadic.base.hex}`, hex: c.triadic.base.hex }],
+      colors: c.triadic.colors.map((row, index) => ({ key: `tri-${row.hex}-${index}`, hex: row.hex })),
+    },
+    {
+      key: 'analogous',
+      title: 'Analogous',
+      leadingColors: [{ key: `ana-base-${c.analogous.base.hex}`, hex: c.analogous.base.hex }],
+      colors: c.analogous.colors.map((row, index) => ({ key: `ana-${row.hex}-${index}`, hex: row.hex })),
+    },
+    {
+      key: 'web-safe',
+      title: 'Closest web-safe',
+      colors: [{
+        key: `web-${c.closest_web_safe.hex}`,
+        hex: c.closest_web_safe.hex,
+      }],
+    },
   ]
 })
 
@@ -261,6 +376,18 @@ async function copySpace(name: string, value: string): Promise<void> {
     if (copyTimer) clearTimeout(copyTimer)
     copyTimer = setTimeout(() => {
       copiedSpace.value = null
+      copyTimer = null
+    }, 1400)
+  } catch {}
+}
+
+async function copyHexValue(hex: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(`#${hex}`)
+    copiedDerivedHex.value = hex
+    if (copyTimer) clearTimeout(copyTimer)
+    copyTimer = setTimeout(() => {
+      copiedDerivedHex.value = null
       copyTimer = null
     }, 1400)
   } catch {}

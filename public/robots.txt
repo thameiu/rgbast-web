@@ -6,4 +6,5 @@ Disallow: /auth/complete
 Disallow: /reset-password
 Disallow: /forgot-password
 
-Sitemap: https://api.rgbast.com/sitemap.xml
+Sitemap: https://www.rgbast.com/sitemap.xml
+Sitemap: https://www.rgbast.com/sitemap-hex.xml

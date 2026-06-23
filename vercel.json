@@ -1,5 +1,9 @@
 {
   "rewrites": [
+    { "source": "/robots.txt", "destination": "https://api.rgbast.com/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "https://api.rgbast.com/sitemap.xml" },
+    { "source": "/sitemap-hex.xml", "destination": "https://api.rgbast.com/sitemap-hex.xml" },
+    { "source": "/sitemap-hex-:page.xml", "destination": "https://api.rgbast.com/sitemap-hex-:page.xml" },
     { "source": "/(.*)", "destination": "/" }
   ]
 }

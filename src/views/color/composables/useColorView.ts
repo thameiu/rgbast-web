@@ -456,6 +456,7 @@ export function useColorView() {
     const nextIndex = analyzedIndex.value + direction
     if (nextIndex < 0 || nextIndex >= analyzedColors.value.length) return
     const nextHex = analyzedColors.value[nextIndex]
+    if (!nextHex) return
     pendingHistoryTarget = nextHex
     analyzedIndex.value = nextIndex
     applyHex(nextHex)

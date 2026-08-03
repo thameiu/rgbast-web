@@ -108,8 +108,19 @@
     </section>
 
     <footer class="foot">
-      <span class="font-mono">RGBAST · an atelier for color systems</span>
-      <RgbastLogo size="28px" />
+      <span class="foot-copy font-mono">RGBAST · Version control for colors</span>
+      <div class="foot-mark">
+        <RgbastLogo size="28px" />
+        <a
+          class="foot-badge-link"
+          href="https://mathieu-hernandez.fr"
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Projet by thameiu"
+        >
+          <img class="foot-badge" :src="thameiuBadge" alt="thameiu 88x31 badge" />
+        </a>
+      </div>
     </footer>
   </main>
 </template>
@@ -124,6 +135,7 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
 import { setPageSeo } from '@/utils/seo'
+import thameiuBadge from '@/assets/images/thameiu_88x31.webp'
 
 // LandingView component: marketing home page with a demo history graph.
 onMounted(() => {

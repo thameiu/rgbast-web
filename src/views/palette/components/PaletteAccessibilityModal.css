@@ -539,3 +539,69 @@
     min-width: 52px;
   }
 }
+
+@media (max-width: 640px) {
+  .audit-modal {
+    padding: 16px;
+  }
+
+  .audit-card-label,
+  .audit-derived-title,
+  .audit-cb-label,
+  .audit-contrast-label {
+    font-size: 9px;
+  }
+
+  .audit-derived-row {
+    overflow-x: visible;
+  }
+
+  .audit-derived-row--shades,
+  .audit-derived-row--tints {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .audit-derived-row--shades .audit-derived-swatch,
+  .audit-derived-row--tints .audit-derived-swatch {
+    min-width: 0;
+    min-height: 68px;
+  }
+
+  .audit-derived-row--shades .audit-derived-swatch:first-child,
+  .audit-derived-row--tints .audit-derived-swatch:first-child {
+    border-radius: 12px 0 0 0;
+  }
+
+  .audit-derived-row--shades .audit-derived-swatch:last-child,
+  .audit-derived-row--tints .audit-derived-swatch:last-child {
+    border-radius: 0 0 12px 0;
+  }
+
+  .audit-derived-row--shades .audit-derived-swatch:nth-child(5),
+  .audit-derived-row--tints .audit-derived-swatch:nth-child(5) {
+    border-radius: 0 12px 0 0;
+  }
+
+  .audit-derived-row--shades .audit-derived-swatch:nth-child(6),
+  .audit-derived-row--tints .audit-derived-swatch:nth-child(6) {
+    border-radius: 0 0 0 12px;
+  }
+
+  .audit-derived-tooltip {
+    display: none;
+  }
+
+  .audit-derived-inline-hex {
+    left: 8px;
+    bottom: 7px;
+    font-size: 11px;
+    letter-spacing: 0.01em;
+  }
+
+  .audit-cb-inline-hex {
+    font-size: 10px;
+    letter-spacing: 0.01em;
+  }
+}

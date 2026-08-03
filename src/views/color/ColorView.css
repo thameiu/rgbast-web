@@ -309,6 +309,83 @@
   }
 }
 
+@media (max-width: 640px) {
+  .derived-groups {
+    gap: 14px;
+  }
+
+  .derived-title {
+    font-size: 10px;
+  }
+
+  .derived-row {
+    overflow-x: visible;
+  }
+
+  .derived-row--shades,
+  .derived-row--tints {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .derived-row--shades .derived-swatch,
+  .derived-row--tints .derived-swatch {
+    min-width: 0;
+    min-height: 72px;
+  }
+
+  .derived-row--shades .derived-swatch:first-child,
+  .derived-row--tints .derived-swatch:first-child {
+    border-radius: 12px 0 0 0;
+  }
+
+  .derived-row--shades .derived-swatch:last-child,
+  .derived-row--tints .derived-swatch:last-child {
+    border-radius: 0 0 12px 0;
+  }
+
+  .derived-row--shades .derived-swatch:nth-child(5),
+  .derived-row--tints .derived-swatch:nth-child(5) {
+    border-radius: 0 12px 0 0;
+  }
+
+  .derived-row--shades .derived-swatch:nth-child(6),
+  .derived-row--tints .derived-swatch:nth-child(6) {
+    border-radius: 0 0 0 12px;
+  }
+
+  .derived-tooltip {
+    display: none;
+  }
+
+  .derived-inline-hex {
+    left: 8px;
+    bottom: 7px;
+    font-size: 11px;
+    letter-spacing: 0.01em;
+  }
+
+  .cc-swatch-hex {
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .cb-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .cb-dot {
+    height: 44px;
+  }
+
+  .cb-inline-hex {
+    font-size: 10px;
+    letter-spacing: 0.01em;
+  }
+}
+
 /* ── Picker card ─────────────────────────────────────── */
 .picker-card {
   gap: 10px;

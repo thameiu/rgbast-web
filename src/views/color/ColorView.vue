@@ -255,7 +255,7 @@
               <div class="derived-head">
                 <span class="derived-title">{{ group.title }}</span>
               </div>
-              <div class="derived-row">
+              <div class="derived-row" :class="`derived-row--${group.key}`">
                 <div
                   v-for="swatch in [...(group.leadingColors ?? []), ...group.colors, ...(group.trailingColors ?? [])]"
                   :key="swatch.key"

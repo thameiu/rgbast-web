@@ -93,7 +93,7 @@
             <div class="audit-derived-groups">
               <section v-for="group in derivedColorGroups" :key="group.key" class="audit-derived-group">
                 <span class="audit-derived-title">{{ group.title }}</span>
-                <div class="audit-derived-row">
+                <div class="audit-derived-row" :class="`audit-derived-row--${group.key}`">
                   <div
                     v-for="swatch in [...(group.leadingColors ?? []), ...group.colors, ...(group.trailingColors ?? [])]"
                     :key="swatch.key"

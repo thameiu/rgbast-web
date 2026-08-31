@@ -488,6 +488,53 @@
     "favoriteViolet": "Favorite violet",
     "saving": "Saving...",
     "created": "Created",
-    "updated": "Updated"
+    "updated": "Updated",
+    "previousColorTitle": "Previous color (Ctrl+Z)",
+    "nextColorTitle": "Next color (Ctrl+Y / Ctrl+Shift+Z)",
+    "vs": "vs",
+    "unknownColor": "Unknown color",
+    "loadFailed": "Failed to load color info.",
+    "closeSaveColorModal": "Close save color modal",
+    "colorFallback": "color {index}",
+    "bastDescriptions": {
+      "crystal": "Crystal clear - this color has a well-known, unambiguous name.",
+      "nameable": "Mostly nameable - sits close to a recognizable color family.",
+      "elusive": "Elusive - drifting between known categories, hard to pin down.",
+      "ambiguous": "Genuinely ambiguous - no obvious name, lives in the in-between.",
+      "unnamed": "Truly unnamed - no clear category, a color of uncertain origin."
+    },
+    "variantGroups": {
+      "shades": "Shades",
+      "tints": "Tints",
+      "webSafe": "Closest web-safe"
+    },
+    "colorBlindnessTypes": {
+      "protanopia": "Protanopia",
+      "deuteranopia": "Deuteranopia",
+      "tritanopia": "Tritanopia"
+    },
+    "seoDescription": "Explore color #{hex}: inspect RGB/HSL/CMYK spaces, accessibility contrast, color blindness simulation, and 3D picker tools.",
+    "seoKeywords": {
+      "colorSelection": "color selection",
+      "hexColor": "hex color"
+    },
+    "cube3d": {
+      "resolution": "Resolution",
+      "levels": "{count} levels",
+      "rCut": "R Cut",
+      "gCut": "G Cut",
+      "bCut": "B Cut",
+      "resetCamera": "Reset Camera",
+      "resetScales": "Reset Scales",
+      "hint": "Drag to rotate camera. Click the cube to pick a color. Use two fingers to move the cube.",
+      "selected": "Selected:",
+      "loadError": "3D selector could not load in this environment."
+    }
+  },
+  "paletteAccessibility": {
+    "kicker": "Accessibility Audit",
+    "title": "Palette color analysis",
+    "loading": "Loading accessibility audit...",
+    "loadFailed": "Could not load accessibility audit."
   }
 }

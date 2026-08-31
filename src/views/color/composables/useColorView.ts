@@ -9,6 +9,7 @@ import type {
   ColorRelatedSet,
 } from '@/api/types'
 import { getSharkTaleQuote } from '@/utils/colorAccessibility'
+import { translate } from '@/i18n'
 
 /** Hue-Saturation-Value tuple: [0-360, 0-1, 0-1]. */
 export type HSV = [number, number, number]
@@ -229,11 +230,11 @@ export function useColorView() {
   /** Human-readable description of the Bast score. */
   const bastDescription = computed(() => {
     const s = colorInfo.value?.bast_score ?? 0
-    if (s < 10) return 'Crystal clear - this colour has a well-known, unambiguous name.'
-    if (s < 30) return 'Mostly nameable - sits close to a recognisable colour family.'
-    if (s < 55) return 'Elusive - drifting between known categories, hard to pin down.'
-    if (s < 75) return 'Genuinely ambiguous - no obvious name, lives in the in-between.'
-    return 'Truly unnamed - no clear category, a colour of uncertain origin.'
+    if (s < 10) return translate('colorPage.bastDescriptions.crystal')
+    if (s < 30) return translate('colorPage.bastDescriptions.nameable')
+    if (s < 55) return translate('colorPage.bastDescriptions.elusive')
+    if (s < 75) return translate('colorPage.bastDescriptions.ambiguous')
+    return translate('colorPage.bastDescriptions.unnamed')
   })
 
   /** Array of color space cards derived from the API response. */
@@ -286,24 +287,24 @@ export function useColorView() {
     return [
       {
         key: 'shades',
-        title: 'Shades',
+        title: translate('colorPage.variantGroups.shades'),
         leadingColors: [{ key: `shades-base-${c.normalized_hex}`, hex: c.normalized_hex }],
         trailingColors: [{ key: 'shades-black', hex: '000000' }],
         colors: c.shades.map((row, index) => swatchFromReference('shade', row, index)),
       },
       {
         key: 'tints',
-        title: 'Tints',
+        title: translate('colorPage.variantGroups.tints'),
         leadingColors: [{ key: `tints-base-${c.normalized_hex}`, hex: c.normalized_hex }],
         trailingColors: [{ key: 'tints-white', hex: 'FFFFFF' }],
         colors: c.tints.map((row, index) => swatchFromReference('tint', row, index)),
       },
-      groupFromRelatedSet('complementary', 'Complementary', c.complementary),
-      groupFromRelatedSet('triadic', 'Triadic', c.triadic),
-      groupFromRelatedSet('analogous', 'Analogous', c.analogous),
+      groupFromRelatedSet('complementary', translate('palette.harmonies.complementary'), c.complementary),
+      groupFromRelatedSet('triadic', translate('palette.harmonies.triadic'), c.triadic),
+      groupFromRelatedSet('analogous', translate('palette.harmonies.analogous'), c.analogous),
       {
         key: 'web-safe',
-        title: 'Closest web-safe',
+        title: translate('colorPage.variantGroups.webSafe'),
         colors: [swatchFromReference('web-safe', c.closest_web_safe, 0)],
       },
     ]
@@ -350,7 +351,7 @@ export function useColorView() {
       syncAnalyzedHistory(response.normalized_hex)
       if (contrastPicked.value) fetchContrastInfo()
     } catch (e: unknown) {
-      error.value = e instanceof Error ? e.message : 'Failed to load colour info.'
+      error.value = e instanceof Error ? e.message : translate('colorPage.loadFailed')
       colorInfo.value = null
     } finally {
       loading.value = false

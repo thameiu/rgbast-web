@@ -37,10 +37,10 @@
       <aside class="picker-col" :class="{ 'picker-col--3d': pickerMode === '3d' }">
         <div class="card picker-card" :class="{ 'picker-card--3d': pickerMode === '3d' }">
           <div class="picker-mode-tabs">
-            <button class="color-history-btn" :disabled="!canGoBackColor" title="Previous color (Ctrl+Z)" @click="goToPreviousColor">
+            <button class="color-history-btn" :disabled="!canGoBackColor" :title="t('colorPage.previousColorTitle')" @click="goToPreviousColor">
               <AppIcon name="arrow-left" :size="13" />
             </button>
-            <button class="color-history-btn" :disabled="!canGoForwardColor" title="Next color (Ctrl+Y / Ctrl+Shift+Z)" @click="goToNextColor">
+            <button class="color-history-btn" :disabled="!canGoForwardColor" :title="t('colorPage.nextColorTitle')" @click="goToNextColor">
               <AppIcon name="arrow-right" :size="13" />
             </button>
             <button class="picker-mode-btn" :class="{ active: pickerMode === '2d' }" @click="pickerMode = '2d'">
@@ -303,7 +303,7 @@
             <div class="cc-swatch" :style="{ background: '#' + displayHex }">
               <span class="cc-swatch-hex" :style="{ color: swatchTextColor }">#{{ displayHex.toUpperCase() }}</span>
             </div>
-            <span class="cc-vs">vs</span>
+            <span class="cc-vs">{{ t('colorPage.vs') }}</span>
             <div
               ref="contrastSwatchEl"
               class="cc-swatch cc-swatch--compare"
@@ -412,7 +412,7 @@
                   #{{ colorInfo.accessibility.color_blindness.protanopia.hex.toUpperCase() }}
                 </span>
               </div>
-              <span class="cb-label">Protanopia</span>
+              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.protanopia') }}</span>
             </div>
             <div class="cb-swatch">
               <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.deuteranopia.hex }">
@@ -420,7 +420,7 @@
                   #{{ colorInfo.accessibility.color_blindness.deuteranopia.hex.toUpperCase() }}
                 </span>
               </div>
-              <span class="cb-label">Deuteranopia</span>
+              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.deuteranopia') }}</span>
             </div>
             <div class="cb-swatch">
               <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.tritanopia.hex }">
@@ -428,7 +428,7 @@
                   #{{ colorInfo.accessibility.color_blindness.tritanopia.hex.toUpperCase() }}
                 </span>
               </div>
-              <span class="cb-label">Tritanopia</span>
+              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.tritanopia') }}</span>
             </div>
           </div>
         </div>
@@ -640,8 +640,8 @@ watch(displayHex, hex => {
   const normalized = hex.toUpperCase()
   setPageSeo({
     title: `#${normalized} - RGBAST`,
-    description: `Explore color #${normalized}: inspect RGB/HSL/CMYK spaces, accessibility contrast, color blindness simulation, and 3D picker tools.`,
-    keywords: ['color selection', 'hex color', 'rgb converter', 'hsl converter', 'cmyk converter', normalized],
+    description: t('colorPage.seoDescription', { hex: normalized }),
+    keywords: [t('colorPage.seoKeywords.colorSelection'), t('colorPage.seoKeywords.hexColor'), 'rgb converter', 'hsl converter', 'cmyk converter', normalized],
   })
 }, { immediate: true })
 

@@ -488,6 +488,53 @@
     "favoriteViolet": "Violet préféré",
     "saving": "Sauvegarde...",
     "created": "Créé",
-    "updated": "Mis à jour"
+    "updated": "Mis à jour",
+    "previousColorTitle": "Couleur précédente (Ctrl+Z)",
+    "nextColorTitle": "Couleur suivante (Ctrl+Y / Ctrl+Shift+Z)",
+    "vs": "vs",
+    "unknownColor": "Couleur inconnue",
+    "loadFailed": "Impossible de charger les informations couleur.",
+    "closeSaveColorModal": "Fermer la modale de sauvegarde de couleur",
+    "colorFallback": "couleur {index}",
+    "bastDescriptions": {
+      "crystal": "Très clair - cette couleur a un nom connu et sans ambiguïté.",
+      "nameable": "Plutôt nommable - proche d'une famille de couleurs reconnaissable.",
+      "elusive": "Insaisissable - entre plusieurs catégories connues, difficile à définir.",
+      "ambiguous": "Vraiment ambiguë - aucun nom évident, elle vit entre deux familles.",
+      "unnamed": "Vraiment sans nom - aucune catégorie claire, une couleur d'origine incertaine."
+    },
+    "variantGroups": {
+      "shades": "Ombres",
+      "tints": "Teintes claires",
+      "webSafe": "Web-safe la plus proche"
+    },
+    "colorBlindnessTypes": {
+      "protanopia": "Protanopie",
+      "deuteranopia": "Deutéranopie",
+      "tritanopia": "Tritanopie"
+    },
+    "seoDescription": "Explore la couleur #{hex} : espaces RGB/HSL/CMYK, contraste d'accessibilité, simulation de daltonisme et outils de sélection 3D.",
+    "seoKeywords": {
+      "colorSelection": "sélection couleur",
+      "hexColor": "couleur hex"
+    },
+    "cube3d": {
+      "resolution": "Résolution",
+      "levels": "{count} niveaux",
+      "rCut": "Coupe R",
+      "gCut": "Coupe G",
+      "bCut": "Coupe B",
+      "resetCamera": "Réinitialiser caméra",
+      "resetScales": "Réinitialiser coupes",
+      "hint": "Glisse pour faire tourner la caméra. Clique sur le cube pour choisir une couleur. Avec deux doigts, déplace le cube.",
+      "selected": "Sélection :",
+      "loadError": "Le sélecteur 3D n'a pas pu se charger dans cet environnement."
+    }
+  },
+  "paletteAccessibility": {
+    "kicker": "Audit accessibilité",
+    "title": "Analyse des couleurs de palette",
+    "loading": "Chargement de l'audit d'accessibilité...",
+    "loadFailed": "Impossible de charger l'audit d'accessibilité."
   }
 }

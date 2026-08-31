@@ -2,7 +2,7 @@
   <Teleport to="body">
     <div v-if="open" class="bookmark-modal-overlay" @click.self="$emit('close')">
       <form class="bookmark-modal" @submit.prevent="$emit('save')">
-        <button class="bookmark-modal-close" type="button" aria-label="Close save color modal" @click="$emit('close')">
+        <button class="bookmark-modal-close" type="button" :aria-label="t('colorPage.closeSaveColorModal')" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
 

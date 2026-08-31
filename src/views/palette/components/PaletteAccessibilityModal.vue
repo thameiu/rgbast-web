@@ -4,10 +4,10 @@
       <div class="audit-modal">
         <div class="audit-head">
           <div>
-            <p class="audit-kicker">Accessibility Audit</p>
-            <h2 class="audit-title font-display">Palette color analysis</h2>
+            <p class="audit-kicker">{{ t('paletteAccessibility.kicker') }}</p>
+            <h2 class="audit-title font-display">{{ t('paletteAccessibility.title') }}</h2>
           </div>
-          <button class="audit-close" @click="$emit('close')">
+          <button class="audit-close" :aria-label="t('header.close')" @click="$emit('close')">
             <AppIcon name="x" :size="16" />
           </button>
         </div>
@@ -37,7 +37,7 @@
 
           <section class="audit-card audit-card--panel">
             <div class="audit-card-head">
-              <span class="audit-card-label">Bast Score</span>
+              <span class="audit-card-label">{{ t('colorPage.bastScore') }}</span>
               <span class="audit-bast-value" :style="{ color: bastColor }">{{ audit.selected_color.bast_score.toFixed(1) }}</span>
             </div>
             <div class="audit-bast-track">
@@ -47,7 +47,7 @@
           </section>
 
           <section class="audit-card audit-card--wide">
-            <span class="audit-card-label">Color Spaces</span>
+            <span class="audit-card-label">{{ t('colorPage.colorSpaces') }}</span>
             <div class="audit-spaces-grid">
               <button
                 v-for="space in colorSpaces"
@@ -66,7 +66,7 @@
           </section>
 
           <section class="audit-card audit-card--wide">
-            <span class="audit-card-label">Contrast</span>
+            <span class="audit-card-label">{{ t('colorPage.contrastCheck') }}</span>
             <div class="audit-contrast-list">
               <div v-for="row in contrastRows" :key="row.key" class="audit-contrast-row">
                 <div class="audit-contrast-preview" :style="{ background: row.background }">
@@ -89,7 +89,7 @@
           </section>
 
           <section class="audit-card audit-card--wide">
-            <span class="audit-card-label">Color Variants</span>
+            <span class="audit-card-label">{{ t('colorPage.colorVariants') }}</span>
             <div class="audit-derived-groups">
               <section v-for="group in derivedColorGroups" :key="group.key" class="audit-derived-group">
                 <span class="audit-derived-title">{{ group.title }}</span>
@@ -107,7 +107,7 @@
                       class="audit-derived-copy"
                       :class="{ 'audit-derived-copy--copied': copiedDerivedHex === swatch.hex }"
                       :style="{ color: getSwatchTextColor(swatch.hex) }"
-                      :title="copiedDerivedHex === swatch.hex ? 'Copied!' : 'Copy hex'"
+                      :title="copiedDerivedHex === swatch.hex ? t('colorPage.copied') : t('colorPage.copyHex')"
                       @click="copyHexValue(swatch.hex)"
                     >
                       <AppIcon :name="copiedDerivedHex === swatch.hex ? 'check' : 'copy'" :size="14" />
@@ -126,7 +126,7 @@
           </section>
 
           <section class="audit-card audit-card--wide">
-            <span class="audit-card-label">Color Blindness</span>
+            <span class="audit-card-label">{{ t('colorPage.colorBlindness') }}</span>
             <div class="audit-cb-row">
               <div v-for="entry in colorBlindnessCards" :key="entry.name" class="audit-cb-card">
                 <div class="audit-cb-dot" :style="{ background: '#' + entry.hex }">
@@ -138,7 +138,7 @@
           </section>
         </div>
 
-        <div v-else class="audit-empty">{{ loading ? 'Loading accessibility audit…' : 'Could not load accessibility audit.' }}</div>
+        <div v-else class="audit-empty">{{ loading ? t('paletteAccessibility.loading') : t('paletteAccessibility.loadFailed') }}</div>
       </div>
     </div>
   </Teleport>
@@ -153,6 +153,7 @@ import type {
 } from '@/api/types'
 import { getSharkTaleQuote } from '@/utils/colorAccessibility'
 import { computed, ref, watch } from 'vue'
+import { useI18n } from '@/i18n'
 
 interface AuditColor {
   hex: string
@@ -194,6 +195,7 @@ defineEmits<{
 }>()
 
 const audit = ref<PaletteAccessibilityAuditResponse | null>(null)
+const { t } = useI18n()
 const loading = ref(false)
 const copiedSpace = ref<string | null>(null)
 const copiedDerivedHex = ref<string | null>(null)
@@ -204,7 +206,7 @@ const selectedColor = computed(() => props.colors[props.selectedIndex] ?? props.
 const quote = computed(() => getSharkTaleQuote(audit.value?.selected_color.normalized_hex ?? selectedColor.value?.hex ?? '000000'))
 const selectedName = computed(() => {
   const color = audit.value?.selected_palette_color
-  if (!color?.closest_name) return 'Unknown color'
+  if (!color?.closest_name) return t('colorPage.unknownColor')
   return color.label_is_approximate ? `~${color.closest_name}` : color.closest_name
 })
 
@@ -235,11 +237,11 @@ const bastColor = computed(() => {
 
 const bastDescription = computed(() => {
   const s = audit.value?.selected_color.bast_score ?? 0
-  if (s < 10) return 'Crystal clear - this colour has a well-known, unambiguous name.'
-  if (s < 30) return 'Mostly nameable - sits close to a recognisable colour family.'
-  if (s < 55) return 'Elusive - drifting between known categories, hard to pin down.'
-  if (s < 75) return 'Genuinely ambiguous - no obvious name, lives in the in-between.'
-  return 'Truly unnamed - no clear category, a colour of uncertain origin.'
+  if (s < 10) return t('colorPage.bastDescriptions.crystal')
+  if (s < 30) return t('colorPage.bastDescriptions.nameable')
+  if (s < 55) return t('colorPage.bastDescriptions.elusive')
+  if (s < 75) return t('colorPage.bastDescriptions.ambiguous')
+  return t('colorPage.bastDescriptions.unnamed')
 })
 
 const colorSpaces = computed(() => {
@@ -267,7 +269,7 @@ const derivedColorGroups = computed<AuditDisplayGroup[]>(() => {
   return [
     {
       key: 'shades',
-      title: 'Shades',
+      title: t('colorPage.variantGroups.shades'),
       leadingColors: [{ key: `audit-shades-base-${c.normalized_hex}`, hex: c.normalized_hex }],
       trailingColors: [{ key: 'audit-shades-black', hex: '000000' }],
       colors: c.shades.map((row, index) => ({
@@ -277,7 +279,7 @@ const derivedColorGroups = computed<AuditDisplayGroup[]>(() => {
     },
     {
       key: 'tints',
-      title: 'Tints',
+      title: t('colorPage.variantGroups.tints'),
       leadingColors: [{ key: `audit-tints-base-${c.normalized_hex}`, hex: c.normalized_hex }],
       trailingColors: [{ key: 'audit-tints-white', hex: 'FFFFFF' }],
       colors: c.tints.map((row, index) => ({
@@ -287,25 +289,25 @@ const derivedColorGroups = computed<AuditDisplayGroup[]>(() => {
     },
     {
       key: 'complementary',
-      title: 'Complementary',
+      title: t('palette.harmonies.complementary'),
       leadingColors: [{ key: `comp-base-${c.complementary.base.hex}`, hex: c.complementary.base.hex }],
       colors: c.complementary.colors.map((row, index) => ({ key: `comp-${row.hex}-${index}`, hex: row.hex })),
     },
     {
       key: 'triadic',
-      title: 'Triadic',
+      title: t('palette.harmonies.triadic'),
       leadingColors: [{ key: `tri-base-${c.triadic.base.hex}`, hex: c.triadic.base.hex }],
       colors: c.triadic.colors.map((row, index) => ({ key: `tri-${row.hex}-${index}`, hex: row.hex })),
     },
     {
       key: 'analogous',
-      title: 'Analogous',
+      title: t('palette.harmonies.analogous'),
       leadingColors: [{ key: `ana-base-${c.analogous.base.hex}`, hex: c.analogous.base.hex }],
       colors: c.analogous.colors.map((row, index) => ({ key: `ana-${row.hex}-${index}`, hex: row.hex })),
     },
     {
       key: 'web-safe',
-      title: 'Closest web-safe',
+      title: t('colorPage.variantGroups.webSafe'),
       colors: [{
         key: `web-${c.closest_web_safe.hex}`,
         hex: c.closest_web_safe.hex,
@@ -318,9 +320,9 @@ const colorBlindnessCards = computed(() => {
   const c = audit.value?.selected_color.accessibility.color_blindness
   if (!c) return []
   return [
-    { name: 'Protanopia', hex: c.protanopia.hex },
-    { name: 'Deuteranopia', hex: c.deuteranopia.hex },
-    { name: 'Tritanopia', hex: c.tritanopia.hex },
+    { name: t('colorPage.colorBlindnessTypes.protanopia'), hex: c.protanopia.hex },
+    { name: t('colorPage.colorBlindnessTypes.deuteranopia'), hex: c.deuteranopia.hex },
+    { name: t('colorPage.colorBlindnessTypes.tritanopia'), hex: c.tritanopia.hex },
   ]
 })
 
@@ -331,7 +333,7 @@ const contrastRows = computed<ContrastRow[]>(() => {
   const rows: ContrastRow[] = [
     {
       key: 'white',
-      label: 'on white',
+      label: t('colorPage.onWhite'),
       background: '#ffffff',
       ratio: current.contrast_on_white.ratio,
       aa: current.contrast_on_white.aa_normal,
@@ -339,7 +341,7 @@ const contrastRows = computed<ContrastRow[]>(() => {
     },
     {
       key: 'black',
-      label: 'on black',
+      label: t('colorPage.onBlack'),
       background: '#000000',
       ratio: current.contrast_on_black.ratio,
       aa: current.contrast_on_black.aa_normal,
@@ -351,8 +353,8 @@ const contrastRows = computed<ContrastRow[]>(() => {
     rows.push({
       key: `${entry.color.normalized_hex}-${index}`,
       label: entry.color.label_is_approximate
-        ? `~${entry.color.closest_name ?? `color ${index + 1}`}`
-        : (entry.color.closest_name ?? `color ${index + 1}`),
+        ? `~${entry.color.closest_name ?? t('colorPage.colorFallback', { index: index + 1 })}`
+        : (entry.color.closest_name ?? t('colorPage.colorFallback', { index: index + 1 })),
       background: `#${entry.color.normalized_hex}`,
       ratio: entry.contrast.ratio,
       aa: entry.contrast.aa_normal,

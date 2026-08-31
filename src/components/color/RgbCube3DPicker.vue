@@ -2,32 +2,32 @@
   <div class="cube-wrap">
     <div class="cube-controls">
       <div class="ctrl">
-        <label>Resolution</label>
+        <label>{{ t('colorPage.cube3d.resolution') }}</label>
         <input type="range" min="3" max="255" :value="resolution" @input="onResolutionInput" />
-        <span>{{ resolution }} levels</span>
+        <span>{{ t('colorPage.cube3d.levels', { count: resolution }) }}</span>
       </div>
 
       <div class="ctrl-grid">
         <div class="ctrl">
-          <label>R Cut</label>
+          <label>{{ t('colorPage.cube3d.rCut') }}</label>
           <input type="range" :min="0" :max="resolution - 1" :value="cutR" @input="onCutInput('r', $event)" />
           <span>{{ cutRChannel }}</span>
         </div>
         <div class="ctrl">
-          <label>G Cut</label>
+          <label>{{ t('colorPage.cube3d.gCut') }}</label>
           <input type="range" :min="0" :max="resolution - 1" :value="cutG" @input="onCutInput('g', $event)" />
           <span>{{ cutGChannel }}</span>
         </div>
         <div class="ctrl">
-          <label>B Cut</label>
+          <label>{{ t('colorPage.cube3d.bCut') }}</label>
           <input type="range" :min="0" :max="resolution - 1" :value="cutB" @input="onCutInput('b', $event)" />
           <span>{{ cutBChannel }}</span>
         </div>
       </div>
 
       <div class="cube-actions">
-        <button type="button" class="camera-reset-btn" @click="resetCamera">Reset Camera</button>
-        <button type="button" class="camera-reset-btn" @click="resetScales">Reset Scales</button>
+        <button type="button" class="camera-reset-btn" @click="resetCamera">{{ t('colorPage.cube3d.resetCamera') }}</button>
+        <button type="button" class="camera-reset-btn" @click="resetScales">{{ t('colorPage.cube3d.resetScales') }}</button>
       </div>
     </div>
 
@@ -39,14 +39,15 @@
     </div>
     <div v-else class="cube-error">{{ loadError }}</div>
 
-    <p class="cube-hint">Drag to rotate camera. Click the cube to pick a color.</p>
-    <p class="cube-picked">Selected: <strong>#{{ selectedHex }}</strong></p>
+    <p class="cube-hint">{{ t('colorPage.cube3d.hint') }}</p>
+    <p class="cube-picked">{{ t('colorPage.cube3d.selected') }} <strong>#{{ selectedHex }}</strong></p>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import * as THREE from 'three'
+import { useI18n } from '@/i18n'
 
 type Axis = 'r' | 'g' | 'b'
 
@@ -57,6 +58,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'pick', hex: string): void
 }>()
+
+const { t } = useI18n()
 
 const canvasHost = ref<HTMLElement | null>(null)
 const resolution = ref(255)
@@ -707,7 +710,7 @@ onMounted(() => {
   try {
     initScene()
   } catch {
-    loadError.value = '3D selector could not load in this environment.'
+    loadError.value = t('colorPage.cube3d.loadError')
   }
 })
 

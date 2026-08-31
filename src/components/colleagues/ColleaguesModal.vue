@@ -187,6 +187,7 @@ const searchResults = ref<UserSearchItem[]>([])
 const searchLoading = ref(false)
 const searchError = ref('')
 const searchDone = ref(false)
+const currentUsername = computed(() => getTokenUsername()?.toLowerCase() ?? null)
 
 const list = ref<ColleagueListResponse>({
   colleagues: [],
@@ -262,6 +263,21 @@ function searchUserActionLabel(username: string): string {
   return t('profilePage.addColleague')
 }
 
+function getTokenUsername(): string | null {
+  const token = localStorage.getItem('access_token')
+  if (!token) return null
+  try {
+    const payloadPart = token.split('.')[1]
+    if (!payloadPart) return null
+    const normalized = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+    const pad = normalized.length % 4 === 0 ? '' : '='.repeat(4 - (normalized.length % 4))
+    const payload = JSON.parse(atob(normalized + pad))
+    return typeof payload?.sub === 'string' ? payload.sub : null
+  } catch {
+    return null
+  }
+}
+
 async function searchUsers(): Promise<void> {
   const query = searchQuery.value.trim()
   if (!query) return
@@ -271,7 +287,10 @@ async function searchUsers(): Promise<void> {
   try {
     const payload = await searchApi.searchUsers(query)
     const needle = query.toLowerCase()
-    searchResults.value = payload.results.filter(user => user.username.toLowerCase().includes(needle))
+    searchResults.value = payload.results.filter((user) => {
+      const username = user.username.toLowerCase()
+      return username.includes(needle) && username !== currentUsername.value
+    })
     searchDone.value = true
   } catch (e: any) {
     searchError.value = e?.message ?? t('colleaguesModal.searchFailed')

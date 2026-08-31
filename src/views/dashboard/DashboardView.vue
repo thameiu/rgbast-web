@@ -24,13 +24,17 @@
               <dt class="font-mono">{{ t('dashboard.palettes') }}</dt>
               <dd>{{ palettes.length }}</dd>
             </div>
-            <div>
+            <div
+              class="stat-row stat-row--clickable"
+              role="button"
+              tabindex="0"
+              @click="showColleaguesModal = true"
+              @keydown.enter.prevent="showColleaguesModal = true"
+              @keydown.space.prevent="showColleaguesModal = true"
+            >
               <dt class="font-mono">{{ t('dashboard.colleagues') }}</dt>
               <dd>
-                <button v-if="user" class="stat-link" @click="showColleaguesModal = true">
-                  {{ colleaguesCount }}
-                </button>
-                <span v-else>0</span>
+                <span class="stat-link">{{ colleaguesCount }}</span>
               </dd>
             </div>
           </dl>

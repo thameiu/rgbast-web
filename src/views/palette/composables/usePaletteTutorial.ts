@@ -1,6 +1,7 @@
 import { ref, computed, watch } from 'vue'
 import type { Ref } from 'vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
+import { translate } from '@/i18n'
 
 export type TutorialFocus = 'header' | 'branches' | 'canvas' | 'history' | 'save' | null
 
@@ -26,7 +27,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
 
   const tutorialNow = Date.now()
 
-  const tutorialDemoHistory: PaletteHistoryGraphResponse = {
+  const tutorialDemoHistory = computed<PaletteHistoryGraphResponse>(() => ({
     palette_id: 999,
     owner_username: 'tutorial-user',
     title: 'brand-system',
@@ -37,7 +38,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
         palette_id: 999,
         parent_snapshot_id: 9003,
         branch_id: null,
-        comment: "Merge branch 'draft/warm-variant'",
+        comment: translate('paletteTutorial.demo.mergeWarm'),
         created_at: new Date(tutorialNow - 10 * 60_000).toISOString(),
         palette_colors: [
           { hex: '121826', label: 'bg-main' },
@@ -54,7 +55,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
         palette_id: 999,
         parent_snapshot_id: 9001,
         branch_id: null,
-        comment: 'Main: baseline approved v2',
+        comment: translate('paletteTutorial.demo.mainBaseline'),
         created_at: new Date(tutorialNow - 5 * 60 * 60_000).toISOString(),
         palette_colors: [
           { hex: '121826', label: 'bg-main' },
@@ -70,7 +71,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
         palette_id: 999,
         parent_snapshot_id: null,
         branch_id: null,
-        comment: 'Initial palette creation',
+        comment: translate('paletteTutorial.demo.initialCreation'),
         created_at: new Date(tutorialNow - 6 * 24 * 60 * 60_000).toISOString(),
         palette_colors: [
           { hex: '121826', label: 'bg-main' },
@@ -84,7 +85,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
     branches: [
       {
         id: 9101,
-        title: 'draft/warm-variant',
+        title: 'brouillon/warm-variant',
         merged_at: new Date(tutorialNow - 10 * 60_000).toISOString(),
         is_merged: true,
         snapshots: [
@@ -93,7 +94,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
             palette_id: 999,
             parent_snapshot_id: 9102,
             branch_id: 9101,
-            comment: 'Draft commit: warmer accent candidate',
+            comment: translate('paletteTutorial.demo.warmCandidate'),
             created_at: new Date(tutorialNow - 120 * 60_000).toISOString(),
             palette_colors: [
               { hex: '121826', label: 'bg-main' },
@@ -109,7 +110,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
             palette_id: 999,
             parent_snapshot_id: 9003,
             branch_id: 9101,
-            comment: 'Fork from main to test warm direction',
+            comment: translate('paletteTutorial.demo.forkWarm'),
             created_at: new Date(tutorialNow - 220 * 60_000).toISOString(),
             palette_colors: [
               { hex: '121826', label: 'bg-main' },
@@ -124,7 +125,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
       },
       {
         id: 9102,
-        title: 'draft/cta-focus',
+        title: 'brouillon/cta-focus',
         merged_at: null,
         is_merged: false,
         snapshots: [
@@ -133,7 +134,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
             palette_id: 999,
             parent_snapshot_id: 9202,
             branch_id: 9102,
-            comment: 'Draft commit 3: too strong, will revert',
+            comment: translate('paletteTutorial.demo.ctaTooStrong'),
             created_at: new Date(tutorialNow - 80 * 60_000).toISOString(),
             palette_colors: [
               { hex: '121826', label: 'bg-main' },
@@ -149,7 +150,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
             palette_id: 999,
             parent_snapshot_id: 9201,
             branch_id: 9102,
-            comment: 'Draft commit 2: balanced CTA',
+            comment: translate('paletteTutorial.demo.ctaBalanced'),
             created_at: new Date(tutorialNow - 170 * 60_000).toISOString(),
             palette_colors: [
               { hex: '121826', label: 'bg-main' },
@@ -165,7 +166,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
             palette_id: 999,
             parent_snapshot_id: 9003,
             branch_id: 9102,
-            comment: 'Fork from main for CTA experiment',
+            comment: translate('paletteTutorial.demo.forkCta'),
             created_at: new Date(tutorialNow - 260 * 60_000).toISOString(),
             palette_colors: [
               { hex: '121826', label: 'bg-main' },
@@ -179,56 +180,56 @@ export function usePaletteTutorial(ctx: TutorialContext) {
         ],
       },
     ],
-  }
+  }))
 
-  const tutorialSteps: TutorialStep[] = [
+  const tutorialSteps = computed<TutorialStep[]>(() => [
     {
-      title: 'Snapshots',
-      body: 'Your palette is a timeline of snapshots. Each save stores the full color state plus a commit message.',
+      title: translate('paletteTutorial.steps.snapshots.title'),
+      body: translate('paletteTutorial.steps.snapshots.body'),
       focus: 'header',
     },
     {
-      title: 'Branches',
-      body: 'Branches are draft tracks. Explore ideas without touching main, then merge when happy or discard.',
+      title: translate('paletteTutorial.steps.branches.title'),
+      body: translate('paletteTutorial.steps.branches.body'),
       focus: 'branches',
     },
     {
-      title: 'Example History',
-      body: 'Demo history: one draft merged into main, another branch with multiple commits. Watch the lines, badges, and change counters.',
+      title: translate('paletteTutorial.steps.example.title'),
+      body: translate('paletteTutorial.steps.example.body'),
       focus: 'history',
       showHistory: true,
       showDemo: true,
       useDemoHistory: true,
     },
     {
-      title: 'Merge and Revert',
-      body: 'Merge promotes a draft to main as a validated result. Revert on a branch deletes newer snapshots after a selected point, so you can keep a stable draft state and discard risky commits.',
+      title: translate('paletteTutorial.steps.mergeRevert.title'),
+      body: translate('paletteTutorial.steps.mergeRevert.body'),
       focus: 'history',
       showHistory: true,
       showDemo: true,
       useDemoHistory: true,
     },
     {
-      title: 'Old Snapshot Rules (Important)',
-      body: 'If you edit an older snapshot from the main branch (the current true version), saving creates a new branch from that point. If you edit an older snapshot inside a branch, saving updates that same branch (it does not create another branch by default).',
+      title: translate('paletteTutorial.steps.oldSnapshotRules.title'),
+      body: translate('paletteTutorial.steps.oldSnapshotRules.body'),
       focus: 'canvas',
     },
     {
-      title: 'Save and Continue',
-      body: 'When happy with the current colors, save a snapshot. Your real history returns right after the tutorial.',
+      title: translate('paletteTutorial.steps.saveContinue.title'),
+      body: translate('paletteTutorial.steps.saveContinue.body'),
       focus: 'save',
     },
-  ]
+  ])
 
   const currentTutorial = computed<TutorialStep>(() => {
-    const idx = Math.max(0, Math.min(tutorialStep.value, tutorialSteps.length - 1))
-    return tutorialSteps[idx]!
+    const idx = Math.max(0, Math.min(tutorialStep.value, tutorialSteps.value.length - 1))
+    return tutorialSteps.value[idx]!
   })
 
   const tutorialFocus = computed<TutorialFocus>(() => (showTutorial.value ? currentTutorial.value.focus : null))
   const headerTutorialFocus = computed(() => (tutorialFocus.value === 'canvas' ? null : tutorialFocus.value))
   const showDemoHistory = computed(() => showTutorial.value && !!currentTutorial.value.useDemoHistory)
-  const historyForDisplay = computed(() => (showDemoHistory.value ? tutorialDemoHistory : ctx.history.value))
+  const historyForDisplay = computed(() => (showDemoHistory.value ? tutorialDemoHistory.value : ctx.history.value))
   const tutorialCardClass = computed(() => `focus-${currentTutorial.value.focus ?? 'header'}`)
 
   // Open the tutorial overlay and optionally show the history panel.
@@ -248,7 +249,7 @@ export function usePaletteTutorial(ctx: TutorialContext) {
 
   // Advance to the next tutorial step within the overlay.
   function nextTutorialStep(): void {
-    tutorialStep.value = Math.min(tutorialStep.value + 1, tutorialSteps.length - 1)
+    tutorialStep.value = Math.min(tutorialStep.value + 1, tutorialSteps.value.length - 1)
   }
 
   // Go back one tutorial step within the overlay.

@@ -4,6 +4,7 @@ import type { Ref } from 'vue'
 import { colorApi } from '@/api/color'
 import type { PaletteHarmony } from '@/api/types'
 import type { WorkingColor } from './usePaletteContext'
+import { useI18n } from '@/i18n'
 
 export interface GeneratorContext {
   colors: Ref<WorkingColor[]>
@@ -16,13 +17,13 @@ export interface GeneratorActions {
 
 // Manage palette generation state and UI logic for PaletteView.
 export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorActions) {
+  const { t } = useI18n()
   const generateOpen = ref(false)
   const generateLoading = ref(false)
   const generateError = ref('')
   const genCount = ref(5)
-  const genContrast = ref(5)
   type GenHarmony = PaletteHarmony | 'shades'
-  const genHarmony = ref<GenHarmony>('random')
+  const genHarmony = ref<GenHarmony>('analogous')
   const genBaseColors = ref<string[]>([])
 
   const genPickerOpenIdx = ref<number | null>(null)
@@ -78,9 +79,10 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
     genBaseColors.value.splice(i, 1)
   }
 
-  // Add a blank base color row for generator inputs.
+  // Add the next existing palette color when available; otherwise leave the row empty.
   function addBaseColor(): void {
-    genBaseColors.value.push('')
+    const index = genBaseColors.value.length
+    genBaseColors.value.push(ctx.colors.value[index]?.hex ?? '')
   }
 
   // Generate a palette from the API and replace current colors.
@@ -94,8 +96,8 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
       const isShades = genHarmony.value === 'shades'
       const result = await colorApi.generatePalette({
         count: genCount.value,
-        contrast: genContrast.value,
-        harmony: isShades ? 'random' : (genHarmony.value as PaletteHarmony),
+        contrast: 5,
+        harmony: isShades ? 'analogous' : (genHarmony.value as PaletteHarmony),
         base_colors: genBaseColors.value.filter(h => isValidHex(h)),
         include_shades: isShades,
       })
@@ -103,7 +105,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
       ctx.colors.value = result.colors.map(c => ({ hex: c.hex, label: null, _key: ctx.mkKey() }))
       generateOpen.value = false
     } catch (e: any) {
-      generateError.value = e.message ?? 'Generation failed'
+      generateError.value = e.message ?? t('palette.generationFailed')
     } finally {
       generateLoading.value = false
     }
@@ -121,7 +123,6 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
     generateLoading,
     generateError,
     genCount,
-    genContrast,
     genHarmony,
     genBaseColors,
     genPickerOpenIdx,

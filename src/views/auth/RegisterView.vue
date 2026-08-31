@@ -22,14 +22,13 @@
       <div class="panel-inner">
         <div class="panel-lede">
           <p class="eyebrow font-mono">
-            Atelier · new designer
+            {{ t('auth.registerEyebrow') }}
           </p>
           <h1 class="panel-title font-display">
-            Open a <em>new book</em>.
+            {{ t('auth.registerTitleBefore') }} <em>{{ t('auth.registerTitleFocus') }}</em>.
           </h1>
           <p class="panel-copy">
-            A blank workspace for your first palette. Commit your first
-            color, branch from day&nbsp;one.
+            {{ t('auth.registerCopy') }}
           </p>
         </div>
 
@@ -90,7 +89,7 @@
 
         </div>
 
-        <RouterLink to="/" class="back-link font-mono">← Back to index</RouterLink>
+        <RouterLink to="/" class="back-link font-mono">← {{ t('auth.backIndex') }}</RouterLink>
       </div>
     </aside>
 
@@ -103,14 +102,14 @@
         </RouterLink>
 
         <header class="form-head">
-          <p class="step font-mono">Step 01 · Open an account</p>
-          <h2 class="form-title font-display">Create account</h2>
-          <p class="form-copy">Three required fields. Identity details are optional.</p>
+          <p class="step font-mono">{{ t('auth.registerStep') }}</p>
+          <h2 class="form-title font-display">{{ t('auth.createAccount') }}</h2>
+          <p class="form-copy">{{ t('auth.registerHint') }}</p>
         </header>
 
         <form class="form" @submit.prevent="handleRegister">
           <label class="field">
-            <span class="field-label font-mono">Username</span>
+            <span class="field-label font-mono">{{ t('auth.username') }}</span>
             <input
               v-model="form.username"
               type="text"
@@ -121,7 +120,7 @@
           </label>
 
           <label class="field">
-            <span class="field-label font-mono">Email</span>
+            <span class="field-label font-mono">{{ t('auth.email') }}</span>
             <input
               v-model="form.email"
               type="email"
@@ -132,7 +131,7 @@
           </label>
 
           <label class="field">
-            <span class="field-label font-mono">Password</span>
+            <span class="field-label font-mono">{{ t('auth.password') }}</span>
             <div class="password-input-wrap">
               <input
                 v-model="form.password"
@@ -155,12 +154,12 @@
               </button>
             </div>
             <span class="hint font-mono">
-              Uppercase · lowercase · number · symbol · 8+
+              {{ t('auth.passwordRules') }}
             </span>
           </label>
 
           <label class="field">
-            <span class="field-label font-mono">Confirm password</span>
+            <span class="field-label font-mono">{{ t('auth.confirmPassword') }}</span>
             <div class="password-input-wrap">
               <input
                 v-model="form.confirmPassword"
@@ -183,24 +182,24 @@
               </button>
             </div>
             <span v-if="passwordsMismatch" class="hint hint--error font-mono">
-              Passwords do not match.
+              {{ t('auth.passwordMismatch') }}
             </span>
           </label>
 
           <div class="optional-group">
-            <p class="optional-label font-mono">Optional</p>
+            <p class="optional-label font-mono">{{ t('auth.optional') }}</p>
             <div class="field-row">
               <label class="field">
-                <span class="field-label font-mono">First name</span>
+                <span class="field-label font-mono">{{ t('auth.firstName') }}</span>
                 <input v-model="form.firstname" type="text" placeholder="Ada" class="field-input" />
               </label>
               <label class="field">
-                <span class="field-label font-mono">Last name</span>
+                <span class="field-label font-mono">{{ t('auth.lastName') }}</span>
                 <input v-model="form.lastname" type="text" placeholder="Lovelace" class="field-input" />
               </label>
             </div>
             <label class="field">
-              <span class="field-label font-mono">Birthdate</span>
+              <span class="field-label font-mono">{{ t('auth.birthdate') }}</span>
               <input v-model="form.birthdate" type="date" class="field-input field-input--date" />
             </label>
           </div>
@@ -209,14 +208,14 @@
           <p v-if="successMessage" class="ok">{{ successMessage }}</p>
 
           <button type="submit" :disabled="isSubmitting || passwordsMismatch" class="submit">
-            <span>{{ isSubmitting ? 'Creating…' : 'Create account' }}</span>
+            <span>{{ isSubmitting ? t('auth.creating') : t('auth.createAccount') }}</span>
             <span aria-hidden="true">→</span>
           </button>
         </form>
 
         <p class="alt">
-          Already have an account?
-          <RouterLink to="/login" class="alt-link">Sign in</RouterLink>
+          {{ t('auth.hasAccount') }}
+          <RouterLink to="/login" class="alt-link">{{ t('auth.signIn') }}</RouterLink>
         </p>
       </div>
     </section>
@@ -237,6 +236,9 @@ import { usersApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
+
+const { t } = useI18n()
 
 onMounted(() => {
   setPageSeo({
@@ -267,7 +269,7 @@ async function handleRegister() {
   errorMessage.value = ''
   successMessage.value = ''
   if (passwordsMismatch.value) {
-    errorMessage.value = 'Passwords do not match.'
+    errorMessage.value = t('auth.passwordMismatch')
     isSubmitting.value = false
     return
   }
@@ -281,11 +283,11 @@ async function handleRegister() {
       birthdate: form.value.birthdate || null,
       verify_type: 'link',
     })
-    successMessage.value = 'Account created. Check your email and click the verification link to sign in.'
+    successMessage.value = t('auth.accountCreatedCheckEmail')
     form.value.password = ''
     form.value.confirmPassword = ''
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Registration failed.'
+    errorMessage.value = error instanceof Error ? error.message : t('auth.registrationFailed')
   } finally {
     isSubmitting.value = false
   }

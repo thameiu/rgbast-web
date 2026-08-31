@@ -1,12 +1,12 @@
 <template>
   <main class="search-view">
-    <SiteHeader :user="viewerUser" brand-meta="search" />
+    <SiteHeader :user="viewerUser" :brand-meta="t('common.search')" />
 
     <section class="search-shell">
       <div class="search-top">
         <header class="search-head">
-          <h1 class="search-title font-display">Search</h1>
-          <p class="search-sub font-mono">Users and palettes</p>
+          <h1 class="search-title font-display">{{ t('common.search') }}</h1>
+          <p class="search-sub font-mono">{{ t('searchPage.subtitle') }}</p>
         </header>
 
         <form class="search-main" @submit.prevent="runSearch">
@@ -20,8 +20,8 @@
               </button>
               <transition name="dd-fade">
                 <div v-if="scopeOpen" class="cselect-menu">
-                  <button type="button" class="cselect-item" :class="{ active: scope === 'users' }" @click="setScope('users')">Users</button>
-                  <button type="button" class="cselect-item" :class="{ active: scope === 'palettes' }" @click="setScope('palettes')">Palettes</button>
+                  <button type="button" class="cselect-item" :class="{ active: scope === 'users' }" @click="setScope('users')">{{ t('searchPage.users') }}</button>
+                  <button type="button" class="cselect-item" :class="{ active: scope === 'palettes' }" @click="setScope('palettes')">{{ t('searchPage.palettes') }}</button>
                 </div>
               </transition>
             </div>
@@ -30,7 +30,7 @@
               <input
                 v-model="query"
                 class="search-main-input"
-                :placeholder="scope === 'users' ? 'Search username, first name, last name' : 'Search palette titles'"
+                :placeholder="scope === 'users' ? t('searchPage.userPlaceholder') : t('searchPage.palettePlaceholder')"
                 @focus="recentOpen = true"
                 @input="onQueryInput"
                 @keydown.escape.prevent="recentOpen = false"
@@ -51,7 +51,7 @@
                     class="recent-dd-item"
                     @click="applyRecent(item)"
                   >
-                    <span class="recent-dd-main">{{ item.query || '(colors only)' }}</span>
+                    <span class="recent-dd-main">{{ item.query || t('searchPage.colorsOnly') }}</span>
                     <span class="recent-dd-meta">
                       {{ item.scope }}
                       <template v-if="item.scope === 'palettes' && item.colors.length">
@@ -74,8 +74,8 @@
               </button>
               <transition name="dd-fade">
                 <div v-if="colorModeOpen" class="cselect-menu">
-                  <button type="button" class="cselect-item" :class="{ active: colorMode === 'exact' }" @click="setColorMode('exact')">Exact colors</button>
-                  <button type="button" class="cselect-item" :class="{ active: colorMode === 'similar' }" @click="setColorMode('similar')">Similar range</button>
+                  <button type="button" class="cselect-item" :class="{ active: colorMode === 'exact' }" @click="setColorMode('exact')">{{ t('searchPage.exactColors') }}</button>
+                  <button type="button" class="cselect-item" :class="{ active: colorMode === 'similar' }" @click="setColorMode('similar')">{{ t('searchPage.similarRange') }}</button>
                 </div>
               </transition>
             </div>
@@ -84,10 +84,10 @@
               <input
                 v-model="colorInput"
                 class="color-input"
-                placeholder="Colors: #FF0055 #1A9C6F"
+                :placeholder="t('searchPage.colorPlaceholder')"
                 @keydown.enter.prevent="addColorsFromInput"
               />
-              <button type="button" class="small-btn" @click="addColorsFromInput">Add</button>
+              <button type="button" class="small-btn" @click="addColorsFromInput">{{ t('searchPage.add') }}</button>
             </div>
           </div>
 
@@ -110,8 +110,8 @@
       <p v-if="errorMessage" class="search-error">{{ errorMessage }}</p>
 
       <section v-if="searchDone && scope === 'users'" class="results">
-        <h2 class="results-title font-display">Users · {{ userResults.length }}</h2>
-        <div v-if="userResults.length === 0" class="empty">No users found.</div>
+        <h2 class="results-title font-display">{{ t('searchPage.users') }} · {{ userResults.length }}</h2>
+        <div v-if="userResults.length === 0" class="empty">{{ t('searchPage.noUsers') }}</div>
         <div v-else class="users-grid">
           <button
             v-for="user in userResults"
@@ -127,8 +127,8 @@
       </section>
 
       <section v-if="searchDone && scope === 'palettes'" class="results">
-        <h2 class="results-title font-display">Palettes · {{ paletteResults.length }}</h2>
-        <div v-if="paletteResults.length === 0" class="empty">No palettes found.</div>
+        <h2 class="results-title font-display">{{ t('searchPage.palettes') }} · {{ paletteResults.length }}</h2>
+        <div v-if="paletteResults.length === 0" class="empty">{{ t('searchPage.noPalettes') }}</div>
         <div v-else class="palettes-grid">
           <PaletteCard
             v-for="palette in paletteResults"
@@ -153,8 +153,10 @@ import type { RecentSearchEntry } from '@/api/search'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 const viewerUser = ref<any>(null)
 const SEARCH_SCOPE_KEY = 'rgbast_search_scope'
 
@@ -178,8 +180,8 @@ const scopeSelectRef = ref<HTMLElement | null>(null)
 const colorModeSelectRef = ref<HTMLElement | null>(null)
 const searchBoxRef = ref<HTMLElement | null>(null)
 
-const scopeLabel = computed(() => scope.value === 'users' ? 'Users' : 'Palettes')
-const colorModeLabel = computed(() => colorMode.value === 'exact' ? 'Exact colors' : 'Similar range')
+const scopeLabel = computed(() => scope.value === 'users' ? t('searchPage.users') : t('searchPage.palettes'))
+const colorModeLabel = computed(() => colorMode.value === 'exact' ? t('searchPage.exactColors') : t('searchPage.similarRange'))
 
 const filteredRecentSearches = computed(() => {
   const needle = query.value.trim().toLowerCase()

@@ -14,22 +14,24 @@
 import { computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import { useI18n } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const token = computed(() => (typeof route.query.token === 'string' ? route.query.token : ''))
 const verified = computed(() => (typeof route.query.verified === 'string' ? route.query.verified : ''))
 
-const title = computed(() => (token.value ? 'Email verified' : 'Verification failed'))
+const title = computed(() => (token.value ? t('auth.emailVerified') : t('auth.verificationFailed')))
 const message = computed(() =>
   token.value
-    ? 'Your email has been verified. Redirecting to your dashboard…'
-    : 'Your verification link is invalid or expired. Redirecting to sign in…',
+    ? t('auth.verifiedRedirect')
+    : t('auth.verificationInvalid'),
 )
 
 onMounted(() => {
-  document.title = 'Authentication complete - RGBAST'
+  document.title = t('auth.authCompleteTitle')
   if (token.value) {
     localStorage.setItem('access_token', token.value)
     void router.replace('/dashboard')

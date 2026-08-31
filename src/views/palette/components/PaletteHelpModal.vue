@@ -3,30 +3,20 @@
     <div v-if="open" class="help-modal-overlay" @click.self="$emit('close')">
       <div class="help-modal">
         <div class="help-modal-top">
-          <h3 class="help-modal-title font-display">{{ mode === 'generation' ? 'Generation Guide' : 'Shortcut Cheat Sheet' }}</h3>
-          <button class="help-close-btn" type="button" aria-label="Close help modal" @click="$emit('close')">
+          <h3 class="help-modal-title font-display">{{ mode === 'generation' ? t('paletteHelp.generationTitle') : t('paletteHelp.cheatSheetTitle') }}</h3>
+          <button class="help-close-btn" type="button" :aria-label="t('header.close')" @click="$emit('close')">
             <AppIcon name="x" :size="16" />
           </button>
         </div>
 
         <div v-if="mode === 'generation'" class="help-modal-body">
           <p class="help-paragraph">
-            Palette generation samples hue positions using the selected harmony, then adjusts saturation/value and contrast to produce balanced sets.
-            Base colors are always prioritized first and the remaining slots are built around them.
+            {{ t('paletteHelp.generationIntro') }}
           </p>
 
           <div class="help-illustration-grid">
             <article class="help-ill-card">
-              <div class="help-ill-title">Random</div>
-              <div class="help-swatches">
-                <span style="--c:#C537FF"></span>
-                <span style="--c:#3BD8FF"></span>
-                <span style="--c:#FFD447"></span>
-                <span style="--c:#4AE36D"></span>
-              </div>
-            </article>
-            <article class="help-ill-card">
-              <div class="help-ill-title">Analogous</div>
+              <div class="help-ill-title">{{ t('palette.harmonies.analogous') }}</div>
               <div class="help-swatches">
                 <span style="--c:#7E3DFF"></span>
                 <span style="--c:#9653FF"></span>
@@ -35,7 +25,7 @@
               </div>
             </article>
             <article class="help-ill-card">
-              <div class="help-ill-title">Complementary</div>
+              <div class="help-ill-title">{{ t('palette.harmonies.complementary') }}</div>
               <div class="help-swatches">
                 <span style="--c:#2E76FF"></span>
                 <span style="--c:#FF9D2E"></span>
@@ -44,7 +34,7 @@
               </div>
             </article>
             <article class="help-ill-card">
-              <div class="help-ill-title">Triadic</div>
+              <div class="help-ill-title">{{ t('palette.harmonies.triadic') }}</div>
               <div class="help-swatches">
                 <span style="--c:#FF4F7D"></span>
                 <span style="--c:#5AC86A"></span>
@@ -53,7 +43,7 @@
               </div>
             </article>
             <article class="help-ill-card">
-              <div class="help-ill-title">Split Complementary</div>
+              <div class="help-ill-title">{{ t('palette.harmonies.split') }}</div>
               <div class="help-swatches">
                 <span style="--c:#4665FF"></span>
                 <span style="--c:#FF6C58"></span>
@@ -62,7 +52,7 @@
               </div>
             </article>
             <article class="help-ill-card">
-              <div class="help-ill-title">Tetradic / Shades</div>
+              <div class="help-ill-title">{{ t('paletteHelp.tetradicShades') }}</div>
               <div class="help-swatches">
                 <span style="--c:#5EE4DA"></span>
                 <span style="--c:#F6C343"></span>
@@ -73,31 +63,30 @@
           </div>
 
           <ul class="help-bullets">
-            <li><strong>Contrast:</strong> higher values increase luminance distance between outputs.</li>
-            <li><strong>Base colors:</strong> 1-3 seed colors used as anchors for generated results.</li>
+            <li><strong>{{ t('paletteHelp.baseColorsTitle') }}</strong> {{ t('paletteHelp.baseColorsBody') }}</li>
           </ul>
         </div>
 
         <div v-else class="help-modal-body">
           <ul class="shortcut-list">
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Z</kbd></span><span>Undo last palette change</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Y</kbd><span class="shortcut-sep">/</span><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>Z</kbd></span><span>Redo</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>Save snapshot</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>Edit palette</span></li>
-            <li><span class="shortcut-keys"><kbd>Space</kbd></span><span>Generate palette instantly</span></li>
-            <li><span class="shortcut-keys"><kbd>Alt</kbd><span class="shortcut-plus">+</span><kbd>Space</kbd></span><span>Open generation settings</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>I</kbd></span><span>Extract palette from image</span></li>
-            <li><span class="shortcut-keys"><kbd>S</kbd></span><span>Open share/export modal</span></li>
-            <li><span class="shortcut-keys"><kbd>A</kbd></span><span>Open accessibility audit</span></li>
-            <li><span class="shortcut-keys"><kbd>D</kbd></span><span>Toggle display settings panel</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>C</kbd></span><span>Copy all palette colors</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>Paste colors and add to palette</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>Paste colors and replace palette</span></li>
-            <li><span class="shortcut-keys"><kbd>Delete</kbd></span><span>Delete last color</span></li>
-            <li><span class="shortcut-keys"><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>Delete</kbd></span><span>Delete first color</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Delete</kbd></span><span>Open delete palette modal</span></li>
-            <li><span class="shortcut-keys"><kbd>←</kbd><span class="shortcut-sep">/</span><kbd>→</kbd></span><span>Toggle history sidebar</span></li>
-            <li><span class="shortcut-keys"><kbd>H</kbd></span><span>Open this cheat sheet</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Z</kbd></span><span>{{ t('paletteHelp.shortcuts.undo') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Y</kbd><span class="shortcut-sep">/</span><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>Z</kbd></span><span>{{ t('paletteHelp.shortcuts.redo') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.save') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.edit') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>{{ t('paletteHelp.keys.space') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.generate') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Alt</kbd><span class="shortcut-plus">+</span><kbd>{{ t('paletteHelp.keys.space') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.generationSettings') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>I</kbd></span><span>{{ t('paletteHelp.shortcuts.image') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.share') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>A</kbd></span><span>{{ t('paletteHelp.shortcuts.accessibility') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>D</kbd></span><span>{{ t('paletteHelp.shortcuts.display') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>C</kbd></span><span>{{ t('paletteHelp.shortcuts.copy') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>{{ t('paletteHelp.shortcuts.pasteAdd') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>{{ t('paletteHelp.shortcuts.pasteReplace') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>{{ t('paletteHelp.keys.delete') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.deleteLast') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>{{ t('paletteHelp.keys.delete') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.deleteFirst') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>{{ t('paletteHelp.keys.delete') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.deletePalette') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>←</kbd><span class="shortcut-sep">/</span><kbd>→</kbd></span><span>{{ t('paletteHelp.shortcuts.history') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>H</kbd></span><span>{{ t('paletteHelp.shortcuts.cheatSheet') }}</span></li>
           </ul>
 
         </div>
@@ -108,6 +97,7 @@
 
 <script setup lang="ts">
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { useI18n } from '@/i18n'
 
 defineProps<{
   open: boolean
@@ -118,6 +108,8 @@ defineEmits<{
   (e: 'close'): void
   (e: 'openHistory'): void
 }>()
+
+const { t } = useI18n()
 </script>
 
 <style scoped src="./PaletteHelpModal.css"></style>

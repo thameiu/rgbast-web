@@ -385,6 +385,57 @@
   gap: 16px;
 }
 
+.profile-folder-card {
+  height: 190px;
+  border: 1px solid var(--rule);
+  border-radius: 16px;
+  background: #FFFFFF;
+  color: var(--ink);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, border-color .2s, box-shadow .2s, background .2s;
+}
+
+.profile-folder-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--ink-3);
+  box-shadow: 0 8px 24px rgba(14,14,16,.08);
+}
+
+.profile-folder-icon {
+  color: var(--ink);
+  position: relative;
+  z-index: 1;
+}
+
+.profile-folder-body {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.profile-folder-title {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-folder-meta {
+  margin-top: 8px;
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--ink-3);
+}
+
 @media (max-width: 960px) {
   .profile-content {
     grid-template-columns: 1fr;

@@ -22,14 +22,13 @@
       <div class="panel-inner">
         <div class="panel-lede">
           <p class="eyebrow font-mono">
-            Atelier · returning designer
+            {{ t('auth.loginEyebrow') }}
           </p>
           <h1 class="panel-title font-display">
-            Welcome <em>back</em>.
+            {{ t('auth.loginTitleBefore') }} <em>{{ t('auth.loginTitleFocus') }}</em>.
           </h1>
           <p class="panel-copy">
-            Your palettes, commits, and branches are waiting exactly where
-            you left&nbsp;them.
+            {{ t('auth.loginCopy') }}
           </p>
         </div>
 
@@ -95,7 +94,7 @@
 
         </div>
 
-        <RouterLink to="/" class="back-link font-mono">← Back to index</RouterLink>
+        <RouterLink to="/" class="back-link font-mono">← {{ t('auth.backIndex') }}</RouterLink>
       </div>
     </aside>
 
@@ -108,14 +107,14 @@
         </RouterLink>
 
         <header class="form-head">
-          <p class="step font-mono">Step 01 · Authenticate</p>
-          <h2 class="form-title font-display">Sign in</h2>
-          <p class="form-copy">Pick up where you left your last commit.</p>
+          <p class="step font-mono">{{ t('auth.loginStep') }}</p>
+          <h2 class="form-title font-display">{{ t('auth.signIn') }}</h2>
+          <p class="form-copy">{{ t('auth.loginHint') }}</p>
         </header>
 
         <form class="form" @submit.prevent="handleLogin">
           <label class="field">
-            <span class="field-label font-mono">Username</span>
+            <span class="field-label font-mono">{{ t('auth.username') }}</span>
             <input
               v-model="form.username"
               type="text"
@@ -126,7 +125,7 @@
           </label>
 
           <label class="field">
-            <span class="field-label font-mono">Password</span>
+            <span class="field-label font-mono">{{ t('auth.password') }}</span>
             <div class="password-input-wrap">
               <input
                 v-model="form.password"
@@ -142,7 +141,7 @@
           </label>
 
           <p class="forgot">
-            <RouterLink to="/forgot-password" class="alt-link">Forgot password?</RouterLink>
+            <RouterLink to="/forgot-password" class="alt-link">{{ t('auth.forgotPassword') }}</RouterLink>
           </p>
 
           <p v-if="errorMessage" class="err">{{ errorMessage }}</p>
@@ -153,20 +152,20 @@
               :disabled="resendSubmitting"
               @click="handleResendVerification"
             >
-              {{ resendSubmitting ? 'Sending…' : 'Resend verification email' }}
+              {{ resendSubmitting ? t('auth.sending') : t('auth.resendVerification') }}
             </button>
           </p>
           <p v-if="infoMessage" class="ok">{{ infoMessage }}</p>
 
           <button type="submit" :disabled="isSubmitting" class="submit">
-            <span>{{ isSubmitting ? 'Signing in…' : 'Sign in' }}</span>
+            <span>{{ isSubmitting ? t('auth.signingIn') : t('auth.signIn') }}</span>
             <span aria-hidden="true">→</span>
           </button>
         </form>
 
         <p class="alt">
-          No account yet?
-          <RouterLink to="/register" class="alt-link">Create one</RouterLink>
+          {{ t('auth.noAccount') }}
+          <RouterLink to="/register" class="alt-link">{{ t('auth.createOne') }}</RouterLink>
         </p>
       </div>
     </section>
@@ -186,9 +185,11 @@ import { authApi } from '@/api'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { useI18n } from '@/i18n'
 import { setPageSeo } from '@/utils/seo'
 
 const router = useRouter()
+const { t } = useI18n()
 const route = useRoute()
 onMounted(() => {
   setPageSeo({
@@ -238,9 +239,9 @@ async function handleLogin() {
     localStorage.setItem('access_token', response.access_token)
     router.push('/dashboard')
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : 'Login failed.'
+    const message = error instanceof Error ? error.message : t('auth.loginFailed')
     errorMessage.value = message
-    showResendVerification.value = message.toLowerCase().includes('email not verified')
+    showResendVerification.value = message === t('apiErrors.emailNotVerified') || message.toLowerCase().includes('email not verified')
   } finally {
     isSubmitting.value = false
   }
@@ -248,7 +249,7 @@ async function handleLogin() {
 
 async function handleResendVerification() {
   if (!form.value.username.trim()) {
-    errorMessage.value = 'Enter your username or email first.'
+    errorMessage.value = t('auth.enterIdentifier')
     return
   }
   resendSubmitting.value = true
@@ -259,7 +260,7 @@ async function handleResendVerification() {
     })
     infoMessage.value = response.response
   } catch (error: unknown) {
-    errorMessage.value = error instanceof Error ? error.message : 'Could not resend verification email.'
+    errorMessage.value = error instanceof Error ? error.message : t('auth.couldNotResend')
   } finally {
     resendSubmitting.value = false
   }

@@ -13,7 +13,7 @@
         <rect x="1" y="2" width="12" height="9" rx="1.5" />
         <path d="M1 5.5h12" />
       </svg>
-      <span class="ft-label">All palettes</span>
+      <span class="ft-label">{{ t('folderTree.allPalettes') }}</span>
       <span class="ft-count">{{ totalCount }}</span>
     </div>
 
@@ -46,16 +46,16 @@
       <svg class="ft-sicon" :class="{ 'ft-sicon--active': mode === 'navigation' ? modelValue === 'root' : modelValue === null }" width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
         <path d="M1 10V5a1 1 0 0 1 .5-.87l5-2.88a1 1 0 0 1 1 0l5 2.88A1 1 0 0 1 13 5v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1Z" />
       </svg>
-      <span class="ft-label ft-label--root">{{ mode === 'picker' ? 'Root (no folder)' : 'Root' }}</span>
+      <span class="ft-label ft-label--root">{{ mode === 'picker' ? t('folderTree.rootNoFolder') : t('folderTree.root') }}</span>
       <span v-if="mode === 'navigation'" class="ft-count-icons">
-        <span class="ft-count-item" title="Palettes">
+        <span class="ft-count-item" :title="t('folderTree.palettes')">
           <svg class="ft-count-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="1" y="1" width="10" height="8" rx="1.3" />
             <path d="M4.33 1.4v7.2M7.67 1.4v7.2" />
           </svg>
           <span>{{ rootCount ?? 0 }}</span>
         </span>
-        <span class="ft-count-item" title="Subfolders">
+        <span class="ft-count-item" :title="t('folderTree.subfolders')">
           <svg class="ft-count-icon" width="11" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
             <path d="M1 3.5C1 2.67 1.67 2 2.5 2H5l1.5 1.5H11.5C12.33 3.5 13 4.17 13 5v4.5C13 10.33 12.33 11 11.5 11h-9C1.67 11 1 10.33 1 9.5V3.5Z" />
           </svg>
@@ -107,7 +107,7 @@
             class="ft-inline-input"
             :class="{ 'ft-inline-input--error': !!rootCreateError }"
             :value="inlineValue"
-            placeholder="Folder name…"
+            :placeholder="t('folderTree.folderNamePlaceholder')"
             @input="inlineValue = ($event.target as HTMLInputElement).value"
             @keydown.enter="!rootCreateError && commitInlineCreate(null)"
             @keydown.escape="cancelInline()"
@@ -138,7 +138,7 @@
             class="ft-inline-input"
             :class="{ 'ft-inline-input--error': !!rootCreateError }"
             :value="inlineValue"
-            placeholder="Folder name…"
+            :placeholder="t('folderTree.folderNamePlaceholder')"
             @input="inlineValue = ($event.target as HTMLInputElement).value"
             @keydown.enter="!rootCreateError && commitInlineCreate(null)"
             @keydown.escape="cancelInline()"
@@ -158,7 +158,7 @@
       <svg width="9" height="9" viewBox="0 0 9 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
         <path d="M4.5 1v7M1 4.5h7" />
       </svg>
-      New folder
+      {{ t('folderTree.newFolder') }}
     </button>
   </div>
 </template>
@@ -168,6 +168,7 @@ import { computed, nextTick, provide, ref, watch } from 'vue'
 import type { FolderResponse, PaletteCache } from '@/api/types'
 import type { FolderTreeState } from './folderTreeTypes'
 import FolderTreeNode from './FolderTreeNode.vue'
+import { useI18n } from '@/i18n'
 
 const props = withDefaults(defineProps<{
   folders: FolderResponse[]
@@ -183,6 +184,8 @@ const props = withDefaults(defineProps<{
 }>(), {
   allowFolderEditing: true,
 })
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: 'all' | 'root' | number | null): void
@@ -221,7 +224,7 @@ const rootCreateError = computed((): string | null => {
   if (!inlineCreate.value || inlineCreate.value.parentId !== null) return null
   const n = inlineValue.value.trim()
   if (!n) return null
-  return isNameTaken(n, null) ? 'Name already taken' : null
+  return isNameTaken(n, null) ? t('folderTree.nameAlreadyTaken') : null
 })
 
 function getChildren(parentId: number | null): FolderResponse[] {
@@ -390,6 +393,11 @@ const state: FolderTreeState = {
 }
 
 provide('folderTreeState', state)
+
+defineExpose({
+  startInlineCreate,
+  cancelInline,
+})
 </script>
 
 <style scoped src="./FolderTree.css"></style>

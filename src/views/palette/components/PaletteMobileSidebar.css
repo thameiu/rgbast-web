@@ -67,6 +67,32 @@
   gap: 0;
 }
 
+.msb-language-switcher {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.msb-lang-btn {
+  height: 34px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+
+.msb-lang-btn:hover,
+.msb-lang-btn.active {
+  border-color: rgba(180, 16, 204, 0.42);
+  background: rgba(180, 16, 204, 0.16);
+  color: #fff;
+}
+
 .msb-section-label {
   font-size: 10px;
   font-weight: 700;

@@ -1,3 +1,5 @@
+import { translate } from '@/i18n'
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 /** Base URL for all API requests. Prefer VITE_BACKEND_URL in Vite builds. */
@@ -78,12 +80,47 @@ export class ApiClient {
       } else {
         message = error.detail || `HTTP error ${response.status}`;
       }
-      throw new Error(message);
+      throw new Error(this.translateError(message, response.status));
     }
     if (response.status === 204) {
       return undefined as T;
     }
 
     return response.json();
+  }
+
+  private static translateError(message: string, statusCode: number): string {
+    const normalized = String(message || '').trim()
+    const lower = normalized.toLowerCase()
+    const rules: Array<[RegExp, string]> = [
+      [/^invalid credentials$/i, 'apiErrors.invalidCredentials'],
+      [/email not verified/i, 'apiErrors.emailNotVerified'],
+      [/^user not found\.?$/i, 'apiErrors.userNotFound'],
+      [/^palette not found\.?$/i, 'apiErrors.paletteNotFound'],
+      [/^folder not found\.?$/i, 'apiErrors.folderNotFound'],
+      [/^bookmark not found\.?$/i, 'apiErrors.bookmarkNotFound'],
+      [/username.*already taken/i, 'apiErrors.usernameTaken'],
+      [/email.*already taken/i, 'apiErrors.emailTaken'],
+      [/duplicate record/i, 'apiErrors.duplicateRecord'],
+      [/folder name already exists/i, 'apiErrors.folderNameExists'],
+      [/palette name already exists/i, 'apiErrors.paletteNameExists'],
+      [/^title is invalid\.?$/i, 'apiErrors.titleInvalid'],
+      [/folder name is invalid/i, 'apiErrors.folderNameInvalid'],
+      [/username is invalid/i, 'apiErrors.usernameInvalid'],
+      [/password is too weak/i, 'apiErrors.passwordWeak'],
+      [/permission to modify this palette/i, 'apiErrors.permissionPalette'],
+      [/permission to modify this folder/i, 'apiErrors.permissionFolder'],
+      [/permission to use this folder/i, 'apiErrors.permissionUseFolder'],
+      [/token has expired|reset token has expired|verification token has expired/i, 'apiErrors.tokenExpired'],
+      [/invalid token|invalid reset token|invalid verification token|signature verification failed/i, 'apiErrors.invalidToken'],
+      [/^validation error$/i, 'apiErrors.validation'],
+    ]
+    for (const [pattern, key] of rules) {
+      if (pattern.test(normalized)) return translate(key)
+    }
+    if (statusCode === 401) return translate('apiErrors.unauthorized')
+    if (statusCode === 403) return translate('apiErrors.forbidden')
+    if (statusCode === 404 || lower.includes('not found')) return translate('apiErrors.notFound')
+    return normalized || translate('apiErrors.generic')
   }
 }

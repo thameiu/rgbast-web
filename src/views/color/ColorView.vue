@@ -16,7 +16,7 @@
             class="hero-bookmark-btn"
             :class="{ 'hero-bookmark-btn--active': !!currentBookmark }"
             :style="{ color: swatchTextColor }"
-            :title="currentBookmark ? 'Update saved color' : 'Save color'"
+            :title="currentBookmark ? t('colorPage.updateSavedColor') : t('colorPage.saveColor')"
             @click="onBookmarkClick"
           >
             <AppIcon name="bookmark" :size="18" />
@@ -25,7 +25,7 @@
       </div>
       <transition name="hero-loader-fade">
         <div v-if="loading" class="hero-loader-overlay">
-          <AppLoader message="Loading color information..." />
+          <AppLoader :message="t('colorPage.loadingInfo')" />
         </div>
       </transition>
     </div>
@@ -44,10 +44,10 @@
               <AppIcon name="arrow-right" :size="13" />
             </button>
             <button class="picker-mode-btn" :class="{ active: pickerMode === '2d' }" @click="pickerMode = '2d'">
-              Normal
+              {{ t('colorPage.normalSelector') }}
             </button>
             <button class="picker-mode-btn" :class="{ active: pickerMode === '3d' }" @click="pickerMode = '3d'">
-              3D selector
+              {{ t('colorPage.selector3d') }}
             </button>
           </div>
 
@@ -87,7 +87,7 @@
           <!-- Inputs -->
           <div class="cp-inputs">
             <div class="cp-field cp-field--hex">
-              <label>Hex</label>
+              <label>{{ t('colorPage.hex') }}</label>
               <div class="cp-hex-row">
                 <span class="cp-hash">#</span>
                 <input class="cp-input" :value="displayHex" maxlength="7" spellcheck="false"
@@ -113,8 +113,8 @@
 
           <!-- Copy hex -->
           <button class="copy-btn" :class="{ 'copy-btn--copied': copied }" @click="copyHex">
-            <span v-if="copied">✓ Copied</span>
-            <span v-else>Copy #{{ displayHex.toUpperCase() }}</span>
+            <span v-if="copied">✓ {{ t('colorPage.copied') }}</span>
+            <span v-else>{{ t('colorPage.copyColor', { hex: displayHex.toUpperCase() }) }}</span>
           </button>
         </div>
       </aside>
@@ -153,7 +153,7 @@
           <!-- Bast score -->
           <div class="card bast-card">
             <div class="bast-header">
-              <span class="card-label">Bast Score</span>
+              <span class="card-label">{{ t('colorPage.bastScore') }}</span>
               <span class="bast-value" :style="{ color: bastColor }">{{ colorInfo.bast_score.toFixed(1) }}</span>
             </div>
             <div class="bast-track">
@@ -164,7 +164,7 @@
 
           <!-- Color spaces -->
           <div class="card">
-            <span class="card-label">Color Spaces</span>
+            <span class="card-label">{{ t('colorPage.colorSpaces') }}</span>
             <div class="spaces-grid">
               <button
                 v-for="sp in colorSpaces"
@@ -249,7 +249,7 @@
 
       <div v-if="colorInfo" class="full-width-col">
         <div class="card">
-          <span class="card-label">Color Variants</span>
+          <span class="card-label">{{ t('colorPage.colorVariants') }}</span>
           <div class="derived-groups">
             <section v-for="group in derivedColorGroups" :key="group.key" class="derived-group">
               <div class="derived-head">
@@ -269,7 +269,7 @@
                     <button
                       class="derived-action-btn"
                       :style="{ color: getSwatchTextColor(swatch.hex) }"
-                      title="Set as current color"
+                      :title="t('colorPage.setCurrent')"
                       @click.stop="setCurrentColor(swatch.hex)"
                     >
                       <AppIcon name="external-link" :size="14" />
@@ -278,7 +278,7 @@
                       class="derived-action-btn"
                       :class="{ 'derived-action-btn--copied': copiedDerivedHex === swatch.hex }"
                       :style="{ color: getSwatchTextColor(swatch.hex) }"
-                      :title="copiedDerivedHex === swatch.hex ? 'Copied!' : 'Copy hex'"
+                      :title="copiedDerivedHex === swatch.hex ? t('colorPage.copied') : t('colorPage.copyHex')"
                       @click.stop="copyHexValue(swatch.hex)"
                     >
                       <AppIcon :name="copiedDerivedHex === swatch.hex ? 'check' : 'copy'" :size="14" />
@@ -298,7 +298,7 @@
         </div>
 
         <div class="card">
-          <span class="card-label">Contrast Check</span>
+          <span class="card-label">{{ t('colorPage.contrastCheck') }}</span>
           <div class="cc-pair">
             <div class="cc-swatch" :style="{ background: '#' + displayHex }">
               <span class="cc-swatch-hex" :style="{ color: swatchTextColor }">#{{ displayHex.toUpperCase() }}</span>
@@ -315,7 +315,7 @@
                 <span class="cc-swatch-hex" :style="{ color: compareSwatchTextColor }">#{{ contrastHex.toUpperCase() }}</span>
               </template>
               <template v-else>
-                <span class="cc-pick-hint">+ pick color</span>
+                <span class="cc-pick-hint">{{ t('colorPage.pickColor') }}</span>
               </template>
             </div>
           </div>
@@ -330,16 +330,16 @@
             <div v-if="contrastInfo && !contrastLoading" class="cc-result">
               <div class="cc-ratio-row">
                 <span class="cc-ratio">{{ contrastInfo.ratio.toFixed(2) }}:1</span>
-                <span class="cc-ratio-label">contrast ratio</span>
+                <span class="cc-ratio-label">{{ t('colorPage.contrastRatio') }}</span>
               </div>
               <div class="cc-badge-groups">
                 <div class="cc-badge-group">
-                  <span class="cc-badge-scope">Normal</span>
+                  <span class="cc-badge-scope">{{ t('colorPage.normal') }}</span>
                   <span class="badge" :class="contrastInfo.aa_normal ? 'badge--pass' : 'badge--fail'">AA</span>
                   <span class="badge" :class="contrastInfo.aaa_normal ? 'badge--pass' : 'badge--fail'">AAA</span>
                 </div>
                 <div class="cc-badge-group">
-                  <span class="cc-badge-scope">Large text</span>
+                  <span class="cc-badge-scope">{{ t('colorPage.largeText') }}</span>
                   <span class="badge" :class="contrastInfo.aa_large ? 'badge--pass' : 'badge--fail'">AA</span>
                   <span class="badge" :class="contrastInfo.aaa_large ? 'badge--pass' : 'badge--fail'">AAA</span>
                 </div>
@@ -364,7 +364,7 @@
         </div>
 
         <div class="card">
-          <span class="card-label">Accessibility</span>
+          <span class="card-label">{{ t('colorPage.accessibility') }}</span>
           <div class="contrast-rows">
             <div class="contrast-row">
               <div class="contrast-preview contrast-preview--white">
@@ -375,7 +375,7 @@
               <div class="contrast-meta">
                 <div class="contrast-meta-top">
                   <span class="contrast-ratio">{{ colorInfo.accessibility.contrast.on_white.toFixed(2) }}:1</span>
-                  <span class="contrast-bg-label">on white</span>
+                  <span class="contrast-bg-label">{{ t('colorPage.onWhite') }}</span>
                 </div>
                 <div class="badges">
                   <span class="badge" :class="colorInfo.accessibility.contrast.aa_on_white_normal_text ? 'badge--pass' : 'badge--fail'">AA</span>
@@ -392,7 +392,7 @@
               <div class="contrast-meta">
                 <div class="contrast-meta-top">
                   <span class="contrast-ratio">{{ colorInfo.accessibility.contrast.on_black.toFixed(2) }}:1</span>
-                  <span class="contrast-bg-label">on black</span>
+                  <span class="contrast-bg-label">{{ t('colorPage.onBlack') }}</span>
                 </div>
                 <div class="badges">
                   <span class="badge" :class="colorInfo.accessibility.contrast.aa_on_black_normal_text ? 'badge--pass' : 'badge--fail'">AA</span>
@@ -404,7 +404,7 @@
         </div>
 
         <div class="card">
-          <span class="card-label">Color Blindness</span>
+          <span class="card-label">{{ t('colorPage.colorBlindness') }}</span>
           <div class="cb-row">
             <div class="cb-swatch">
               <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.protanopia.hex }">
@@ -472,9 +472,11 @@ import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
 import ColorBookmarkModal from '@/views/color/components/ColorBookmarkModal.vue'
 import { useColorView } from './composables/useColorView'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 
 // ColorView component: orchestrates the color explorer layout and state.
 const view = useColorView()
+const { t } = useI18n()
 
 const {
   hsv,
@@ -614,7 +616,7 @@ async function saveBookmark(): Promise<void> {
     bookmarkLabel.value = saved.label
     bookmarkModalOpen.value = false
   } catch (error: any) {
-    bookmarkError.value = error?.message ?? 'Could not save this bookmark.'
+    bookmarkError.value = error?.message ?? t('colorPage.couldNotSaveBookmark')
   } finally {
     bookmarkSaving.value = false
   }

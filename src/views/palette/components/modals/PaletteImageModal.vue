@@ -5,10 +5,10 @@
         <button class="modal-close-btn" type="button" aria-label="Close image modal" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
-        <h3 class="modal-title font-display">Palette From Image</h3>
+        <h3 class="modal-title font-display">{{ t('palette.imageTitle') }}</h3>
 
         <p class="image-help">
-          Upload an image and extract dominant colors.
+          {{ t('palette.imageHelp') }}
         </p>
 
         <label
@@ -45,41 +45,72 @@
           <template v-else>
             <div class="dropzone-placeholder">
               <AppIcon name="upload" :size="26" />
-              <p class="dropzone-title">Drag &amp; drop an image here</p>
-              <p class="dropzone-sub">or click to browse</p>
+              <p class="dropzone-title">{{ t('palette.dropImage') }}</p>
+              <p class="dropzone-sub">{{ t('palette.browseImage') }}</p>
             </div>
           </template>
         </label>
 
-        <p class="upload-meta">Max size: 10 MB</p>
+        <p class="upload-meta">{{ t('palette.maxImageSize') }}</p>
 
-        <label class="field-label">Colors - {{ count }}</label>
-        <input
-          type="range"
-          :value="count"
-          min="1"
-          max="8"
-          step="1"
-          class="image-range"
-          @input="$emit('update:count', Number(($event.target as HTMLInputElement).value))"
-        />
+        <template v-if="extractedColors.length === 0">
+          <label class="field-label">{{ t('palette.colors') }} - {{ count }}</label>
+          <input
+            type="range"
+            :value="count"
+            min="1"
+            max="8"
+            step="1"
+            class="image-range"
+            @input="$emit('update:count', Number(($event.target as HTMLInputElement).value))"
+          />
+        </template>
+
+        <div v-else class="extracted-palette">
+          <p class="field-label">{{ t('palette.extractedPalette') }}</p>
+          <div class="extracted-grid">
+            <button
+              v-for="color in extractedColors"
+              :key="color.hex"
+              type="button"
+              class="extracted-color"
+              :class="{ 'extracted-color--off': !color.selected }"
+              :style="{ background: '#' + color.hex }"
+              @click="$emit('toggleExtractedColor', color.hex)"
+            >
+              <span class="extracted-check">
+                <AppIcon v-if="color.selected" name="check" :size="13" />
+              </span>
+              <span class="extracted-hex">#{{ color.hex }}</span>
+            </button>
+          </div>
+        </div>
 
         <p v-if="error" class="modal-error">{{ error }}</p>
 
         <div class="modal-actions">
-          <button class="modal-btn cancel" @click="$emit('close')">Cancel</button>
+          <button class="modal-btn cancel" @click="$emit('close')">{{ t('common.cancel') }}</button>
           <button
+            v-if="extractedColors.length === 0"
             class="modal-btn confirm"
             :disabled="isLoading || !fileName"
             @click="$emit('submit')"
           >
-            {{ isLoading ? 'Extracting...' : 'Extract palette' }}
+            {{ isLoading ? t('palette.extracting') : t('palette.extractPalette') }}
           </button>
+          <template v-else>
+            <button class="modal-btn confirm ghost-confirm" :disabled="selectedCount === 0" @click="$emit('addExtractedColors')">
+              {{ t('common.add') }}
+            </button>
+            <button class="modal-btn confirm" :disabled="selectedCount === 0" @click="$emit('replaceExtractedColors')">
+              {{ t('common.replace') }}
+            </button>
+          </template>
         </div>
 
         <Transition name="image-modal-loader-fade">
           <div v-if="isLoading" class="image-modal-loader-overlay">
-            <AppLoader message="Extracting palette from image..." />
+            <AppLoader :message="t('palette.extractingLoader')" />
           </div>
         </Transition>
       </div>
@@ -91,6 +122,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
+import { useI18n } from '@/i18n'
 
 const props = defineProps<{
   open: boolean
@@ -99,19 +131,26 @@ const props = defineProps<{
   count: number
   file: File | null
   fileName: string
+  extractedColors: Array<{ hex: string; count: number; selected: boolean }>
 }>()
+
+const { t } = useI18n()
 
 const emit = defineEmits<{
   (e: 'close'): void
   (e: 'update:count', value: number): void
   (e: 'fileChange', file: File | null): void
   (e: 'submit'): void
+  (e: 'toggleExtractedColor', hex: string): void
+  (e: 'addExtractedColors'): void
+  (e: 'replaceExtractedColors'): void
 }>()
 
 const fileInputEl = ref<HTMLInputElement | null>(null)
 const dragActive = ref(false)
 const localPreviewUrl = ref<string | null>(null)
 const previewUrl = computed(() => localPreviewUrl.value)
+const selectedCount = computed(() => props.extractedColors.filter(color => color.selected).length)
 
 watch(
   () => props.file,

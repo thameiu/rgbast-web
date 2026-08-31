@@ -7,45 +7,43 @@
       <div class="hero-left">
         <p class="eyebrow font-mono">
           <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
-          Palette generation · version controlled
+          {{ t('landing.meta') }}
         </p>
 
         <h1 class="headline font-display">
-          Generate, commit, branch
-          <span class="headline-line">your <em>colors.</em></span>
+          {{ t('landing.headline') }}
+          <span class="headline-line"><em>{{ t('landing.headlineLine') }}</em></span>
         </h1>
 
         <p class="lede">
-          Generate palettes first, then shape them like code.
-          Tune harmony and contrast, commit with a message, branch experiments,
-          and walk back through every&nbsp;change.
+          {{ t('landing.lead') }}
         </p>
 
         <div class="cta-row">
           <RouterLink :to="{ name: 'palette', params: { username: 'local', pathMatch: 'new' } }" class="btn-primary">
-            Create a palette
+            {{ t('landing.createPalette') }}
             <span class="btn-arrow" aria-hidden="true">→</span>
           </RouterLink>
           <RouterLink to="/login" class="btn-ghost">
-            <span class="font-mono">→</span> Sign in
+            <span class="font-mono">→</span> {{ t('common.login') }}
           </RouterLink>
           <RouterLink to="/color/B410CC" class="btn-ghost btn-ghost--color">
-            <span class="color-dot" aria-hidden="true"></span> Color Explorer
+            <span class="color-dot" aria-hidden="true"></span> {{ t('landing.colorExplorer') }}
           </RouterLink>
         </div>
 
         <dl class="stats">
           <div class="stat">
             <dt class="font-mono">01</dt>
-            <dd>Generate from harmony rules, image extraction, or base colors.</dd>
+            <dd>{{ t('landing.statGenerate') }}</dd>
           </div>
           <div class="stat">
             <dt class="font-mono">02</dt>
-            <dd>Commit every iteration - nothing lost, ever.</dd>
+            <dd>{{ t('landing.statCommit') }}</dd>
           </div>
           <div class="stat">
             <dt class="font-mono">03</dt>
-            <dd>Branch palette experiments without touching your main version.</dd>
+            <dd>{{ t('landing.statBranch') }}</dd>
           </div>
         </dl>
       </div>
@@ -71,44 +69,30 @@
       <div class="features-stack">
         <article class="feat feat--wide feat--generator" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.01</span>
-          <h3 class="feat-title font-display">Advanced&nbsp;<span class="feat-key feat-key--generator">Generator</span></h3>
-          <p class="feat-body">
-            Generate palettes with harmony strategies, contrast tuning,
-            curated base colors, and image or SVG extraction.
-            then refine and commit what works.
-          </p>
+          <h3 class="feat-title font-display">{{ t('landing.featureGeneratorTitle') }}</h3>
+          <p class="feat-body">{{ t('landing.featureGeneratorBody') }}</p>
         </article>
         <article class="feat feat--wide feat--atelier" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.02</span>
-          <h3 class="feat-title font-display">Palette&nbsp;<span class="feat-key feat-key--atelier">Atelier</span></h3>
-          <p class="feat-body">
-            Generate a base, then craft named swatches with labels and structure.
-            Every color gets a role in your system.
-          </p>
+          <h3 class="feat-title font-display">{{ t('landing.featureAtelierTitle') }}</h3>
+          <p class="feat-body">{{ t('landing.featureAtelierBody') }}</p>
         </article>
         <article class="feat feat--wide feat--history" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.03</span>
-          <h3 class="feat-title font-display">Versioned&nbsp;<span class="feat-key feat-key--history">History</span></h3>
-          <p class="feat-body">
-            Generate new variants, commit every change with a message, branch from any
-            snapshot, and merge back when ready. Traverse the timeline and
-            safely roll back without losing work.
-          </p>
+          <h3 class="feat-title font-display">{{ t('landing.featureHistoryTitle') }}</h3>
+          <p class="feat-body">{{ t('landing.featureHistoryBody') }}</p>
         </article>
         <article class="feat feat--wide feat--color" :ref="registerFeatureEl">
           <span class="feat-num font-mono">F.04</span>
-          <h3 class="feat-title font-display">Color&nbsp;<span class="feat-key feat-key--explorer">Explorer</span></h3>
-          <p class="feat-body">
-            Generate a palette, then inspect any hex: color spaces, accessibility ratings, contrast checker,
-            color blindness simulations, and toy around with the 3D Color Picker.
-          </p>
-          <RouterLink to="/color/B410CC" class="feat-link font-mono">Try it →</RouterLink>
+          <h3 class="feat-title font-display">{{ t('landing.featureExplorerTitle') }}</h3>
+          <p class="feat-body">{{ t('landing.featureExplorerBody') }}</p>
+          <RouterLink to="/color/B410CC" class="feat-link font-mono">{{ t('landing.tryIt') }} →</RouterLink>
         </article>
       </div>
     </section>
 
     <footer class="foot">
-      <span class="foot-copy font-mono">RGBAST · Version control for colors</span>
+      <span class="foot-copy font-mono">{{ t('landing.footer') }}</span>
       <div class="foot-mark">
         <RgbastLogo size="28px" />
         <a
@@ -135,9 +119,12 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 import thameiuBadge from '@/assets/images/thameiu_88x31.webp'
 
 // LandingView component: marketing home page with a demo history graph.
+const { t } = useI18n()
+
 onMounted(() => {
   setPageSeo({
     title: 'RGBAST - version control for color',

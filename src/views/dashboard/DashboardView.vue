@@ -5,11 +5,11 @@
     <span class="regmark regmark-bl" aria-hidden="true"></span>
     <span class="regmark regmark-br" aria-hidden="true"></span>
 
-    <SiteHeader :user="user" brand-meta="atelier" />
+    <SiteHeader :user="user" :brand-meta="t('dashboard.atelier')" />
 
     <div class="shell">
       <aside class="sidebar">
-        <AppLoader v-if="loading" message="Loading palettes..." />
+        <AppLoader v-if="loading" :message="t('common.loadingPalettes')" />
 
         <template v-else-if="user">
           <div class="avatar">{{ user.username?.charAt(0)?.toUpperCase() }}</div>
@@ -17,15 +17,15 @@
           <p v-if="user.firstname || user.lastname" class="sidebar-fullname">
             {{ [user.firstname, user.lastname].filter(Boolean).join(' ') }}
           </p>
-          <p class="sidebar-email">{{ user.email || 'No email on file' }}</p>
+          <p class="sidebar-email">{{ user.email || t('dashboard.noEmail') }}</p>
 
           <dl class="sidebar-stats">
             <div>
-              <dt class="font-mono">palettes</dt>
+              <dt class="font-mono">{{ t('dashboard.palettes') }}</dt>
               <dd>{{ palettes.length }}</dd>
             </div>
             <div>
-              <dt class="font-mono">colleagues</dt>
+              <dt class="font-mono">{{ t('dashboard.colleagues') }}</dt>
               <dd>
                 <button v-if="user" class="stat-link" @click="showColleaguesModal = true">
                   {{ colleaguesCount }}
@@ -36,7 +36,7 @@
           </dl>
 
           <div class="folder-panel">
-            <p class="folder-panel-label font-mono">Folders</p>
+            <p class="folder-panel-label font-mono">{{ t('dashboard.folders') }}</p>
             <div class="folder-panel-tree">
               <FolderTree
                 :folders="folders"
@@ -60,8 +60,8 @@
 
         <template v-else>
           <div class="guest-info">
-            <p class="guest-info-text">You are not logged in. Showing local drafts stored in this browser.</p>
-            <button class="guest-login-btn" @click="router.push('/login')">Log in</button>
+            <p class="guest-info-text">{{ t('dashboard.guestInfo') }}</p>
+            <button class="guest-login-btn" @click="router.push('/login')">{{ t('common.login') }}</button>
           </div>
         </template>
       </aside>
@@ -70,17 +70,17 @@
         <header class="content-head">
           <p class="eyebrow font-mono">
             <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
-            Atelier · active workspace
+            {{ t('dashboard.workspace') }}
           </p>
           <h1 class="content-title font-display">
-            Your <em>palettes</em>, committed.
+            {{ t('dashboard.titleBefore') }} <em>{{ t('dashboard.titleFocus') }}</em>, {{ t('dashboard.titleAfter') }}
           </h1>
-          <p v-if="!user" class="guest-note font-mono">Guest mode · local drafts only</p>
+          <p v-if="!user" class="guest-note font-mono">{{ t('dashboard.guestMode') }}</p>
         </header>
 
         <div class="palettes-section">
           <div class="section-bar">
-            <h2 class="section-title font-display">Palettes</h2>
+            <h2 class="section-title font-display">{{ t('dashboard.palettes') }}</h2>
 
             <!-- Breadcrumb path -->
             <nav v-if="activeFolderKey !== 'all'" class="breadcrumb font-mono">
@@ -95,22 +95,26 @@
                 <span class="bc-sep">/</span>
               </template>
             </nav>
-            <p v-else class="breadcrumb-all font-mono">All palettes</p>
+            <p v-else class="breadcrumb-all font-mono">{{ t('dashboard.allPalettes') }}</p>
 
             <button class="new-palette-btn" @click="newPalette">
-              New palette
+              {{ t('dashboard.newPalette') }}
+              <span aria-hidden="true">+</span>
+            </button>
+            <button v-if="activeFolderKey !== 'all'" class="new-folder-btn" @click="createFolderHere">
+              {{ t('folderTree.newFolder') }}
               <span aria-hidden="true">+</span>
             </button>
           </div>
 
           <div class="sort-bar font-mono">
-            <span class="sort-label">Sort</span>
+            <span class="sort-label">{{ t('dashboard.sort') }}</span>
             <button
               class="sort-btn"
               :class="{ 'sort-btn--active': sortField === 'name' }"
               @click="sortField === 'name' ? sortDir = sortDir === 'asc' ? 'desc' : 'asc' : (sortField = 'name', sortDir = 'asc')"
             >
-              Name
+              {{ t('dashboard.name') }}
               <svg v-if="sortField === 'name'" class="sort-arrow" :class="{ 'sort-arrow--down': sortDir === 'desc' }" width="9" height="9" viewBox="0 0 9 9" fill="none">
                 <path d="M4.5 1.5v6M1.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -120,25 +124,115 @@
               :class="{ 'sort-btn--active': sortField === 'date' }"
               @click="sortField === 'date' ? sortDir = sortDir === 'asc' ? 'desc' : 'asc' : (sortField = 'date', sortDir = 'desc')"
             >
-              Last edit
+              {{ t('dashboard.lastEdit') }}
               <svg v-if="sortField === 'date'" class="sort-arrow" :class="{ 'sort-arrow--down': sortDir === 'desc' }" width="9" height="9" viewBox="0 0 9 9" fill="none">
                 <path d="M4.5 1.5v6M1.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
             </button>
           </div>
 
-          <div v-if="filteredPalettes.length === 0" class="empty-state">
+          <div v-if="!isCreatingFolderCard && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="empty-state">
             <div class="empty-icon">◐</div>
-            <p>{{ activeFolderKey === 'all' ? 'No palettes yet.' : 'No palettes in this folder.' }}</p>
+            <p>{{ activeFolderKey === 'all' ? t('dashboard.noPalettes') : t('dashboard.noFolderPalettes') }}</p>
             <button class="empty-cta" @click="newPalette">{{ emptyCta }}</button>
           </div>
 
           <div v-else class="palettes-grid">
+            <article
+              v-if="isCreatingFolderCard"
+              class="dashboard-folder-card dashboard-folder-card--editing dashboard-folder-card--new"
+            >
+              <div class="dashboard-folder-icon" aria-hidden="true">
+                <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
+                  <path d="M3 10.5C3 7.74 5.24 5.5 8 5.5h8.9l4.2 4.1H34c2.76 0 5 2.24 5 5V28c0 2.76-2.24 5-5 5H8c-2.76 0-5-2.24-5-5V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M3 14h36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="dashboard-folder-body">
+                <input
+                  v-model="folderCreateDraftName"
+                  class="dashboard-folder-input font-display"
+                  :class="{ 'dashboard-folder-input--error': !!folderCreateError }"
+                  :placeholder="t('folderTree.folderNamePlaceholder')"
+                  data-dashboard-folder-create-input
+                  @click.stop
+                  @keydown.enter="!folderCreateError && saveFolderCreate()"
+                  @keydown.escape="cancelFolderCreate()"
+                />
+                <p v-if="folderCreateError" class="dashboard-folder-inline-error">{{ folderCreateError }}</p>
+                <div class="dashboard-folder-inline-actions">
+                  <button class="dashboard-folder-inline-btn dashboard-folder-inline-btn--cancel" @click.stop="cancelFolderCreate">{{ t('common.cancel') }}</button>
+                  <button class="dashboard-folder-inline-btn" :disabled="isSavingFolderCreate || !folderCreateDraftName.trim() || !!folderCreateError" @click.stop="saveFolderCreate">
+                    {{ isSavingFolderCreate ? t('dashboard.creatingFolder') : t('common.save') }}
+                  </button>
+                </div>
+              </div>
+            </article>
+
+            <article
+              v-for="folder in visibleFolderCards"
+              :key="`folder-${folder.id}`"
+              class="dashboard-folder-card"
+              :class="{ 'dashboard-folder-card--drag': gridDragTargetFolderId === folder.id, 'dashboard-folder-card--editing': folderEditTarget?.id === folder.id }"
+              @click="onFolderCardClick(folder)"
+              @dragenter.prevent="onFolderCardDragEnter(folder.id)"
+              @dragover.prevent="onFolderCardDragEnter(folder.id)"
+              @dragleave="onFolderCardDragLeave(folder.id)"
+              @drop.prevent="onFolderCardDrop(folder.id, $event)"
+            >
+              <div v-if="folderEditTarget?.id !== folder.id" class="dashboard-folder-actions">
+                <button class="dashboard-folder-action" :title="t('dashboard.editFolder')" @click.stop="startFolderEdit(folder)">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M2 8.5L7.5 3l1.5 1.5L3.5 10H2V8.5z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                    <path d="M6.8 3.7l1.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <button class="dashboard-folder-action dashboard-folder-action--danger" :title="t('dashboard.deleteFolder')" @click.stop="openDeleteFolder(folder)">
+                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="dashboard-folder-icon" aria-hidden="true">
+                <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
+                  <path d="M3 10.5C3 7.74 5.24 5.5 8 5.5h8.9l4.2 4.1H34c2.76 0 5 2.24 5 5V28c0 2.76-2.24 5-5 5H8c-2.76 0-5-2.24-5-5V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M3 14h36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="dashboard-folder-body">
+                <template v-if="folderEditTarget?.id === folder.id">
+                  <input
+                    v-model="folderEditDraftName"
+                    class="dashboard-folder-input font-display"
+                    :class="{ 'dashboard-folder-input--error': !!folderEditError }"
+                    :data-dashboard-folder-edit-id="folder.id"
+                    @click.stop
+                    @keydown.enter="!folderEditError && saveFolderEdit()"
+                    @keydown.escape="cancelFolderEdit()"
+                  />
+                  <p v-if="folderEditError" class="dashboard-folder-inline-error">{{ folderEditError }}</p>
+                  <div class="dashboard-folder-inline-actions">
+                    <button class="dashboard-folder-inline-btn dashboard-folder-inline-btn--cancel" @click.stop="cancelFolderEdit">{{ t('common.cancel') }}</button>
+                    <button class="dashboard-folder-inline-btn" :disabled="isSavingFolderEdit || !folderEditDraftName.trim() || !!folderEditError" @click.stop="saveFolderEdit">
+                      {{ t('common.save') }}
+                    </button>
+                  </div>
+                </template>
+                <template v-else>
+                  <h3 class="dashboard-folder-title font-display">{{ folder.name }}</h3>
+                  <p class="dashboard-folder-meta font-mono">
+                    {{ folderPaletteCount(folder.id) }} {{ t('dashboard.palettes') }} · {{ childFolderCount(folder.id) }} {{ t('dashboard.folders').toLowerCase() }}
+                  </p>
+                </template>
+              </div>
+            </article>
+
             <PaletteCard
               v-for="p in filteredPalettes"
               :key="p.isLocalDraftOnly ? p.draftLink ?? `draft-${p.id}` : p.id"
               :palette="p"
               :show-actions="!p.isLocalDraftOnly"
+              :show-delete="true"
               :is-dragging="draggingId === p.id"
               :draggable-enabled="!p.isLocalDraftOnly"
               @open="openPalette(p)"
@@ -156,15 +250,15 @@
     <Teleport to="body">
       <div v-if="deleteTarget" class="modal-overlay" @click.self="deleteTarget = null">
         <div class="modal">
-          <h3 class="modal-title font-display">Delete Palette</h3>
+          <h3 class="modal-title font-display">{{ deleteTarget.isLocalDraftOnly ? t('dashboard.deleteDraft') : t('dashboard.deletePalette') }}</h3>
           <p class="modal-sub">
-            Delete <strong>{{ deleteTarget.title }}</strong>? All snapshots and branches will be permanently lost.
+            {{ t('common.delete') }} <strong>{{ deleteTarget.title }}</strong>? {{ deleteTarget.isLocalDraftOnly ? t('dashboard.deleteDraftConfirm') : t('dashboard.deletePaletteConfirm') }}
           </p>
           <p v-if="deleteError" class="modal-error">{{ deleteError }}</p>
           <div class="modal-actions">
-            <button class="modal-btn cancel" @click="deleteTarget = null">Cancel</button>
+            <button class="modal-btn cancel" @click="deleteTarget = null">{{ t('common.cancel') }}</button>
             <button class="modal-btn danger" :disabled="isDeleting" @click="doDeletePalette">
-              {{ isDeleting ? 'Deleting...' : 'Delete permanently' }}
+              {{ isDeleting ? t('dashboard.deleting') : (deleteTarget.isLocalDraftOnly ? t('common.delete') : t('dashboard.deletePermanently')) }}
             </button>
           </div>
         </div>
@@ -175,18 +269,18 @@
     <Teleport to="body">
       <div v-if="editTarget" class="modal-overlay" @click.self="editTarget = null">
         <div class="modal">
-          <h3 class="modal-title font-display">Edit Palette</h3>
+          <h3 class="modal-title font-display">{{ t('dashboard.editPalette') }}</h3>
           <div class="edit-field">
-            <label class="edit-label">Name</label>
+            <label class="edit-label">{{ t('dashboard.name') }}</label>
             <input class="edit-input" v-model="editDraftTitle" @keydown.enter="!editTitleErrorMessage && saveEditPalette()" />
             <p v-if="editTitleErrorMessage" class="modal-error">{{ editTitleErrorMessage }}</p>
           </div>
           <div class="edit-field">
-            <label class="edit-label">Description</label>
-            <textarea class="edit-input edit-textarea" v-model="editDraftDesc" rows="2" placeholder="Optional description…" />
+            <label class="edit-label">{{ t('dashboard.description') }}</label>
+            <textarea class="edit-input edit-textarea" v-model="editDraftDesc" rows="2" :placeholder="t('dashboard.optionalDescription')" />
           </div>
           <div class="edit-field">
-            <label class="edit-label">Folder</label>
+            <label class="edit-label">{{ t('dashboard.folder') }}</label>
             <FolderPicker
               :folders="folders"
               v-model="editDraftFolderId"
@@ -196,9 +290,9 @@
           </div>
           <p v-if="editError" class="modal-error">{{ editError }}</p>
           <div class="modal-actions">
-            <button class="modal-btn cancel" @click="editTarget = null">Cancel</button>
+            <button class="modal-btn cancel" @click="editTarget = null">{{ t('common.cancel') }}</button>
             <button class="modal-btn primary" :disabled="isSavingEdit || !!editTitleErrorMessage" @click="saveEditPalette">
-              {{ isSavingEdit ? 'Saving…' : 'Save changes' }}
+              {{ isSavingEdit ? t('dashboard.saving') : t('dashboard.saveChanges') }}
             </button>
           </div>
         </div>
@@ -209,12 +303,12 @@
     <Teleport to="body">
       <div v-if="deleteFolderTarget" class="modal-overlay" @click.self="deleteFolderTarget = null">
         <div class="modal">
-          <h3 class="modal-title font-display">Delete Folder</h3>
+          <h3 class="modal-title font-display">{{ t('dashboard.deleteFolder') }}</h3>
           <p class="modal-sub">
-            Delete <strong>{{ deleteFolderTarget.name }}</strong>? Subfolders are always deleted.
+            {{ t('common.delete') }} <strong>{{ deleteFolderTarget.name }}</strong>? {{ t('dashboard.deleteFolderConfirm') }}
           </p>
           <div class="edit-field">
-            <label class="edit-label">Palettes inside this folder tree</label>
+            <label class="edit-label">{{ t('dashboard.palettesInsideFolder') }}</label>
             <div class="folder-delete-options">
               <label class="check-row">
                 <input
@@ -224,7 +318,7 @@
                   :checked="deleteFolderPaletteStrategy === 'move_root'"
                   @change="deleteFolderPaletteStrategy = 'move_root'"
                 />
-                <span>Move palettes to root</span>
+                <span>{{ t('dashboard.movePalettesRoot') }}</span>
               </label>
               <label class="check-row">
                 <input
@@ -234,15 +328,15 @@
                   :checked="deleteFolderPaletteStrategy === 'delete'"
                   @change="deleteFolderPaletteStrategy = 'delete'"
                 />
-                <span>Delete palettes too</span>
+                <span>{{ t('dashboard.deletePalettesToo') }}</span>
               </label>
             </div>
           </div>
           <p v-if="deleteFolderError" class="modal-error">{{ deleteFolderError }}</p>
           <div class="modal-actions">
-            <button class="modal-btn cancel" @click="deleteFolderTarget = null">Cancel</button>
+            <button class="modal-btn cancel" @click="deleteFolderTarget = null">{{ t('common.cancel') }}</button>
             <button class="modal-btn danger" :disabled="isDeletingFolder" @click="doDeleteFolder">
-              {{ isDeletingFolder ? 'Deleting...' : 'Delete folder' }}
+              {{ isDeletingFolder ? t('dashboard.deleting') : t('dashboard.deleteFolder') }}
             </button>
           </div>
         </div>
@@ -259,7 +353,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import { foldersApi } from '@/api/folders'
@@ -277,8 +371,10 @@ import PaletteCard from '@/components/palette/PaletteCard.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
 import { getPaletteTitleError } from '@/utils/paletteConstraints'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 const loading = ref(true)
 const user = ref<any>(null)
 const palettes = ref<PaletteCache[]>([])
@@ -286,6 +382,7 @@ interface DashboardPaletteCard extends PaletteCache {
   isLocalDraftOnly?: boolean
   hasUnsavedDraft?: boolean
   draftLink?: string
+  draftKey?: string
 }
 const localDraftCards = ref<DashboardPaletteCard[]>([])
 const unsavedDraftPaletteIds = ref<number[]>([])
@@ -295,7 +392,8 @@ const activeFolderKey = ref<'all' | 'root' | number>('all')
 const sortField = ref<'name' | 'date'>('date')
 const sortDir = ref<'asc' | 'desc'>('desc')
 const draggingId = ref<number | null>(null)
-const deleteTarget = ref<PaletteCache | null>(null)
+const gridDragTargetFolderId = ref<number | null>(null)
+const deleteTarget = ref<DashboardPaletteCard | null>(null)
 const isDeleting = ref(false)
 const deleteError = ref('')
 const deleteFolderTarget = ref<FolderResponse | null>(null)
@@ -313,6 +411,37 @@ const editError = ref('')
 const editTitleErrorMessage = computed(() => getPaletteTitleError(editDraftTitle.value))
 const colleaguesCount = ref(0)
 const showColleaguesModal = ref(false)
+const folderEditTarget = ref<FolderResponse | null>(null)
+const folderEditDraftName = ref('')
+const isSavingFolderEdit = ref(false)
+const folderEditServerError = ref('')
+const isCreatingFolderCard = ref(false)
+const folderCreateDraftName = ref('')
+const folderCreateServerError = ref('')
+const isSavingFolderCreate = ref(false)
+
+const folderEditError = computed(() => {
+  const folder = folderEditTarget.value
+  if (!folder) return ''
+  if (folderEditServerError.value) return folderEditServerError.value
+  const name = folderEditDraftName.value.trim()
+  if (!name) return ''
+  return isFolderNameTaken(name, folder.parent_folder_id ?? null, folder.id) ? t('dashboard.folderNameTaken') : ''
+})
+
+const currentFolderParentId = computed<number | null>(() => (
+  activeFolderKey.value === 'root' || activeFolderKey.value === 'all'
+    ? null
+    : activeFolderKey.value
+))
+
+const folderCreateError = computed(() => {
+  if (!isCreatingFolderCard.value) return ''
+  if (folderCreateServerError.value) return folderCreateServerError.value
+  const name = folderCreateDraftName.value.trim()
+  if (!name) return ''
+  return isFolderNameTaken(name, currentFolderParentId.value) ? t('dashboard.folderNameTaken') : ''
+})
 
 function applyDraftsToState(drafts: PaletteDraftEntry[], serverIds: Set<number>) {
   unsavedDraftByPaletteId.value = drafts.reduce<Record<number, PaletteDraftEntry>>((acc, d) => {
@@ -330,7 +459,7 @@ function applyDraftsToState(drafts: PaletteDraftEntry[], serverIds: Set<number>)
     .filter(d => d.mode === 'new' || d.paletteId === null || !serverIds.has(d.paletteId))
     .map((d, idx) => ({
       id: -(idx + 1),
-      title: d.paletteTitle || 'Untitled draft',
+      title: d.paletteTitle || t('common.untitledDraft'),
       description: d.description || '',
       folder_id: d.pendingFolderId,
       folder_path: d.folderPath ?? [],
@@ -340,19 +469,20 @@ function applyDraftsToState(drafts: PaletteDraftEntry[], serverIds: Set<number>)
       isLocalDraftOnly: true,
       hasUnsavedDraft: true,
       draftLink: d.linkPath,
+      draftKey: d.key,
     }))
 }
 
 const folderCounts = computed(() => {
   const counts: Record<number, number> = {}
-  for (const p of palettes.value) {
+  for (const p of displayPalettes.value) {
     if (p.folder_id == null) continue
     counts[p.folder_id] = (counts[p.folder_id] ?? 0) + 1
   }
   return counts
 })
 
-const rootPaletteCount = computed(() => palettes.value.filter(p => p.folder_id == null).length)
+const rootPaletteCount = computed(() => displayPalettes.value.filter(p => p.folder_id == null).length)
 
 const displayPalettes = computed<DashboardPaletteCard[]>(() => {
   const mergedServer = palettes.value.map(p => ({
@@ -380,9 +510,19 @@ const filteredPalettes = computed(() => {
   return list
 })
 
+const visibleFolderCards = computed(() => {
+  if (activeFolderKey.value === 'all') return []
+  const parentId = activeFolderKey.value === 'root' ? null : activeFolderKey.value
+  const dir = sortField.value === 'name' && sortDir.value === 'desc' ? -1 : 1
+  return folders.value
+    .filter(folder => folder.parent_folder_id === parentId)
+    .slice()
+    .sort((a, b) => dir * a.name.localeCompare(b.name))
+})
+
 const emptyCta = computed(() => {
-  if (activeFolderKey.value !== 'all' && palettes.value.length > 0) return 'Create a new palette here'
-  return 'Create your first palette'
+  if (activeFolderKey.value !== 'all' && palettes.value.length > 0) return t('dashboard.createHere')
+  return t('dashboard.createFirst')
 })
 
 const breadcrumbSegments = computed((): Array<{ key: 'root' | number; label: string }> => {
@@ -436,6 +576,16 @@ function getDescendantFolderIds(rootFolderId: number): Set<number> {
     }
   }
   return descendants
+}
+
+function isFolderNameTaken(name: string, parentId: number | null, excludeId?: number): boolean {
+  const normalized = name.trim().toLowerCase()
+  if (!normalized) return false
+  return folders.value.some(folder =>
+    folder.id !== excludeId &&
+    (folder.parent_folder_id ?? null) === parentId &&
+    folder.name.trim().toLowerCase() === normalized,
+  )
 }
 
 function onBreadcrumbDragenter(key: 'root' | number) {
@@ -545,6 +695,93 @@ function openPalette(p: DashboardPaletteCard) {
   router.push({ name: 'palette', params: { username: user.value.username, pathMatch: segments.join('/') } })
 }
 
+function onFolderCardClick(folder: FolderResponse) {
+  if (folderEditTarget.value?.id === folder.id) return
+  activeFolderKey.value = folder.id
+}
+
+function createFolderHere() {
+  if (activeFolderKey.value === 'all') return
+  folderEditTarget.value = null
+  folderEditDraftName.value = ''
+  folderEditServerError.value = ''
+  isCreatingFolderCard.value = true
+  folderCreateDraftName.value = ''
+  folderCreateServerError.value = ''
+  void nextTick(() => {
+    document.querySelector<HTMLInputElement>('[data-dashboard-folder-create-input]')?.focus()
+  })
+}
+
+function startFolderEdit(folder: FolderResponse) {
+  isCreatingFolderCard.value = false
+  folderCreateDraftName.value = ''
+  folderCreateServerError.value = ''
+  folderEditTarget.value = folder
+  folderEditDraftName.value = folder.name
+  folderEditServerError.value = ''
+  void nextTick(() => {
+    document.querySelector<HTMLInputElement>(`[data-dashboard-folder-edit-id="${folder.id}"]`)?.focus()
+  })
+}
+
+function cancelFolderEdit() {
+  folderEditTarget.value = null
+  folderEditDraftName.value = ''
+  folderEditServerError.value = ''
+}
+
+async function saveFolderEdit() {
+  const folder = folderEditTarget.value
+  if (!folder) return
+  const name = folderEditDraftName.value.trim()
+  if (!name) return
+  const nameTaken = isFolderNameTaken(name, folder.parent_folder_id ?? null, folder.id)
+  if (nameTaken) return
+  isSavingFolderEdit.value = true
+  folderEditServerError.value = ''
+  try {
+    const updated = await foldersApi.update(folder.id, { name })
+    const idx = folders.value.findIndex(f => f.id === folder.id)
+    if (idx >= 0) {
+      folders.value[idx] = updated
+      folders.value.sort((a, b) => a.name.localeCompare(b.name))
+      refreshPaletteFolderPaths()
+    }
+    cancelFolderEdit()
+  } catch (e: any) {
+    folderEditServerError.value = e?.message ?? t('dashboard.saveFailed')
+  } finally {
+    isSavingFolderEdit.value = false
+  }
+}
+
+function cancelFolderCreate() {
+  isCreatingFolderCard.value = false
+  folderCreateDraftName.value = ''
+  folderCreateServerError.value = ''
+}
+
+async function saveFolderCreate() {
+  if (activeFolderKey.value === 'all') return
+  const name = folderCreateDraftName.value.trim()
+  if (!name) return
+  if (isFolderNameTaken(name, currentFolderParentId.value)) return
+  isSavingFolderCreate.value = true
+  folderCreateServerError.value = ''
+  try {
+    const created = await foldersApi.create({ name, parent_folder_id: currentFolderParentId.value })
+    folders.value.push(created)
+    folders.value.sort((a, b) => a.name.localeCompare(b.name))
+    refreshPaletteFolderPaths()
+    cancelFolderCreate()
+  } catch (e: any) {
+    folderCreateServerError.value = e?.message ?? t('dashboard.saveFailed')
+  } finally {
+    isSavingFolderCreate.value = false
+  }
+}
+
 function newPalette() {
   if (!user.value?.username) {
     router.push({ name: 'palette', params: { username: 'local', pathMatch: 'new' } })
@@ -558,7 +795,7 @@ function newPalette() {
   })
 }
 
-function confirmDeletePalette(p: PaletteCache) {
+function confirmDeletePalette(p: DashboardPaletteCard) {
   deleteTarget.value = p
   deleteError.value = ''
 }
@@ -568,12 +805,24 @@ async function doDeletePalette() {
   isDeleting.value = true
   deleteError.value = ''
   try {
+    if (deleteTarget.value.isLocalDraftOnly) {
+      if (deleteTarget.value.draftKey) {
+        paletteDraftsApi.removeDraft(deleteTarget.value.draftKey)
+      }
+      const serverIds = new Set(palettes.value.map(p => p.id))
+      applyDraftsToState(
+        user.value?.username ? paletteDraftsApi.listByOwner(user.value.username) : paletteDraftsApi.listAllDrafts(),
+        serverIds,
+      )
+      deleteTarget.value = null
+      return
+    }
     await palettesApi.deletePalette(deleteTarget.value.id)
     paletteDraftsApi.removeByPaletteId(deleteTarget.value.id)
     await loadDashboard()
     deleteTarget.value = null
   } catch (e: any) {
-    deleteError.value = e.message ?? 'Delete failed'
+    deleteError.value = e.message ?? t('dashboard.deleteFailed')
   } finally {
     isDeleting.value = false
   }
@@ -618,7 +867,7 @@ async function saveEditPalette() {
     }
     editTarget.value = null
   } catch (e: any) {
-    editError.value = e.message ?? 'Save failed'
+    editError.value = e.message ?? t('dashboard.saveFailed')
   } finally {
     isSavingEdit.value = false
   }
@@ -690,7 +939,7 @@ async function doDeleteFolder() {
     deleteFolderTarget.value = null
     refreshPaletteFolderPaths()
   } catch (e: any) {
-    deleteFolderError.value = e.message ?? 'Delete failed'
+    deleteFolderError.value = e.message ?? t('dashboard.deleteFailed')
   } finally {
     isDeletingFolder.value = false
   }
@@ -716,6 +965,33 @@ function onCardDragStart(id: number, event: DragEvent) {
   draggingId.value = id
   event.dataTransfer?.setData('palette-id', String(id))
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'move'
+}
+
+function childFolderCount(folderId: number): number {
+  return folders.value.filter(folder => folder.parent_folder_id === folderId).length
+}
+
+function folderPaletteCount(folderId: number): number {
+  return folderCounts.value[folderId] ?? 0
+}
+
+function onFolderCardDragEnter(folderId: number): void {
+  if (draggingId.value === null) return
+  gridDragTargetFolderId.value = folderId
+}
+
+function onFolderCardDragLeave(folderId: number): void {
+  if (gridDragTargetFolderId.value === folderId) {
+    gridDragTargetFolderId.value = null
+  }
+}
+
+async function onFolderCardDrop(folderId: number, event: DragEvent): Promise<void> {
+  gridDragTargetFolderId.value = null
+  const paletteId = Number(event.dataTransfer?.getData('palette-id'))
+  if (!Number.isFinite(paletteId) || !paletteId) return
+  await onMovePalette({ paletteId, targetFolderId: folderId })
+  draggingId.value = null
 }
 </script>
 

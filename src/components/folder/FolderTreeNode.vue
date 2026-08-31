@@ -52,14 +52,14 @@ export default { name: 'FolderTreeNode' }
       <span v-else class="ftn-label">{{ folder.name }}</span>
 
       <span v-if="state.mode === 'navigation'" class="ftn-count-icons">
-        <span class="ftn-count-item" title="Palettes">
+        <span class="ftn-count-item" :title="t('folderTree.palettes')">
           <svg class="ftn-count-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="1" y="1" width="10" height="8" rx="1.3" />
             <path d="M4.33 1.4v7.2M7.67 1.4v7.2" />
           </svg>
           <span>{{ state.paletteCounts[folder.id] ?? 0 }}</span>
         </span>
-        <span class="ftn-count-item" title="Subfolders">
+        <span class="ftn-count-item" :title="t('folderTree.subfolders')">
           <svg class="ftn-count-icon" width="11" height="11" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
             <path d="M1 3.5C1 2.67 1.67 2 2.5 2H5l1.5 1.5H11.5C12.33 3.5 13 4.17 13 5v4.5C13 10.33 12.33 11 11.5 11h-9C1.67 11 1 10.33 1 9.5V3.5Z" />
           </svg>
@@ -67,10 +67,10 @@ export default { name: 'FolderTreeNode' }
         </span>
       </span>
       <span v-if="state.allowFolderEditing && (state.mode === 'navigation' || state.mode === 'picker')" class="ftn-btns">
-        <button class="ftn-btn" title="New subfolder" @click.stop="state.startInlineCreate(folder.id)">
+        <button class="ftn-btn" :title="t('folderTree.newSubfolder')" @click.stop="state.startInlineCreate(folder.id)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 1v6M1 4h6" /></svg>
         </button>
-        <button v-if="state.mode === 'navigation'" class="ftn-btn ftn-btn--del" title="Delete" @click.stop="state.onDeleteFolder(folder)">
+        <button v-if="state.mode === 'navigation'" class="ftn-btn ftn-btn--del" :title="t('folderTree.delete')" @click.stop="state.onDeleteFolder(folder)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l6 6M7 1L1 7" /></svg>
         </button>
       </span>
@@ -125,7 +125,7 @@ export default { name: 'FolderTreeNode' }
             class="ftn-input ftn-input--new"
             :class="{ 'ftn-input--error': !!createError }"
             :value="state.inlineValue"
-            placeholder="Folder name…"
+            :placeholder="t('folderTree.folderNamePlaceholder')"
             @input="state.updateInlineValue(($event.target as HTMLInputElement).value)"
             @keydown.enter="!createError && state.commitInlineCreate(folder.id)"
             @keydown.escape="state.cancelInline()"
@@ -142,10 +142,12 @@ export default { name: 'FolderTreeNode' }
 import { computed, inject, nextTick, ref, watch } from 'vue'
 import type { FolderResponse } from '@/api/types'
 import type { FolderTreeState } from './folderTreeTypes'
+import { useI18n } from '@/i18n'
 
 const props = defineProps<{ folder: FolderResponse; depth: number }>()
 
 const state = inject<FolderTreeState>('folderTreeState')!
+const { t } = useI18n()
 
 let clickCount = 0
 let clickTimer: ReturnType<typeof setTimeout> | null = null
@@ -176,14 +178,14 @@ const createError = computed((): string | null => {
   if (!state.inlineCreate || state.inlineCreate.parentId !== props.folder.id) return null
   const n = state.inlineValue.trim()
   if (!n) return null
-  return state.isNameTaken(n, props.folder.id) ? 'Name already taken' : null
+  return state.isNameTaken(n, props.folder.id) ? t('folderTree.nameAlreadyTaken') : null
 })
 
 const renameError = computed((): string | null => {
   if (!state.inlineRename || state.inlineRename.folderId !== props.folder.id) return null
   const n = state.inlineValue.trim()
   if (!n) return null
-  return state.isNameTaken(n, props.folder.parent_folder_id ?? null, props.folder.id) ? 'Name already taken' : null
+  return state.isNameTaken(n, props.folder.parent_folder_id ?? null, props.folder.id) ? t('folderTree.nameAlreadyTaken') : null
 })
 
 const renameRef = ref<HTMLInputElement | null>(null)

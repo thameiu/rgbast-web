@@ -9,27 +9,32 @@
     <!-- Desktop nav -->
     <nav class="site-nav">
       <template v-if="isOnLanding">
-        <a href="#features" class="nav-link">Features</a>
+        <a href="#features" class="nav-link">{{ t('common.features') }}</a>
         <span class="nav-sep" aria-hidden="true"></span>
       </template>
-      <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }">Colors</RouterLink>
+      <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }">{{ t('common.colors') }}</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
-      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">Search</RouterLink>
+      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">{{ t('common.search') }}</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
-      <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">New palette</RouterLink>
+      <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">{{ t('common.newPalette') }}</RouterLink>
       <template v-if="isLoggedIn">
         <span class="nav-sep" aria-hidden="true"></span>
-        <RouterLink to="/dashboard" class="nav-link" :class="{ 'nav-link--active': isOnDashboard }">Dashboard</RouterLink>
+        <RouterLink to="/dashboard" class="nav-link" :class="{ 'nav-link--active': isOnDashboard }">{{ t('common.dashboard') }}</RouterLink>
         <span class="nav-sep" aria-hidden="true"></span>
-        <RouterLink to="/bookmarks" class="nav-link" :class="{ 'nav-link--active': isOnBookmarks }">Bookmarks</RouterLink>
+        <RouterLink to="/bookmarks" class="nav-link" :class="{ 'nav-link--active': isOnBookmarks }">{{ t('common.bookmarks') }}</RouterLink>
       </template>
     </nav>
+
+    <div class="language-switcher" :aria-label="t('header.language')">
+      <button class="lang-btn" :class="{ active: locale === 'fr' }" @click="setLocale('fr')" title="Français">FR</button>
+      <button class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')" title="English">EN</button>
+    </div>
 
     <div v-if="isLoggedIn" class="notif-slot" ref="notifEl">
       <button
         class="notif-btn"
-        title="Colleague requests"
-        aria-label="Open colleague requests"
+        :title="t('header.colleagueRequests')"
+        :aria-label="t('header.openRequests')"
         :aria-expanded="notifMenuOpen"
         @click="toggleNotifMenu"
       >
@@ -42,9 +47,9 @@
 
       <Transition name="profile-menu-fade">
         <div v-if="notifMenuOpen" class="notif-menu">
-          <p class="notif-title font-mono">Colleague requests</p>
+          <p class="notif-title font-mono">{{ t('header.colleagueRequests') }}</p>
           <p v-if="notifError" class="notif-error">{{ notifError }}</p>
-          <div v-else-if="incomingRequests.length === 0" class="notif-empty">No pending request.</div>
+          <div v-else-if="incomingRequests.length === 0" class="notif-empty">{{ t('header.noPendingRequest') }}</div>
           <div v-else class="notif-list">
             <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="notif-item">
               <button class="notif-user" @click="goToUserFromNotif(requestUser.username)">
@@ -52,8 +57,8 @@
                 <span class="notif-username">{{ requestUser.username }}</span>
               </button>
               <div class="notif-actions">
-                <button class="notif-action notif-action--accept" :disabled="notifPendingUser === requestUser.username" @click="acceptRequestFromNotif(requestUser.username)">Accept</button>
-                <button class="notif-action" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">Deny</button>
+                <button class="notif-action notif-action--accept" :disabled="notifPendingUser === requestUser.username" @click="acceptRequestFromNotif(requestUser.username)">{{ t('header.accept') }}</button>
+                <button class="notif-action" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">{{ t('header.deny') }}</button>
               </div>
             </div>
           </div>
@@ -72,13 +77,13 @@
       >
         <span class="profile-avatar">{{ profileInitial }}</span>
       </button>
-      <RouterLink v-else to="/login" class="login-link">Log in</RouterLink>
+      <RouterLink v-else to="/login" class="login-link">{{ t('common.login') }}</RouterLink>
 
       <Transition name="profile-menu-fade">
         <div v-if="isLoggedIn && profileMenuOpen" class="profile-menu">
-          <button class="profile-menu-item" @click="goToProfile">Profile</button>
-          <button class="profile-menu-item" @click="onSettingsSoon">Settings</button>
-          <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">Sign out</button>
+          <button class="profile-menu-item" @click="goToProfile">{{ t('common.profile') }}</button>
+          <button class="profile-menu-item" @click="onSettingsSoon">{{ t('common.settings') }}</button>
+          <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">{{ t('common.signOut') }}</button>
         </div>
       </Transition>
     </div>
@@ -88,7 +93,7 @@
       class="burger"
       :class="{ open: mobileOpen }"
       @click="openSidebar"
-      aria-label="Open navigation"
+      :aria-label="t('header.openNavigation')"
     >
       <span></span>
       <span></span>
@@ -108,19 +113,24 @@
           <RgbastLogo size="28px" />
           <span class="mob-brand-name"><span style="color:#B410CC">R</span><span style="color:#D56A88">G</span><span style="color:#F6C343">B</span><span style="color:#82C58C">A</span><span style="color:#0EC6D4">S</span><span style="color:#616BD0">T</span></span>
         </RouterLink>
-        <button class="mob-close" @click="closeSidebar" aria-label="Close">×</button>
+        <button class="mob-close" @click="closeSidebar" :aria-label="t('header.close')">×</button>
       </div>
 
       <div class="mob-links">
+        <div class="mob-language-switcher" :aria-label="t('header.language')">
+          <button class="lang-btn" :class="{ active: locale === 'fr' }" @click="setLocale('fr')">FR</button>
+          <button class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
+        </div>
+
         <template v-if="isOnLanding">
-          <a href="#features" class="mob-link" @click="closeSidebar">Features</a>
+          <a href="#features" class="mob-link" @click="closeSidebar">{{ t('common.features') }}</a>
         </template>
 
-        <RouterLink :to="lastColorRoute" class="mob-link" @click="closeSidebar">Colors</RouterLink>
-        <RouterLink to="/search" class="mob-link" @click="closeSidebar">Search</RouterLink>
-        <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">New palette</RouterLink>
-        <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">Dashboard</RouterLink>
-        <RouterLink v-if="isLoggedIn" to="/bookmarks" class="mob-link" :class="{ 'mob-link--active': isOnBookmarks }" @click="closeSidebar">Bookmarks</RouterLink>
+        <RouterLink :to="lastColorRoute" class="mob-link" @click="closeSidebar">{{ t('common.colors') }}</RouterLink>
+        <RouterLink to="/search" class="mob-link" @click="closeSidebar">{{ t('common.search') }}</RouterLink>
+        <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">{{ t('common.newPalette') }}</RouterLink>
+        <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">{{ t('common.dashboard') }}</RouterLink>
+        <RouterLink v-if="isLoggedIn" to="/bookmarks" class="mob-link" :class="{ 'mob-link--active': isOnBookmarks }" @click="closeSidebar">{{ t('common.bookmarks') }}</RouterLink>
 
         <template v-if="isLoggedIn">
           <span class="mob-user font-mono">
@@ -128,25 +138,25 @@
             <span class="mob-user-name">{{ profileName }}</span>
           </span>
           <div class="mob-requests" v-if="incomingRequests.length">
-            <p class="mob-requests-title">Requests</p>
+            <p class="mob-requests-title">{{ t('header.requests') }}</p>
             <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="mob-request-row">
               <button class="mob-request-user" @click="goToUserFromNotif(requestUser.username)">
                 {{ requestUser.username }}
               </button>
               <div class="mob-request-actions">
-                <button class="mob-request-btn" :disabled="notifPendingUser === requestUser.username" @click="acceptRequestFromNotif(requestUser.username)">Accept</button>
-                <button class="mob-request-btn" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">Deny</button>
+                <button class="mob-request-btn" :disabled="notifPendingUser === requestUser.username" @click="acceptRequestFromNotif(requestUser.username)">{{ t('header.accept') }}</button>
+                <button class="mob-request-btn" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">{{ t('header.deny') }}</button>
               </div>
             </div>
           </div>
-          <button class="mob-link" @click="goToProfile">Profile</button>
-          <button class="mob-link" @click="goToBookmarks">Bookmarks</button>
-          <button class="mob-link" @click="onSettingsSoon">Settings</button>
-          <button class="mob-link mob-signout" @click="handleLogout">Sign out</button>
+          <button class="mob-link" @click="goToProfile">{{ t('common.profile') }}</button>
+          <button class="mob-link" @click="goToBookmarks">{{ t('common.bookmarks') }}</button>
+          <button class="mob-link" @click="onSettingsSoon">{{ t('common.settings') }}</button>
+          <button class="mob-link mob-signout" @click="handleLogout">{{ t('common.signOut') }}</button>
         </template>
         <template v-else>
-          <RouterLink to="/login" class="mob-cta" @click="closeSidebar">Log in</RouterLink>
-          <RouterLink to="/register" class="mob-link" @click="closeSidebar">Create account</RouterLink>
+          <RouterLink to="/login" class="mob-cta" @click="closeSidebar">{{ t('common.login') }}</RouterLink>
+          <RouterLink to="/register" class="mob-link" @click="closeSidebar">{{ t('common.register') }}</RouterLink>
         </template>
       </div>
     </nav>
@@ -168,6 +178,7 @@ import RgbastLogo from '../ui/RgbastLogo.vue'
 import { searchApi } from '@/api/search'
 import { colleaguesApi } from '@/api/colleagues'
 import type { ColleagueUserItem } from '@/api/types'
+import { useI18n } from '@/i18n'
 
 const props = defineProps<{
   user?: { username: string; firstname?: string | null; lastname?: string | null } | null
@@ -176,6 +187,7 @@ const props = defineProps<{
 
 const route  = useRoute()
 const router = useRouter()
+const { locale, setLocale, t } = useI18n()
 
 /** True when the current route is the landing page. */
 const isOnLanding   = computed(() => route.path === '/')
@@ -352,7 +364,7 @@ async function loadIncomingRequests(): Promise<void> {
     incomingRequests.value = payload.incoming_pending
   } catch (e: any) {
     incomingRequests.value = []
-    notifError.value = e?.message ?? 'Could not load requests.'
+    notifError.value = e?.message ?? t('header.couldNotLoadRequests')
   }
 }
 

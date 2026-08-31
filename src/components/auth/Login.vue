@@ -70,8 +70,10 @@
  */
 import { ref } from 'vue';
 import { authApi } from '@/api';
+import { useI18n } from '@/i18n';
 
 const emit = defineEmits(['navigate', 'login-success']);
+const { t } = useI18n();
 
 /** Form field values. */
 const form = ref({ username: '', password: '' });
@@ -100,7 +102,7 @@ const handleSubmit = async () => {
       emit('login-success');
     }
   } catch (err: any) {
-    errorMsg.value = err.message || 'Login failed. Please check your credentials.';
+    errorMsg.value = err.message || t('auth.loginFailed');
   } finally {
     loading.value = false;
   }

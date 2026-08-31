@@ -205,7 +205,6 @@
       :generateLoading="generator.generateLoading.value"
       :generateError="generator.generateError.value"
       :genCount="generator.genCount.value"
-      :genContrast="generator.genContrast.value"
       :genHarmony="generator.genHarmony.value"
       :genBaseColors="generator.genBaseColors.value"
       :genPaletteDropIdx="generator.genPaletteDropIdx.value"
@@ -226,7 +225,6 @@
       :setGenPickerAnchorRect="setGenPickerAnchorRect"
       @close="generator.generateOpen.value = false"
       @update:genCount="generator.genCount.value = $event"
-      @update:genContrast="generator.genContrast.value = $event"
       @update:genHarmony="generator.genHarmony.value = $event as typeof generator.genHarmony.value"
     />
 
@@ -237,10 +235,14 @@
       :count="imagePaletteCount"
       :file="imagePaletteFile"
       :fileName="imagePaletteFile?.name ?? ''"
+      :extractedColors="imagePaletteExtractedColors"
       @close="closeImagePaletteModal"
       @update:count="imagePaletteCount = $event"
       @fileChange="onImagePaletteFileChange"
       @submit="extractPaletteFromImage"
+      @toggleExtractedColor="toggleExtractedImageColor"
+      @addExtractedColors="applyExtractedImageColors('add')"
+      @replaceExtractedColors="applyExtractedImageColors('replace')"
     />
 
     <PaletteExportModal
@@ -257,7 +259,7 @@
       :tutorialFocus="tutorial.tutorialFocus.value"
       :tutorialCardClass="tutorial.tutorialCardClass.value"
       :tutorialStep="tutorial.tutorialStep.value"
-      :tutorialSteps="tutorial.tutorialSteps"
+      :tutorialSteps="tutorial.tutorialSteps.value"
       :currentTutorial="tutorial.currentTutorial.value"
       @close="tutorial.closeTutorial"
       @next="tutorial.nextTutorialStep"
@@ -309,7 +311,6 @@
       :isNewPalette="ctx.isNewPalette.value"
       :copyFeedback="copyFeedbackActive"
       :displaySettings="displaySettings"
-      :adjustments="globalAdjustments"
       @close="closeMobileSidebar"
       @switchBranch="switchBranchWithUndo"
       @merge="save.confirmMerge"
@@ -327,10 +328,6 @@
       @openGenerateSettings="generator.generateOpen.value = true"
       @openImagePalette="openImagePaletteModal"
       @openExport="openExportModal"
-      @startAdjustmentsSession="startAdjustmentsSession"
-      @updateAdjustments="onAdjustmentsChange"
-      @cancelAdjustments="cancelAdjustments"
-      @applyAdjustments="applyAdjustments"
       @edit="save.openEditPalette"
       @openAccessibilityAudit="openAccessibilityAuditModal"
     />
@@ -360,8 +357,8 @@ import PaletteHelpModal from './components/PaletteHelpModal.vue'
 import PaletteAccessibilityModal from './components/PaletteAccessibilityModal.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
+import analyzeImage from 'rgbaster'
 import { foldersApi } from '@/api/folders'
-import { colorApi } from '@/api/color'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteDraftHistorySnapshot } from '@/api/paletteDrafts'
 import type { PaletteColorSave } from '@/api/types'
@@ -388,9 +385,11 @@ import {
   isNeutralAdjustments,
   type GlobalColorAdjustments,
 } from '@/utils/paletteColorAdjustments'
+import { useI18n } from '@/i18n'
 
 // PaletteView component: orchestrates the palette editor UI and feature modules.
 const ctx = usePaletteContext()
+const { t } = useI18n()
 
 const undo = usePaletteUndo({
   colors: ctx.colors,
@@ -425,6 +424,7 @@ const imagePaletteLoading = ref(false)
 const imagePaletteError = ref('')
 const imagePaletteCount = ref(5)
 const imagePaletteFile = ref<File | null>(null)
+const imagePaletteExtractedColors = ref<Array<{ hex: string; count: number; selected: boolean }>>([])
 const helpModalOpen = ref(false)
 const helpModalMode = ref<'generation' | 'cheatsheet'>('cheatsheet')
 const copyFeedbackActive = ref(false)
@@ -554,7 +554,7 @@ function persistDraftIfNeeded(): void {
     paletteId: isExisting ? ctx.paletteId.value : null,
     ownerUsername: ctx.username.value,
     palettePath: ctx.palettePath.value,
-    paletteTitle: ctx.isNewPalette.value ? (ctx.pendingTitle.value.trim() || 'Untitled draft') : ctx.paletteTitle.value,
+    paletteTitle: ctx.isNewPalette.value ? (ctx.pendingTitle.value.trim() || t('common.untitledDraft')) : ctx.paletteTitle.value,
     description: ctx.isNewPalette.value ? ctx.pendingDescription.value : (ctx.history.value?.description ?? ''),
     folderPath,
     pendingTitle: ctx.pendingTitle.value,
@@ -918,43 +918,116 @@ async function pasteReplaceFromClipboard(): Promise<void> {
 
 function onImagePaletteFileChange(file: File | null): void {
   imagePaletteError.value = ''
+  imagePaletteExtractedColors.value = []
   if (!file) {
     imagePaletteFile.value = null
     return
   }
   if (file.size > IMAGE_MAX_BYTES) {
     imagePaletteFile.value = null
-    imagePaletteError.value = 'Image is too large. Maximum size is 10MB.'
+    imagePaletteError.value = t('palette.imageTooLarge')
     return
   }
   if (!file.type.startsWith('image/')) {
     imagePaletteFile.value = null
-    imagePaletteError.value = 'File must be an image.'
+    imagePaletteError.value = t('palette.fileMustBeImage')
     return
   }
   imagePaletteFile.value = file
 }
 
+function readImageAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result ?? ''))
+    reader.onerror = () => reject(new Error('Could not read image file.'))
+    reader.readAsDataURL(file)
+  })
+}
+
+function rgbStringToHex(value: string): string | null {
+  const match = value.match(/rgba?\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})/i)
+  if (!match) return null
+  const channels = match.slice(1, 4).map(Number)
+  if (channels.some(channel => Number.isNaN(channel) || channel < 0 || channel > 255)) return null
+  return channels.map(channel => channel.toString(16).padStart(2, '0')).join('').toUpperCase()
+}
+
+function hexRgbDistance(hex1: string, hex2: string): number {
+  const r1 = parseInt(hex1.slice(0, 2), 16)
+  const g1 = parseInt(hex1.slice(2, 4), 16)
+  const b1 = parseInt(hex1.slice(4, 6), 16)
+  const r2 = parseInt(hex2.slice(0, 2), 16)
+  const g2 = parseInt(hex2.slice(2, 4), 16)
+  const b2 = parseInt(hex2.slice(4, 6), 16)
+  return Math.sqrt((r1 - r2) ** 2 + (g1 - g2) ** 2 + (b1 - b2) ** 2)
+}
+
+function pickDistinctImageColors(colors: Array<{ hex: string; count: number }>, count: number): Array<{ hex: string; count: number }> {
+  const selected: Array<{ hex: string; count: number }> = []
+  const deferred: Array<{ hex: string; count: number }> = []
+  for (const color of colors) {
+    if (selected.every(chosen => hexRgbDistance(color.hex, chosen.hex) >= 34)) {
+      selected.push(color)
+    } else {
+      deferred.push(color)
+    }
+    if (selected.length >= count) return selected
+  }
+  for (const color of deferred) {
+    if (selected.length >= count) break
+    if (!selected.some(chosen => chosen.hex === color.hex)) selected.push(color)
+  }
+  return selected
+}
+
 async function extractPaletteFromImage(): Promise<void> {
   if (!imagePaletteFile.value) {
-    imagePaletteError.value = 'Please choose an image first.'
+    imagePaletteError.value = t('palette.imageRequired')
     return
   }
   imagePaletteLoading.value = true
   imagePaletteError.value = ''
   try {
-    const resp = await colorApi.generatePaletteFromImage(imagePaletteFile.value, imagePaletteCount.value)
-    if (!resp.colors.length) throw new Error('No dominant colors could be extracted.')
-    undo.captureForUndo()
-    ctx.colors.value = resp.colors
-      .slice(0, MAX_PALETTE_COLORS)
-      .map(c => ({ hex: c.hex, label: null, _key: ctx.mkKey() }))
-    closeImagePaletteModal()
+    const dataUrl = await readImageAsDataUrl(imagePaletteFile.value)
+    const analyzed = await analyzeImage(dataUrl, {
+      scale: 0.6,
+      skipTransparentPixels: true,
+    })
+    const ranked: Array<{ hex: string; count: number }> = []
+    const seen = new Set<string>()
+    for (const item of analyzed) {
+      const hex = rgbStringToHex(item.color)
+      if (!hex || seen.has(hex)) continue
+      seen.add(hex)
+      ranked.push({ hex, count: item.count })
+    }
+    const colors = pickDistinctImageColors(ranked, imagePaletteCount.value)
+    if (!colors.length) throw new Error(t('palette.noDominantColors'))
+    imagePaletteExtractedColors.value = colors.map(color => ({ ...color, selected: true }))
   } catch (e: any) {
-    imagePaletteError.value = e.message ?? 'Could not extract colors from image.'
+    imagePaletteError.value = e.message ?? t('palette.couldNotExtract')
   } finally {
     imagePaletteLoading.value = false
   }
+}
+
+function toggleExtractedImageColor(hex: string): void {
+  imagePaletteExtractedColors.value = imagePaletteExtractedColors.value.map(color =>
+    color.hex === hex ? { ...color, selected: !color.selected } : color,
+  )
+}
+
+function applyExtractedImageColors(mode: 'add' | 'replace'): void {
+  const hexes = imagePaletteExtractedColors.value
+    .filter(color => color.selected)
+    .map(color => color.hex)
+  if (!hexes.length) {
+    imagePaletteError.value = t('palette.selectExtracted')
+    return
+  }
+  applyClipboardColors(hexes, mode)
+  closeImagePaletteModal()
 }
 
 async function handleCreateFolder(payload: { name: string; parentId: number | null }) {

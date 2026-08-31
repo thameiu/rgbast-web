@@ -1,28 +1,28 @@
 <template>
   <main class="settings-view">
-    <SiteHeader :user="viewer" brand-meta="settings" />
+    <SiteHeader :user="viewer" :brand-meta="t('common.settings')" />
 
     <section class="settings-shell">
       <header class="settings-head">
-        <p class="eyebrow font-mono">Account</p>
-        <h1 class="settings-title font-display">Settings</h1>
+        <p class="eyebrow font-mono">{{ t('settingsPage.account') }}</p>
+        <h1 class="settings-title font-display">{{ t('common.settings') }}</h1>
       </header>
 
       <section class="settings-card">
-        <h2 class="card-title font-display">Profile</h2>
+        <h2 class="card-title font-display">{{ t('settingsPage.profile') }}</h2>
         <form class="form" @submit.prevent="saveProfile">
           <label class="field">
-            <span class="field-label font-mono">Username</span>
+            <span class="field-label font-mono">{{ t('settingsPage.username') }}</span>
             <input v-model="form.username" class="field-input" type="text" required />
           </label>
 
           <div class="field-row">
             <label class="field">
-              <span class="field-label font-mono">First name</span>
+              <span class="field-label font-mono">{{ t('settingsPage.firstName') }}</span>
               <input v-model="form.firstname" class="field-input" type="text" />
             </label>
             <label class="field">
-              <span class="field-label font-mono">Last name</span>
+              <span class="field-label font-mono">{{ t('settingsPage.lastName') }}</span>
               <input v-model="form.lastname" class="field-input" type="text" />
             </label>
           </div>
@@ -31,22 +31,22 @@
           <p v-if="saveSuccess" class="msg msg--ok">{{ saveSuccess }}</p>
 
           <button class="btn btn--primary" type="submit" :disabled="saving">
-            {{ saving ? 'Saving…' : 'Save profile' }}
+            {{ saving ? t('dashboard.saving') : t('settingsPage.saveProfile') }}
           </button>
         </form>
       </section>
 
       <section class="settings-card danger">
-        <h2 class="card-title font-display">Delete account</h2>
-        <p class="danger-copy">This action is permanent and removes your palettes, history, and folders.</p>
+        <h2 class="card-title font-display">{{ t('settingsPage.deleteAccount') }}</h2>
+        <p class="danger-copy">{{ t('settingsPage.deleteCopy') }}</p>
         <label class="field">
-          <span class="field-label font-mono">Type DELETE to confirm</span>
+          <span class="field-label font-mono">{{ t('settingsPage.deleteConfirm') }}</span>
           <input v-model="deleteConfirm" class="field-input" type="text" placeholder="DELETE" />
         </label>
 
         <p v-if="deleteError" class="msg msg--error">{{ deleteError }}</p>
         <button class="btn btn--danger" :disabled="deleting || deleteConfirm !== 'DELETE'" @click="deleteAccount">
-          {{ deleting ? 'Deleting…' : 'Delete my account' }}
+          {{ deleting ? t('settingsPage.deleting') : t('settingsPage.deleteMyAccount') }}
         </button>
       </section>
     </section>
@@ -61,8 +61,10 @@ import { usersApi } from '@/api/users'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import { searchApi } from '@/api/search'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const viewer = ref<{ username: string; firstname?: string | null; lastname?: string | null } | null>(null)
 const form = ref({ username: '', firstname: '', lastname: '' })
@@ -114,9 +116,9 @@ async function saveProfile(): Promise<void> {
     form.value.username = response.username
     form.value.firstname = response.firstname ?? ''
     form.value.lastname = response.lastname ?? ''
-    saveSuccess.value = 'Profile updated.'
+    saveSuccess.value = t('settingsPage.profileUpdated')
   } catch (error: unknown) {
-    saveError.value = error instanceof Error ? error.message : 'Could not save profile.'
+    saveError.value = error instanceof Error ? error.message : t('settingsPage.couldNotSave')
   } finally {
     saving.value = false
   }
@@ -131,7 +133,7 @@ async function deleteAccount(): Promise<void> {
     searchApi.clearRecentSearches()
     await router.replace('/')
   } catch (error: unknown) {
-    deleteError.value = error instanceof Error ? error.message : 'Could not delete account.'
+    deleteError.value = error instanceof Error ? error.message : t('settingsPage.couldNotDelete')
   } finally {
     deleting.value = false
   }

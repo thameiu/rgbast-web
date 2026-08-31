@@ -1,25 +1,25 @@
 <template>
   <main class="bookmarks-view">
-    <SiteHeader :user="viewerUser" brand-meta="bookmarks" />
+    <SiteHeader :user="viewerUser" :brand-meta="t('bookmarksPage.brand')" />
 
     <section class="bookmarks-shell">
-      <AppLoader v-if="loading" message="Loading bookmarks..." />
+      <AppLoader v-if="loading" :message="t('bookmarksPage.loading')" />
 
       <div v-else class="bookmarks-content">
         <header class="bookmarks-head">
-          <p class="eyebrow font-mono">Saved colors · personal collection</p>
-          <h1 class="content-title font-display">Bookmarks</h1>
+          <p class="eyebrow font-mono">{{ t('bookmarksPage.eyebrow') }}</p>
+          <h1 class="content-title font-display">{{ t('bookmarksPage.title') }}</h1>
         </header>
 
         <div class="bookmarks-section">
           <div class="sort-bar font-mono">
-            <span class="sort-label">Sort</span>
+            <span class="sort-label">{{ t('common.sort') }}</span>
             <button
               class="sort-btn"
               :class="{ 'sort-btn--active': sortField === 'name' }"
               @click="sortField === 'name' ? sortDir = sortDir === 'asc' ? 'desc' : 'asc' : (sortField = 'name', sortDir = 'asc')"
             >
-              Name
+              {{ t('common.name') }}
               <svg v-if="sortField === 'name'" class="sort-arrow" :class="{ 'sort-arrow--down': sortDir === 'desc' }" width="9" height="9" viewBox="0 0 9 9" fill="none">
                 <path d="M4.5 1.5v6M1.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -29,7 +29,7 @@
               :class="{ 'sort-btn--active': sortField === 'date' }"
               @click="sortField === 'date' ? sortDir = sortDir === 'asc' ? 'desc' : 'asc' : (sortField = 'date', sortDir = 'desc')"
             >
-              Last edit
+              {{ t('common.lastEdit') }}
               <svg v-if="sortField === 'date'" class="sort-arrow" :class="{ 'sort-arrow--down': sortDir === 'desc' }" width="9" height="9" viewBox="0 0 9 9" fill="none">
                 <path d="M4.5 1.5v6M1.5 4.5l3-3 3 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
               </svg>
@@ -39,7 +39,7 @@
           <p v-if="errorMessage" class="bookmarks-error">{{ errorMessage }}</p>
           <div v-else-if="sortedBookmarks.length === 0" class="empty-state">
             <div class="empty-icon">◐</div>
-            <p>No bookmarks yet.</p>
+            <p>{{ t('bookmarksPage.empty') }}</p>
           </div>
 
           <div v-else class="bookmarks-grid">
@@ -94,8 +94,10 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import ColorBookmarkCard from '@/components/bookmarks/ColorBookmarkCard.vue'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 
 const viewerUser = ref<UserMeResponse | null>(null)
+const { t } = useI18n()
 const bookmarks = ref<ColorBookmarkResponse[]>([])
 const loading = ref(true)
 const errorMessage = ref('')
@@ -136,7 +138,7 @@ async function loadBookmarksPage(): Promise<void> {
     viewerUser.value = user
     bookmarks.value = response.bookmarks
   } catch (error: any) {
-    errorMessage.value = error?.message ?? 'Could not load bookmarks.'
+    errorMessage.value = error?.message ?? t('bookmarksPage.couldNotLoad')
     bookmarks.value = []
   } finally {
     loading.value = false
@@ -170,7 +172,7 @@ async function saveEdit(): Promise<void> {
     editLabel.value = updated.label
     editModalOpen.value = false
   } catch (error: any) {
-    editError.value = error?.message ?? 'Could not update bookmark.'
+    editError.value = error?.message ?? t('bookmarksPage.couldNotUpdate')
   } finally {
     isSavingEdit.value = false
   }
@@ -200,7 +202,7 @@ async function confirmDeleteBookmark(): Promise<void> {
     }
     closeDeleteModal()
   } catch (error: any) {
-    deleteError.value = error?.message ?? 'Could not delete bookmark.'
+    deleteError.value = error?.message ?? t('bookmarksPage.couldNotDelete')
   } finally {
     isDeletingBookmark.value = false
   }

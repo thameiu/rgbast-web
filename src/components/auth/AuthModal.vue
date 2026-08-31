@@ -6,7 +6,7 @@
         <div class="auth-header">
           <RgbastLogo size="26px" />
           <p class="auth-headline font-display">
-            {{ tab === 'login' ? 'Sign in to save' : 'Create account to save' }}
+            {{ tab === 'login' ? t('authModal.signInToSave') : t('authModal.createAccountToSave') }}
           </p>
           <button class="auth-close" @click="$emit('cancel')">×</button>
         </div>
@@ -14,21 +14,21 @@
         <!-- Tab switcher -->
         <div class="auth-tabs">
           <button class="tab-btn" :class="{ active: tab === 'login' }" @click="switchAuthTab('login')">
-            Sign in
+            {{ t('auth.signIn') }}
           </button>
           <button class="tab-btn" :class="{ active: tab === 'register' }" @click="switchAuthTab('register')">
-            New account
+            {{ t('authModal.newAccount') }}
           </button>
         </div>
 
         <!-- Login form -->
         <form v-if="tab === 'login'" class="auth-form" @submit.prevent="doLogin">
           <label class="auth-field">
-            <span class="auth-label font-mono">Username</span>
+            <span class="auth-label font-mono">{{ t('auth.username') }}</span>
             <input v-model="loginForm.username" class="auth-input" type="text" required placeholder="your_username" autofocus />
           </label>
           <label class="auth-field">
-            <span class="auth-label font-mono">Password</span>
+            <span class="auth-label font-mono">{{ t('auth.password') }}</span>
             <div class="auth-pass-wrap">
               <input
                 v-model="loginForm.password"
@@ -51,7 +51,7 @@
               </button>
             </div>
           </label>
-          <RouterLink to="/forgot-password" class="auth-hint-link" @click="$emit('cancel')">Forgot password?</RouterLink>
+          <RouterLink to="/forgot-password" class="auth-hint-link" @click="$emit('cancel')">{{ t('auth.forgotPassword') }}</RouterLink>
           <p v-if="loginError" class="auth-error">{{ loginError }}</p>
           <p v-if="showResendVerification" class="auth-inline-link">
             <button
@@ -60,12 +60,12 @@
               :disabled="resendSubmitting"
               @click="handleResendVerification"
             >
-              {{ resendSubmitting ? 'Sending…' : 'Resend verification email' }}
+              {{ resendSubmitting ? t('auth.sending') : t('auth.resendVerification') }}
             </button>
           </p>
           <p v-if="loginInfo" class="auth-success">{{ loginInfo }}</p>
           <button class="auth-submit" type="submit" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Signing in…' : 'Sign in' }}
+            {{ isSubmitting ? t('auth.signingIn') : t('auth.signIn') }}
             <span aria-hidden="true">→</span>
           </button>
         </form>
@@ -73,15 +73,15 @@
         <!-- Register form -->
         <form v-else-if="registerStep === 'form'" class="auth-form" @submit.prevent="doRegister">
           <label class="auth-field">
-            <span class="auth-label font-mono">Username</span>
+            <span class="auth-label font-mono">{{ t('auth.username') }}</span>
             <input v-model="regForm.username" class="auth-input" type="text" required placeholder="your_username" autofocus />
           </label>
           <label class="auth-field">
-            <span class="auth-label font-mono">Email</span>
+            <span class="auth-label font-mono">{{ t('auth.email') }}</span>
             <input v-model="regForm.email" class="auth-input" type="email" required placeholder="you@example.com" />
           </label>
           <label class="auth-field">
-            <span class="auth-label font-mono">Password</span>
+            <span class="auth-label font-mono">{{ t('auth.password') }}</span>
             <div class="auth-pass-wrap">
               <input
                 v-model="regForm.password"
@@ -103,10 +103,10 @@
                 </svg>
               </button>
             </div>
-            <span class="auth-hint font-mono">Uppercase · lowercase · number · symbol · 8+</span>
+            <span class="auth-hint font-mono">{{ t('auth.passwordRules') }}</span>
           </label>
           <label class="auth-field">
-            <span class="auth-label font-mono">Confirm password</span>
+            <span class="auth-label font-mono">{{ t('auth.confirmPassword') }}</span>
             <div class="auth-pass-wrap">
               <input
                 v-model="regForm.confirmPassword"
@@ -128,19 +128,19 @@
                 </svg>
               </button>
             </div>
-            <span v-if="passwordsMismatch" class="auth-hint auth-hint--error">Passwords do not match.</span>
+            <span v-if="passwordsMismatch" class="auth-hint auth-hint--error">{{ t('auth.passwordMismatch') }}</span>
           </label>
           <p v-if="regError" class="auth-error">{{ regError }}</p>
           <p v-if="regSuccess" class="auth-success">{{ regSuccess }}</p>
           <button class="auth-submit" type="submit" :disabled="isSubmitting || passwordsMismatch">
-            {{ isSubmitting ? 'Creating…' : 'Create account' }}
+            {{ isSubmitting ? t('auth.creating') : t('auth.createAccount') }}
             <span aria-hidden="true">→</span>
           </button>
         </form>
 
         <form v-else class="auth-form" @submit.prevent="doVerifyCode">
           <label class="auth-field">
-            <span class="auth-label font-mono">Verification code</span>
+            <span class="auth-label font-mono">{{ t('authModal.verificationCode') }}</span>
             <input
               v-model="verifyCode"
               class="auth-input"
@@ -153,17 +153,17 @@
               autofocus
             />
             <span class="auth-hint font-mono">
-              Enter the 6-digit code sent to {{ regForm.email }}
+              {{ t('authModal.codeHint', { email: regForm.email }) }}
             </span>
           </label>
           <p v-if="regError" class="auth-error">{{ regError }}</p>
           <p v-if="regSuccess" class="auth-success">{{ regSuccess }}</p>
           <button class="auth-submit" type="submit" :disabled="isSubmitting">
-            {{ isSubmitting ? 'Verifying…' : 'Verify and continue' }}
+            {{ isSubmitting ? t('authModal.verifying') : t('authModal.verifyContinue') }}
             <span aria-hidden="true">→</span>
           </button>
           <button class="auth-back" type="button" :disabled="isSubmitting" @click="backToRegisterForm">
-            Back
+            {{ t('authModal.back') }}
           </button>
         </form>
       </div>
@@ -183,12 +183,14 @@ import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { authApi, usersApi } from '@/api'
 import RgbastLogo from '../ui/RgbastLogo.vue'
+import { useI18n } from '@/i18n'
 
 withDefaults(defineProps<{ theme?: 'dark' | 'light' }>(), {
   theme: 'dark',
 })
 
 const emit = defineEmits<{ authenticated: []; cancel: [] }>()
+const { t } = useI18n()
 
 /** Currently selected tab: 'login' or 'register'. */
 const tab = ref<'login' | 'register'>('login')
@@ -250,7 +252,7 @@ async function doLogin() {
     localStorage.setItem('access_token', resp.access_token)
     emit('authenticated')
   } catch (e: any) {
-    const message = e.message ?? 'Login failed.'
+    const message = e.message ?? t('authModal.loginFailed')
     loginError.value = message
     showResendVerification.value = String(message).toLowerCase().includes('email not verified')
   } finally {
@@ -260,7 +262,7 @@ async function doLogin() {
 
 async function handleResendVerification() {
   if (!loginForm.value.username.trim()) {
-    loginError.value = 'Enter your username or email first.'
+    loginError.value = t('authModal.enterIdentifier')
     return
   }
   resendSubmitting.value = true
@@ -271,7 +273,7 @@ async function handleResendVerification() {
     })
     loginInfo.value = response.response
   } catch (e: any) {
-    loginError.value = e.message ?? 'Could not resend verification email.'
+    loginError.value = e.message ?? t('authModal.couldNotResend')
   } finally {
     resendSubmitting.value = false
   }
@@ -282,7 +284,7 @@ async function handleResendVerification() {
  */
 async function doRegister() {
   if (passwordsMismatch.value) {
-    regError.value = 'Passwords do not match.'
+    regError.value = t('auth.passwordMismatch')
     return
   }
   isSubmitting.value = true
@@ -299,11 +301,11 @@ async function doRegister() {
       verify_type: 'code',
     })
     registerStep.value = 'code'
-    regSuccess.value = 'Account created. Enter the verification code sent by email.'
+    regSuccess.value = t('authModal.accountCreatedCode')
     regForm.value.password = ''
     regForm.value.confirmPassword = ''
   } catch (e: any) {
-    regError.value = e.message ?? 'Registration failed.'
+    regError.value = e.message ?? t('authModal.registrationFailed')
   } finally {
     isSubmitting.value = false
   }
@@ -321,7 +323,7 @@ async function doVerifyCode() {
     localStorage.setItem('access_token', resp.access_token)
     emit('authenticated')
   } catch (e: any) {
-    regError.value = e.message ?? 'Verification failed.'
+    regError.value = e.message ?? t('auth.verificationFailed')
   } finally {
     isSubmitting.value = false
   }

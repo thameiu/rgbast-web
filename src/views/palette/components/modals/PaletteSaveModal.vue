@@ -40,7 +40,7 @@
 
         <template v-else-if="selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot">
           <p class="modal-info">Forking from an older main snapshot. You must save to a new branch.</p>
-          <label class="field-label">Commit message</label>
+          <label class="field-label">Commit message <span class="optional">(optional)</span></label>
           <input
             :value="saveComment"
             class="modal-input"
@@ -71,7 +71,7 @@
               Saving will create a new latest commit in this branch.
             </template>
           </p>
-          <label class="field-label">Commit message</label>
+          <label class="field-label">Commit message <span class="optional">(optional)</span></label>
           <input
             :value="saveComment"
             class="modal-input"
@@ -95,7 +95,7 @@
         </template>
 
         <template v-else>
-          <label class="field-label">Commit message</label>
+          <label class="field-label">Commit message <span class="optional">(optional)</span></label>
           <input
             :value="saveComment"
             class="modal-input"
@@ -135,13 +135,13 @@
             class="modal-btn confirm"
             :disabled="
               isSaving ||
-              (isNewPalette ? !pendingTitle.trim() : !saveComment.trim()) ||
+              (isNewPalette && !pendingTitle.trim()) ||
               !!titleErrorMessage ||
               ((((selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot) || selectedSnapshotCtx?.isMerged)) && !newBranchName.trim())
             "
             @click="$emit('save')"
           >
-            {{ isSaving ? (isNewPalette ? 'Creating...' : 'Saving...') : (isNewPalette ? 'Create' : 'Save') }}
+            {{ t('common.save') }}
           </button>
         </div>
       </div>
@@ -154,6 +154,9 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import type { FolderResponse } from '@/api/types'
 import type { SnapshotContext } from '../../composables/usePaletteContext'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
+import { useI18n } from '@/i18n'
+
+const { t } = useI18n()
 
 defineProps<{
   open: boolean

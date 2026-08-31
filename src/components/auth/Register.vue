@@ -101,8 +101,10 @@
  */
 import { ref, computed } from 'vue';
 import { usersApi } from '@/api';
+import { useI18n } from '@/i18n';
 
 const emit = defineEmits(['navigate']);
+const { t } = useI18n();
 
 /** Form field values. */
 const form = ref({ username: '', email: '', password: '' });
@@ -157,7 +159,7 @@ const strengthLabel = computed(() => {
  */
 const handleSubmit = async () => {
   if (!PASSWORD_REGEX.test(form.value.password)) {
-    errorMsg.value = 'Password is too weak.';
+    errorMsg.value = t('apiErrors.passwordWeak');
     return;
   }
   loading.value = true;
@@ -171,12 +173,12 @@ const handleSubmit = async () => {
       password: form.value.password
     });
 
-    successMsg.value = 'Registration successful! Redirecting...';
+    successMsg.value = t('auth.accountCreatedCheckEmail');
     setTimeout(() => {
       emit('navigate', 'login');
     }, 2000);
   } catch (err: any) {
-    errorMsg.value = err.message || 'Registration failed.';
+    errorMsg.value = err.message || t('auth.registrationFailed');
   } finally {
     loading.value = false;
   }

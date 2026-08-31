@@ -148,7 +148,7 @@ export interface PaletteSnapshotSave {
   create_branch?: boolean;
   branch_title?: string | null;
   palette_colors?: PaletteColorSave[];
-  comment: string;
+  comment?: string | null;
 }
 
 export interface PaletteSnapshotSaveResponse {
@@ -267,7 +267,7 @@ export interface PaletteByUsernameResponse {
 // ── Palette generator ─────────────────────────────────────────────────────────
 
 export type PaletteHarmony =
-  | 'random' | 'analogous' | 'complementary'
+  | 'analogous' | 'complementary'
   | 'triadic' | 'split_complementary' | 'tetradic'
 
 export interface PaletteGenerateRequest {

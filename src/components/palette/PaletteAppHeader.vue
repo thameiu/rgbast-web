@@ -2,7 +2,7 @@
   <header class="pal-header" :class="{ 'focus-header': tutorialFocus === 'header' }">
     <!-- Left: back + title -->
     <div class="left-group">
-      <button class="back-btn" @click="$emit('back')" title="Back to previous page">
+      <button class="back-btn" @click="$emit('back')" :title="t('palette.back')">
         <AppIcon name="arrow-left" :size="16" />
       </button>
       <div class="divider"></div>
@@ -27,7 +27,7 @@
       <span
         v-if="isOwned && hasUnsavedChanges"
         class="unsaved-dot"
-        title="Unsaved changes"
+        :title="t('palette.unsavedChanges')"
       ></span>
       <div
         class="branch-selector"
@@ -70,7 +70,7 @@
               class="merge-inline-btn"
               @click.stop="$emit('merge', br.id); branchOpen = false"
             >
-              ↩ Merge into main
+              ↩ {{ t('palette.mergeIntoMain') }}
             </button>
           </template>
         </div>
@@ -79,7 +79,7 @@
         <button
           class="help-split-btn"
           :class="{ open: helpMenuOpen }"
-          title="Help"
+          :title="t('palette.help')"
           @click.stop="toggleHelpMenu"
         >
           <AppIcon name="help-circle" :size="14" />
@@ -87,10 +87,10 @@
         </button>
         <Transition name="header-dd">
           <div v-if="helpMenuOpen" class="header-dropdown-menu help-menu">
-            <button class="header-menu-opt" @click="onHelpHistory">History</button>
-            <button class="header-menu-opt" @click="onHelpGeneration">Generation</button>
+            <button class="header-menu-opt" @click="onHelpHistory">{{ t('palette.history') }}</button>
+            <button class="header-menu-opt" @click="onHelpGeneration">{{ t('palette.generation') }}</button>
             <button class="header-menu-opt" @click="onHelpCheatSheet">
-              Cheat sheet
+              {{ t('palette.cheatSheet') }}
               <span class="header-menu-kbd">H</span>
             </button>
           </div>
@@ -103,7 +103,7 @@
       <button
         class="icon-action-btn"
         :class="{ 'icon-action-btn--copied': copyFeedback }"
-        title="Copy palette colors (Ctrl+C)"
+        :title="t('palette.copyPaletteTitle')"
         @click="emit('copyPalette')"
       >
         <AppIcon :name="copyFeedback ? 'check' : 'copy'" :size="13" />
@@ -113,7 +113,7 @@
         <div class="paste-split-btn">
           <button
             class="icon-action-btn paste-main-btn"
-            title="Paste colors and add to palette (Ctrl+V)"
+            :title="t('palette.pasteAddTitle')"
             @click="emit('pasteAdd')"
           >
             <AppIcon name="clipboard" :size="13" />
@@ -121,7 +121,7 @@
           <button
             class="paste-menu-toggle"
             :class="{ open: pasteMenuOpen }"
-            title="Paste options"
+            :title="t('palette.pasteOptions')"
             @click.stop="togglePasteMenu"
           >
             <AppIcon name="chevron-down" :size="9" />
@@ -130,11 +130,11 @@
         <Transition name="header-dd">
           <div v-if="pasteMenuOpen" class="header-dropdown-menu paste-menu">
             <button class="header-menu-opt" @click="onPasteAddOption">
-              Add pasted colors
+              {{ t('palette.addPastedColors') }}
               <span class="header-menu-kbd">Ctrl+V</span>
             </button>
             <button class="header-menu-opt" @click="onPasteReplaceOption">
-              Replace all colors
+              {{ t('palette.replaceAllColors') }}
               <span class="header-menu-kbd">Ctrl+Shift+V</span>
             </button>
           </div>
@@ -152,7 +152,7 @@
         </button>
         <Transition name="header-dd">
           <div v-if="displayMenuOpen" class="header-dropdown-menu display-menu">
-            <p class="header-menu-title">Display values</p>
+            <p class="header-menu-title">{{ t('palette.displayValues') }}</p>
             <label class="header-check-opt">
               <input type="checkbox" :checked="displaySettings.hex" @change="emit('toggleDisplayFormat', 'hex')">
               <span>HEX</span>
@@ -171,7 +171,7 @@
             </label>
             <div v-if="canChangeCopyFormat" class="header-menu-divider"></div>
             <template v-if="canChangeCopyFormat">
-              <p class="header-menu-title">Copy full palette as</p>
+              <p class="header-menu-title">{{ t('palette.copyFullPaletteAs') }}</p>
               <div class="header-inline-options">
                 <button class="header-chip-opt" :class="{ active: copyFormat === 'hex' }" @click="emit('setCopyFormat', 'hex')">HEX</button>
                 <button class="header-chip-opt" :class="{ active: copyFormat === 'rgb' }" @click="emit('setCopyFormat', 'rgb')">RGB</button>
@@ -180,10 +180,10 @@
               </div>
             </template>
             <div class="header-menu-divider"></div>
-            <p class="header-menu-title">Global adjustments</p>
+            <p class="header-menu-title">{{ t('palette.globalAdjustments') }}</p>
             <div class="header-adjustments">
               <label class="header-slider-row">
-                <span class="header-slider-label">Hue</span>
+                <span class="header-slider-label">{{ t('palette.hue') }}</span>
                 <input
                   class="header-slider header-slider--hue"
                   type="range"
@@ -196,7 +196,7 @@
                 <span class="header-slider-value">{{ adjustments.hue }}</span>
               </label>
               <label class="header-slider-row">
-                <span class="header-slider-label">Saturation</span>
+                <span class="header-slider-label">{{ t('palette.saturation') }}</span>
                 <input
                   class="header-slider header-slider--saturation"
                   type="range"
@@ -209,7 +209,7 @@
                 <span class="header-slider-value">{{ adjustments.saturation }}</span>
               </label>
               <label class="header-slider-row">
-                <span class="header-slider-label">Temperature</span>
+                <span class="header-slider-label">{{ t('palette.temperature') }}</span>
                 <input
                   class="header-slider header-slider--temperature"
                   type="range"
@@ -222,7 +222,7 @@
                 <span class="header-slider-value">{{ adjustments.temperature }}</span>
               </label>
               <label class="header-slider-row">
-                <span class="header-slider-label">Luminosity</span>
+                <span class="header-slider-label">{{ t('palette.luminosity') }}</span>
                 <input
                   class="header-slider header-slider--luminosity"
                   type="range"
@@ -235,7 +235,7 @@
                 <span class="header-slider-value">{{ adjustments.luminosity }}</span>
               </label>
               <div class="header-adjustments-vision">
-                <span class="header-slider-label">Daltonism</span>
+                <span class="header-slider-label">{{ t('palette.daltonism') }}</span>
                 <div class="header-inline-options">
                   <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'protanopia' }" @click="onDaltonismToggle('protanopia')">Protanopia</button>
                   <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'deuteranopia' }" @click="onDaltonismToggle('deuteranopia')">Deuteranopia</button>
@@ -243,8 +243,8 @@
                 </div>
               </div>
               <div class="header-adjustments-actions">
-                <button class="header-adjust-btn header-adjust-btn--cancel" @click="onAdjustmentsCancel">Cancel</button>
-                <button class="header-adjust-btn header-adjust-btn--apply" @click="onAdjustmentsApply">Apply</button>
+                <button class="header-adjust-btn header-adjust-btn--cancel" @click="onAdjustmentsCancel">{{ t('common.cancel') }}</button>
+                <button class="header-adjust-btn header-adjust-btn--apply" @click="onAdjustmentsApply">{{ t('palette.apply') }}</button>
               </div>
             </div>
           </div>
@@ -272,24 +272,24 @@
 
       <!-- Generate split-button -->
       <div class="gen-btn-group">
-        <button class="gen-instant-btn" @click="$emit('generate')" title="Generate palette (Space)">
+        <button class="gen-instant-btn" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
           <AppIcon name="sparkles" :size="13" />
-          Generate
+          {{ t('palette.generate') }}
         </button>
-        <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" title="Generate settings (Alt+Space)">
+        <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
           <AppIcon name="settings" :size="12" />
         </button>
       </div>
       <button
         class="image-action-btn"
-        title="Extract palette from image"
+        :title="t('palette.imageExtractTitle')"
         @click="$emit('openImagePalette')"
       >
         <AppIcon name="image" :size="13" />
       </button>
       <button
         class="image-action-btn"
-        title="Export palette"
+        :title="t('palette.exportPalette')"
         @click="$emit('openExport')"
       >
         <AppIcon name="share" :size="13" />
@@ -297,7 +297,7 @@
 
       <button
         class="icon-action-btn"
-        title="Accessibility audit (A)"
+        :title="t('palette.accessibilityAudit')"
         @click="$emit('openAccessibilityAudit')"
       >
         <AppIcon name="info-circle" :size="13" />
@@ -305,7 +305,7 @@
       <button
         v-if="isOwned && canDelete"
         class="action-btn danger-icon"
-        title="Delete palette"
+        :title="t('common.delete')"
         @click="$emit('deletePalette')"
       >
         <AppIcon name="trash" :size="14" />
@@ -317,16 +317,16 @@
         :class="{ active: historyOpen, 'focus-ring': tutorialFocus === 'history' }"
       >
         <AppIcon name="history" :size="14" />
-        History
+        {{ t('palette.history') }}
       </button>
       <button
         v-if="isOwned && !isNewPalette"
         class="action-btn secondary"
-        title="Edit palette"
+        :title="t('palette.editPalette')"
         @click="$emit('edit')"
       >
         <AppIcon name="edit" :size="14" />
-        Edit
+        {{ t('palette.editPalette') }}
       </button>
       <button
         v-if="isOwned"
@@ -336,7 +336,7 @@
         @click="$emit('save')"
       >
         <AppIcon name="download" :size="14" />
-        {{ isSaving ? 'Saving…' : 'Save snapshot' }}
+        {{ t('common.save') }}
       </button>
       <button
         v-else
@@ -344,13 +344,13 @@
         @click="$emit('clone')"
       >
         <AppIcon name="clone" :size="14" />
-        Clone palette
+        {{ t('palette.clonePalette') }}
       </button>
     </div>
 
     <!-- Mobile right: unsaved indicator + undo/redo + history + hamburger -->
     <div class="mobile-right">
-      <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" title="Unsaved changes"></span>
+      <span v-if="isOwned && hasUnsavedChanges" class="unsaved-dot" :title="t('palette.unsavedChanges')"></span>
       <div class="mobile-nav-group">
         <button
           class="mobile-nav-btn"
@@ -378,11 +378,92 @@
       >
         <AppIcon name="history" :size="15" />
       </button>
+      <div ref="mobileDisplayGroupEl" class="header-dropdown-group mobile-display-group">
+        <button
+          class="history-mobile-btn"
+          :class="{ active: displayMenuOpen }"
+          :title="t('palette.display')"
+          @click.stop="toggleDisplayMenu"
+        >
+          <AppIcon name="sliders" :size="15" />
+        </button>
+        <Transition name="header-dd">
+          <div v-if="displayMenuOpen" class="header-dropdown-menu display-menu mobile-display-menu">
+            <p class="header-menu-title">{{ t('palette.globalAdjustments') }}</p>
+            <div class="header-adjustments">
+              <label class="header-slider-row">
+                <span class="header-slider-label">{{ t('palette.hue') }}</span>
+                <input
+                  class="header-slider header-slider--hue"
+                  type="range"
+                  min="-180"
+                  max="180"
+                  step="1"
+                  :value="adjustments.hue"
+                  @input="onSliderInput('hue', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.hue }}</span>
+              </label>
+              <label class="header-slider-row">
+                <span class="header-slider-label">{{ t('palette.saturation') }}</span>
+                <input
+                  class="header-slider header-slider--saturation"
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  :value="adjustments.saturation"
+                  @input="onSliderInput('saturation', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.saturation }}</span>
+              </label>
+              <label class="header-slider-row">
+                <span class="header-slider-label">{{ t('palette.temperature') }}</span>
+                <input
+                  class="header-slider header-slider--temperature"
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  :value="adjustments.temperature"
+                  @input="onSliderInput('temperature', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.temperature }}</span>
+              </label>
+              <label class="header-slider-row">
+                <span class="header-slider-label">{{ t('palette.luminosity') }}</span>
+                <input
+                  class="header-slider header-slider--luminosity"
+                  type="range"
+                  min="-100"
+                  max="100"
+                  step="1"
+                  :value="adjustments.luminosity"
+                  @input="onSliderInput('luminosity', Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="header-slider-value">{{ adjustments.luminosity }}</span>
+              </label>
+              <div class="header-adjustments-vision">
+                <span class="header-slider-label">{{ t('palette.daltonism') }}</span>
+                <div class="header-inline-options">
+                  <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'protanopia' }" @click="onDaltonismToggle('protanopia')">Protanopia</button>
+                  <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'deuteranopia' }" @click="onDaltonismToggle('deuteranopia')">Deuteranopia</button>
+                  <button class="header-chip-opt" :class="{ active: adjustments.daltonism === 'tritanopia' }" @click="onDaltonismToggle('tritanopia')">Tritanopia</button>
+                </div>
+              </div>
+              <div class="header-adjustments-actions">
+                <button class="header-adjust-btn header-adjust-btn--cancel" @click="onAdjustmentsCancel">{{ t('common.cancel') }}</button>
+                <button class="header-adjust-btn header-adjust-btn--apply" @click="onAdjustmentsApply">{{ t('palette.apply') }}</button>
+              </div>
+            </div>
+          </div>
+        </Transition>
+      </div>
       <button
         class="hamburger-btn"
         :class="{ open: mobileMenuOpen }"
         :aria-expanded="mobileMenuOpen"
-        aria-label="Open menu"
+        :aria-label="t('palette.openMenu')"
         @click="$emit('hamburgerClick')"
       >
         <span></span>
@@ -407,6 +488,7 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import { getBranchColor } from '@/utils/branchColors'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
+import { useI18n } from '@/i18n'
 
 type AdjustmentSliderKey = 'hue' | 'saturation' | 'temperature' | 'luminosity'
 
@@ -489,6 +571,8 @@ const emit = defineEmits<{
   openAccessibilityAudit: []
 }>()
 
+const { t } = useI18n()
+
 /** Whether the branch dropdown flyout is open. */
 const branchOpen = ref(false)
 const pasteMenuOpen = ref(false)
@@ -497,6 +581,7 @@ const displayMenuOpen = ref(false)
 const pasteGroupEl = ref<HTMLElement | null>(null)
 const helpGroupEl = ref<HTMLElement | null>(null)
 const displayGroupEl = ref<HTMLElement | null>(null)
+const mobileDisplayGroupEl = ref<HTMLElement | null>(null)
 
 /** Only non-merged branches shown in the selector. */
 const activeBranches = computed(() => props.branches.filter(b => !b.is_merged))
@@ -612,7 +697,9 @@ function onDocumentPointerDown(event: Event): void {
   if (helpMenuOpen.value && helpGroupEl.value && target && !helpGroupEl.value.contains(target)) {
     helpMenuOpen.value = false
   }
-  if (displayMenuOpen.value && displayGroupEl.value && target && !displayGroupEl.value.contains(target)) {
+  const insideDesktopDisplay = displayGroupEl.value && target && displayGroupEl.value.contains(target)
+  const insideMobileDisplay = mobileDisplayGroupEl.value && target && mobileDisplayGroupEl.value.contains(target)
+  if (displayMenuOpen.value && target && !insideDesktopDisplay && !insideMobileDisplay) {
     emit('cancelAdjustments')
     displayMenuOpen.value = false
   }

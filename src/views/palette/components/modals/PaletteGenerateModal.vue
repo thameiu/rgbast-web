@@ -5,9 +5,9 @@
         <button class="modal-close-btn" type="button" aria-label="Close generation modal" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
-        <h3 class="modal-title font-display">Generate</h3>
+        <h3 class="modal-title font-display">{{ t('palette.generate') }}</h3>
 
-        <label class="field-label">Colors - {{ genCount }}</label>
+        <label class="field-label">{{ t('palette.colors') }} - {{ genCount }}</label>
         <input
           type="range"
           :value="genCount"
@@ -18,18 +18,7 @@
           @input="$emit('update:genCount', Number(($event.target as HTMLInputElement).value))"
         />
 
-        <label class="field-label">Contrast - {{ genContrast }}</label>
-        <input
-          type="range"
-          :value="genContrast"
-          min="1"
-          max="10"
-          step="1"
-          class="gen-range"
-          @input="$emit('update:genContrast', Number(($event.target as HTMLInputElement).value))"
-        />
-
-        <label class="field-label">Harmony</label>
+        <label class="field-label">{{ t('palette.harmony') }}</label>
         <div class="gen-harmony-wrap">
           <button ref="harmonyTriggerEl" class="gen-harmony-trigger" @click="toggleHarmonyDropdown()">
             <span>{{ harmonyLabel }}</span>
@@ -37,13 +26,13 @@
           </button>
         </div>
 
-        <label class="field-label">Base colors (up to 3) - included in output</label>
+        <label class="field-label">{{ t('palette.baseColors') }}</label>
         <div class="gen-base-colors">
           <div v-for="(_, i) in genBaseColors" :key="i" class="gen-base-row">
             <div
               class="gen-base-swatch gen-base-swatch--click"
               :style="{ background: isValidHex(genBaseColors[i] ?? '') ? '#' + genBaseColors[i] : 'rgba(255,255,255,0.06)' }"
-              title="Pick color"
+              :title="t('palette.pickColor')"
               @click="openGenPicker(i, $event)"
             ></div>
             <input
@@ -67,16 +56,16 @@
             <button class="gen-base-remove" @click="removeBaseColor(i)">x</button>
           </div>
           <button v-if="genBaseColors.length < 3" class="gen-add-base" @click="addBaseColor()">
-            + Add base color
+            + {{ t('palette.addBaseColor') }}
           </button>
         </div>
 
         <p v-if="generateError" class="modal-error">{{ generateError }}</p>
 
         <div class="modal-actions">
-          <button class="modal-btn cancel" @click="$emit('close')">Cancel</button>
+          <button class="modal-btn cancel" @click="$emit('close')">{{ t('common.cancel') }}</button>
           <button class="modal-btn confirm" :disabled="generateLoading" @click="doGenerate()">
-            {{ generateLoading ? 'Generating...' : 'Generate' }}
+            {{ generateLoading ? t('palette.generating') : t('palette.generate') }}
           </button>
         </div>
       </div>
@@ -84,7 +73,7 @@
 
     <div v-if="genPaletteDropIdx !== null" class="gen-palette-overlay" @click="setGenPaletteDropIdx(null)"></div>
     <div v-if="genPaletteDropIdx !== null" class="gen-palette-dropdown" :style="genPaletteDropStyle">
-      <div class="gen-palette-heading">Palette colors</div>
+      <div class="gen-palette-heading">{{ t('palette.colors') }}</div>
       <button
         v-for="col in colors"
         :key="col._key"
@@ -116,8 +105,8 @@
           :class="{ active: genHarmony === opt.value }"
           @click="$emit('update:genHarmony', opt.value); harmonyOpen = false"
         >
-          <span class="gen-harmony-label">{{ opt.label }}</span>
-          <span class="gen-harmony-desc">{{ opt.desc }}</span>
+          <span class="gen-harmony-label">{{ t(opt.labelKey) }}</span>
+          <span class="gen-harmony-desc">{{ t(opt.descKey) }}</span>
           <span v-if="genHarmony === opt.value" class="gen-harmony-check" aria-hidden="true">
             <AppIcon name="check" :size="11" />
           </span>
@@ -133,6 +122,7 @@ import type { CSSProperties } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
 import type { WorkingColor } from '../../composables/usePaletteContext'
+import { useI18n } from '@/i18n'
 
 // PaletteGenerateModal component: generates palettes and configures generator settings in PaletteView.
 const props = defineProps<{
@@ -140,7 +130,6 @@ const props = defineProps<{
   generateLoading: boolean
   generateError: string
   genCount: number
-  genContrast: number
   genHarmony: string
   genBaseColors: string[]
   genPaletteDropIdx: number | null
@@ -161,26 +150,26 @@ const props = defineProps<{
   setGenPickerAnchorRect: (value: DOMRect | null) => void
 }>()
 
+const { t } = useI18n()
+
 // Emits: close and generator field updates for PaletteView.
 defineEmits<{
   (e: 'close'): void
   (e: 'update:genCount', value: number): void
-  (e: 'update:genContrast', value: number): void
   (e: 'update:genHarmony', value: string): void
 }>()
 
 const harmonyOptions = [
-  { value: 'random', label: 'Random', desc: 'Evenly spread hues' },
-  { value: 'analogous', label: 'Analogous', desc: 'Adjacent hues' },
-  { value: 'complementary', label: 'Complementary', desc: 'Opposite hues' },
-  { value: 'triadic', label: 'Triadic', desc: '3 equidistant hues' },
-  { value: 'split_complementary', label: 'Split compl.', desc: 'Near-opposite pair' },
-  { value: 'tetradic', label: 'Tetradic', desc: '4 equidistant hues' },
-  { value: 'shades', label: 'Shades', desc: 'Tone families' },
+  { value: 'analogous', labelKey: 'palette.harmonies.analogous', descKey: 'palette.harmonyDescriptions.analogous' },
+  { value: 'complementary', labelKey: 'palette.harmonies.complementary', descKey: 'palette.harmonyDescriptions.complementary' },
+  { value: 'triadic', labelKey: 'palette.harmonies.triadic', descKey: 'palette.harmonyDescriptions.triadic' },
+  { value: 'split_complementary', labelKey: 'palette.harmonies.split', descKey: 'palette.harmonyDescriptions.split' },
+  { value: 'tetradic', labelKey: 'palette.harmonies.tetradic', descKey: 'palette.harmonyDescriptions.tetradic' },
+  { value: 'shades', labelKey: 'palette.harmonies.shades', descKey: 'palette.harmonyDescriptions.shades' },
 ]
 
 const harmonyLabel = computed(() =>
-  harmonyOptions.find(o => o.value === props.genHarmony)?.label ?? 'Random'
+  t(harmonyOptions.find(o => o.value === props.genHarmony)?.labelKey ?? 'palette.harmonies.analogous')
 )
 
 const harmonyOpen = ref(false)

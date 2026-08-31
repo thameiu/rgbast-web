@@ -745,6 +745,10 @@
   color: rgba(255,255,255,0.9);
 }
 
+.mobile-display-group {
+  display: none;
+}
+
 .hamburger-btn {
   width: 36px;
   height: 36px;
@@ -854,9 +858,25 @@
   .center-group { display: none; }
   .right-group  { display: none; }
   .mobile-right { display: flex; }
+  .mobile-display-group { display: block; }
   .left-group   { flex: 1; min-width: 0; }
   .palette-name { max-width: none; }
   .palette-title-wrap { gap: 8px; }
   .palette-owner-link { max-width: 110px; font-size: 10px; }
-  .display-menu { min-width: 0; max-width: calc(100vw - 12px); }
+  .mobile-display-menu {
+    position: fixed;
+    top: 62px;
+    left: 10px;
+    right: 10px;
+    min-width: 0;
+    max-width: none;
+    width: auto;
+    max-height: min(52dvh, 420px);
+    overflow-y: auto;
+    z-index: 180;
+    box-shadow: none;
+  }
+  .mobile-display-menu .header-slider-row {
+    grid-template-columns: 70px minmax(0, 1fr) 38px;
+  }
 }

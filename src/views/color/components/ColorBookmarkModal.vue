@@ -6,30 +6,30 @@
           <AppIcon name="x" :size="16" />
         </button>
 
-        <h3 class="bookmark-modal-title font-display">{{ existing ? 'Update bookmark' : 'Save bookmark' }}</h3>
-        <p class="bookmark-modal-sub">Save this color with a custom label.</p>
+        <h3 class="bookmark-modal-title font-display">{{ existing ? t('colorPage.updateBookmark') : t('colorPage.saveBookmark') }}</h3>
+        <p class="bookmark-modal-sub">{{ t('colorPage.bookmarkSub') }}</p>
 
         <div class="bookmark-preview" :style="{ background: '#' + hex }">
           <span class="bookmark-preview-hex" :style="{ color: textColor }">#{{ hex.toUpperCase() }}</span>
         </div>
 
-        <label class="bookmark-field-label">Custom label</label>
+        <label class="bookmark-field-label">{{ t('colorPage.customLabel') }}</label>
         <input
           :value="label"
           class="bookmark-input"
           maxlength="100"
-          placeholder="Favorite violet"
+          :placeholder="t('colorPage.favoriteViolet')"
           autofocus
           @input="$emit('update:label', ($event.target as HTMLInputElement).value)"
         />
 
         <div v-if="existing && (createdAt || updatedAt)" class="bookmark-meta">
           <p v-if="createdAt" class="bookmark-meta-line">
-            <span class="bookmark-meta-key">Created</span>
+            <span class="bookmark-meta-key">{{ t('colorPage.created') }}</span>
             <span>{{ formatDate(createdAt) }}</span>
           </p>
           <p v-if="updatedAt" class="bookmark-meta-line">
-            <span class="bookmark-meta-key">Updated</span>
+            <span class="bookmark-meta-key">{{ t('colorPage.updated') }}</span>
             <span>{{ formatDate(updatedAt) }}</span>
           </p>
         </div>
@@ -37,9 +37,9 @@
         <p v-if="error" class="bookmark-error">{{ error }}</p>
 
         <div class="bookmark-actions">
-          <button class="bookmark-btn bookmark-btn--ghost" type="button" @click="$emit('close')">Cancel</button>
+          <button class="bookmark-btn bookmark-btn--ghost" type="button" @click="$emit('close')">{{ t('common.cancel') }}</button>
           <button class="bookmark-btn" type="submit" :disabled="isSaving || !label.trim()">
-            {{ isSaving ? 'Saving…' : (existing ? 'Update bookmark' : 'Save bookmark') }}
+            {{ isSaving ? t('colorPage.saving') : (existing ? t('colorPage.updateBookmark') : t('colorPage.saveBookmark')) }}
           </button>
         </div>
       </form>
@@ -51,6 +51,7 @@
 import { computed } from 'vue'
 
 import AppIcon from '@/components/icons/AppIcon.vue'
+import { useI18n } from '@/i18n'
 
 const props = defineProps<{
   open: boolean
@@ -62,6 +63,8 @@ const props = defineProps<{
   createdAt?: string | null
   updatedAt?: string | null
 }>()
+
+const { locale, t } = useI18n()
 
 defineEmits<{
   (e: 'close'): void
@@ -79,7 +82,7 @@ const textColor = computed(() => {
 })
 
 function formatDate(value: string): string {
-  return new Date(value).toLocaleString('en', {
+  return new Date(value).toLocaleString(locale.value, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',

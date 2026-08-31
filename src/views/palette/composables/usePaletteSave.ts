@@ -107,7 +107,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
 
   // Save the current palette snapshot or create a new palette.
   async function doSave(): Promise<void> {
-    if (ctx.isNewPalette.value ? !ctx.pendingTitle.value.trim() : !saveComment.value.trim()) return
+    if (ctx.isNewPalette.value && !ctx.pendingTitle.value.trim()) return
     if (ctx.colors.value.length > MAX_PALETTE_COLORS) {
       saveError.value = `Palette cannot contain more than ${MAX_PALETTE_COLORS} colors.`
       return

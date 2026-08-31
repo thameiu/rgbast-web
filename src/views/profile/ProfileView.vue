@@ -5,13 +5,13 @@
     <span class="regmark regmark-bl" aria-hidden="true"></span>
     <span class="regmark regmark-br" aria-hidden="true"></span>
 
-    <SiteHeader :user="viewerUser" brand-meta="profiles" />
+    <SiteHeader :user="viewerUser" :brand-meta="t('profilePage.brand')" />
 
     <section class="profile-shell">
-      <AppLoader v-if="loading" message="Loading profile..." />
+      <AppLoader v-if="loading" :message="t('profilePage.loading')" />
 
       <div v-else-if="errorMessage" class="profile-error">
-        <h1 class="profile-error-title font-display">Profile unavailable</h1>
+        <h1 class="profile-error-title font-display">{{ t('profilePage.unavailable') }}</h1>
         <p class="profile-error-text">{{ errorMessage }}</p>
       </div>
 
@@ -69,14 +69,14 @@
               :class="{ 'profile-view-toggle-btn--active': contentMode === 'palettes' }"
               @click="contentMode = 'palettes'"
             >
-              <span class="profile-view-toggle-label">Palettes</span>
+              <span class="profile-view-toggle-label">{{ t('profilePage.palettes') }}</span>
             </button>
             <button
               class="profile-view-toggle-btn font-display"
               :class="{ 'profile-view-toggle-btn--active': contentMode === 'bookmarks' }"
               @click="contentMode = 'bookmarks'"
             >
-              <span class="profile-view-toggle-label">Bookmarks</span>
+              <span class="profile-view-toggle-label">{{ t('profilePage.bookmarks') }}</span>
             </button>
           </div>
           <p class="breadcrumb-all font-mono">{{ contentMode === 'palettes' ? palettesSubtitle : bookmarksSubtitle }}</p>
@@ -84,7 +84,7 @@
 
         <div class="profile-content" :class="{ 'profile-content--bookmarks': contentMode === 'bookmarks' }">
           <aside v-if="contentMode === 'palettes'" class="profile-folders">
-            <p class="profile-folders-label font-mono">Folders</p>
+            <p class="profile-folders-label font-mono">{{ t('profilePage.folders') }}</p>
             <FolderTree
               :folders="folders"
               v-model="activeFolderKey"
@@ -100,11 +100,31 @@
           </aside>
 
           <section class="profile-palettes">
-            <p v-if="contentMode === 'palettes' && filteredPalettes.length === 0" class="profile-empty">
-              No palettes in this folder.
+            <p v-if="contentMode === 'palettes' && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="profile-empty">
+              {{ t('profilePage.noPalettesInFolder') }}
             </p>
 
             <div v-else-if="contentMode === 'palettes'" class="palettes-grid">
+              <article
+                v-for="folder in visibleFolderCards"
+                :key="`folder-${folder.id}`"
+                class="profile-folder-card"
+                @click="activeFolderKey = folder.id"
+              >
+                <div class="profile-folder-icon" aria-hidden="true">
+                  <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
+                    <path d="M3 10.5C3 7.74 5.24 5.5 8 5.5h8.9l4.2 4.1H34c2.76 0 5 2.24 5 5V28c0 2.76-2.24 5-5 5H8c-2.76 0-5-2.24-5-5V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                    <path d="M3 14h36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                </div>
+                <div class="profile-folder-body">
+                  <h3 class="profile-folder-title font-display">{{ folder.name }}</h3>
+                  <p class="profile-folder-meta font-mono">
+                    {{ folderPaletteCount(folder.id) }} {{ t('dashboard.palettes') }} · {{ childFolderCount(folder.id) }} {{ t('dashboard.folders').toLowerCase() }}
+                  </p>
+                </div>
+              </article>
+
               <PaletteCard
                 v-for="palette in filteredPalettes"
                 :key="palette.id"
@@ -115,7 +135,7 @@
             </div>
 
             <p v-else-if="sortedBookmarks.length === 0" class="profile-empty">
-              No saved colors yet.
+              {{ t('profilePage.noSavedColors') }}
             </p>
 
             <div v-else class="palettes-grid">
@@ -177,13 +197,13 @@
       <Transition name="profile-confirm-fade">
         <div v-if="showProfileRemoveConfirm" class="profile-confirm-overlay" @click.self="showProfileRemoveConfirm = false">
           <div class="profile-confirm-modal">
-            <h3 class="profile-confirm-title font-display">Confirm</h3>
+            <h3 class="profile-confirm-title font-display">{{ t('profilePage.confirm') }}</h3>
             <p class="profile-confirm-text">
-              Are you sure you want to {{ secondaryActionLabel.toLowerCase() }}?
+              {{ t('profilePage.removeConfirm', { action: secondaryActionLabel.toLowerCase() }) }}
             </p>
             <div class="profile-confirm-actions">
-              <button class="profile-confirm-btn" :disabled="relationLoading" @click="showProfileRemoveConfirm = false">No</button>
-              <button class="profile-confirm-btn profile-confirm-btn--danger" :disabled="relationLoading" @click="confirmRemoveFromProfile">Yes</button>
+              <button class="profile-confirm-btn" :disabled="relationLoading" @click="showProfileRemoveConfirm = false">{{ t('common.no') }}</button>
+              <button class="profile-confirm-btn profile-confirm-btn--danger" :disabled="relationLoading" @click="confirmRemoveFromProfile">{{ t('common.yes') }}</button>
             </div>
           </div>
         </div>
@@ -216,9 +236,11 @@ import IconUsers from '@/components/icons/IconUsers.vue'
 import IconClock3 from '@/components/icons/IconClock3.vue'
 import IconMail from '@/components/icons/IconMail.vue'
 import { setPageSeo } from '@/utils/seo'
+import { useI18n } from '@/i18n'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
 
 const loading = ref(true)
 const errorMessage = ref('')
@@ -250,7 +272,7 @@ const isOwnProfile = computed(() => !!viewerUser.value?.username && viewerUser.v
 
 const fullName = computed(() => {
   const name = [profileUser.value?.firstname, profileUser.value?.lastname].filter(Boolean).join(' ')
-  return name || 'No public full name'
+  return name || t('profilePage.noPublicFullName')
 })
 
 const folderCounts = computed(() => {
@@ -264,7 +286,7 @@ const folderCounts = computed(() => {
 
 const rootPaletteCount = computed(() => palettes.value.filter(p => p.folder_id == null).length)
 const palettesSubtitle = computed(() => {
-  if (activeFolderKey.value === 'all') return 'All palettes'
+  if (activeFolderKey.value === 'all') return t('profilePage.allPalettes')
   if (activeFolderKey.value === 'root') return '/'
   const ancestors = getFolderAncestors(activeFolderKey.value)
   const labels = ancestors
@@ -272,7 +294,7 @@ const palettesSubtitle = computed(() => {
     .filter(Boolean)
   return labels.length ? `/ ${labels.join(' / ')}` : '/'
 })
-const bookmarksSubtitle = computed(() => `${bookmarks.value.length} saved`)
+const bookmarksSubtitle = computed(() => `${bookmarks.value.length} ${t('profilePage.saved')}`)
 
 const filteredPalettes = computed(() => {
   let list: PaletteCache[]
@@ -292,6 +314,15 @@ const filteredPalettes = computed(() => {
   return list
 })
 
+const visibleFolderCards = computed(() => {
+  if (activeFolderKey.value === 'all') return []
+  const parentId = activeFolderKey.value === 'root' ? null : activeFolderKey.value
+  return folders.value
+    .filter(folder => folder.parent_folder_id === parentId)
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name))
+})
+
 const sortedBookmarks = computed(() => {
   const list = [...bookmarks.value]
   list.sort((a, b) => {
@@ -303,11 +334,11 @@ const sortedBookmarks = computed(() => {
 })
 
 const relationPrimaryLabel = computed(() => {
-  if (!viewerUser.value) return 'Add colleague'
-  if (relationStatus.value === 'accepted') return 'Colleague'
-  if (relationStatus.value === 'pending_outgoing') return 'Request sent'
-  if (relationStatus.value === 'pending_incoming') return 'Accept request'
-  return 'Add colleague'
+  if (!viewerUser.value) return t('profilePage.addColleague')
+  if (relationStatus.value === 'accepted') return t('profilePage.colleague')
+  if (relationStatus.value === 'pending_outgoing') return t('profilePage.requestSent')
+  if (relationStatus.value === 'pending_incoming') return t('profilePage.acceptRequest')
+  return t('profilePage.addColleague')
 })
 
 const showSecondaryAction = computed(() => {
@@ -315,14 +346,14 @@ const showSecondaryAction = computed(() => {
 })
 
 const secondaryActionLabel = computed(() => {
-  if (relationStatus.value === 'accepted') return 'Remove'
-  if (relationStatus.value === 'pending_outgoing') return 'Remove request'
-  return 'Deny'
+  if (relationStatus.value === 'accepted') return t('profilePage.remove')
+  if (relationStatus.value === 'pending_outgoing') return t('profilePage.removeRequest')
+  return t('profilePage.deny')
 })
 
 const colleaguesCountLabel = computed(() => {
   const count = Number(profileUser.value?.colleagues_count ?? 0)
-  return `${count} ${count === 1 ? 'Colleague' : 'Colleagues'}`
+  return `${count} ${count === 1 ? t('profilePage.colleague') : t('profilePage.colleagues')}`
 })
 
 function syncProfilePageTitle(): void {
@@ -389,7 +420,7 @@ async function loadRelationStatus() {
 async function loadProfile() {
   const username = profileUsername.value
   if (!username) {
-    errorMessage.value = 'Missing username.'
+    errorMessage.value = t('profilePage.missingUsername')
     loading.value = false
     return
   }
@@ -427,7 +458,7 @@ async function loadProfile() {
     palettes.value = []
     folders.value = []
     bookmarks.value = []
-    errorMessage.value = error?.message ?? 'Could not load this profile.'
+    errorMessage.value = error?.message ?? t('profilePage.couldNotLoad')
   } finally {
     loading.value = false
   }
@@ -438,6 +469,14 @@ function openPalette(palette: PaletteCache) {
   if (!profileUser.value) return
   const path = [...(palette.folder_path ?? []), palette.title].filter(Boolean).join('/')
   router.push({ name: 'palette', params: { username: profileUser.value.username, pathMatch: path } })
+}
+
+function childFolderCount(folderId: number): number {
+  return folders.value.filter(folder => folder.parent_folder_id === folderId).length
+}
+
+function folderPaletteCount(folderId: number): number {
+  return folderCounts.value[folderId] ?? 0
 }
 
 function getFolderAncestors(folderId: number): number[] {
@@ -479,7 +518,7 @@ async function saveBookmarkEdit(): Promise<void> {
     bookmarkEditLabel.value = updated.label
     bookmarkEditModalOpen.value = false
   } catch (error: any) {
-    bookmarkEditError.value = error?.message ?? 'Could not update bookmark.'
+    bookmarkEditError.value = error?.message ?? t('bookmarksPage.couldNotUpdate')
   } finally {
     bookmarkEditSaving.value = false
   }
@@ -510,7 +549,7 @@ async function confirmDeleteBookmark(): Promise<void> {
     }
     closeBookmarkDeleteModal()
   } catch (error: any) {
-    bookmarkDeleteError.value = error?.message ?? 'Could not delete bookmark.'
+    bookmarkDeleteError.value = error?.message ?? t('bookmarksPage.couldNotDelete')
   } finally {
     bookmarkDeleteSaving.value = false
   }

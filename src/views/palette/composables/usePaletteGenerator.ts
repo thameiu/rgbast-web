@@ -74,6 +74,28 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
     genBaseColors.value[i] = value
   }
 
+  function normalizeBaseHex(hex: string): string {
+    return hex.replace('#', '').toUpperCase().slice(0, 6)
+  }
+
+  function isGenerationBaseColor(hex: string): boolean {
+    const normalized = normalizeBaseHex(hex)
+    return genBaseColors.value.some(base => normalizeBaseHex(base) === normalized)
+  }
+
+  const canAddGenerationBaseColor = computed(() => genBaseColors.value.length < 3)
+
+  function toggleGenerationBaseColor(hex: string): void {
+    const normalized = normalizeBaseHex(hex)
+    const existingIndex = genBaseColors.value.findIndex(base => normalizeBaseHex(base) === normalized)
+    if (existingIndex >= 0) {
+      genBaseColors.value.splice(existingIndex, 1)
+      return
+    }
+    if (genBaseColors.value.length >= 3 || !isValidHex(normalized)) return
+    genBaseColors.value.push(normalized)
+  }
+
   // Remove a base color row from the generator inputs.
   function removeBaseColor(i: number): void {
     genBaseColors.value.splice(i, 1)
@@ -133,8 +155,11 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
     openGenPicker,
     toggleGenPaletteDrop,
     isValidHex,
+    isGenerationBaseColor,
+    canAddGenerationBaseColor,
     onBaseColorInput,
     setBaseColor,
+    toggleGenerationBaseColor,
     removeBaseColor,
     addBaseColor,
     doGenerate,

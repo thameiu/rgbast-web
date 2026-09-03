@@ -323,6 +323,7 @@ const colorBlindnessCards = computed(() => {
     { name: t('colorPage.colorBlindnessTypes.protanopia'), hex: c.protanopia.hex },
     { name: t('colorPage.colorBlindnessTypes.deuteranopia'), hex: c.deuteranopia.hex },
     { name: t('colorPage.colorBlindnessTypes.tritanopia'), hex: c.tritanopia.hex },
+    { name: t('colorPage.colorBlindnessTypes.achromatopsia'), hex: c.achromatopsia.hex },
   ]
 })
 

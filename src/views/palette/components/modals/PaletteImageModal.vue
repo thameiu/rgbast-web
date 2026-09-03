@@ -59,7 +59,7 @@
             type="range"
             :value="count"
             min="1"
-            max="8"
+            max="15"
             step="1"
             class="image-range"
             @input="$emit('update:count', Number(($event.target as HTMLInputElement).value))"
@@ -75,7 +75,7 @@
               type="button"
               class="extracted-color"
               :class="{ 'extracted-color--off': !color.selected }"
-              :style="{ background: '#' + color.hex }"
+              :style="{ background: '#' + color.hex, color: getExtractedTextColor(color.hex) }"
               @click="$emit('toggleExtractedColor', color.hex)"
             >
               <span class="extracted-check">
@@ -151,6 +151,15 @@ const dragActive = ref(false)
 const localPreviewUrl = ref<string | null>(null)
 const previewUrl = computed(() => localPreviewUrl.value)
 const selectedCount = computed(() => props.extractedColors.filter(color => color.selected).length)
+
+function getExtractedTextColor(hex: string): string {
+  const clean = hex.replace('#', '')
+  const r = parseInt(clean.slice(0, 2), 16)
+  const g = parseInt(clean.slice(2, 4), 16)
+  const b = parseInt(clean.slice(4, 6), 16)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return lum > 0.5 ? 'rgba(0,0,0,0.78)' : 'rgba(255,255,255,0.9)'
+}
 
 watch(
   () => props.file,

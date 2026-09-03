@@ -14,9 +14,23 @@
       <span></span><span></span><span></span>
     </div>
 
-    <!-- Remove button -->
-    <button class="remove-btn" @click.stop="$emit('remove')" title="Remove color">
-      <AppIcon name="x" :size="12" />
+    <div class="column-actions" aria-label="Color actions">
+      <button class="column-action-btn remove-btn" @click.stop="$emit('remove')" :title="t('palette.removeColor')">
+        <AppIcon name="x" :size="12" />
+      </button>
+      <button class="column-action-btn" @click.stop="$emit('openAccessibility')" :title="t('palette.colorAccessibility')">
+        <AppIcon name="info-circle" :size="13" />
+      </button>
+    </div>
+
+    <button
+      class="column-action-btn lock-btn"
+      :class="{ active: isGenerationBaseColor }"
+      :disabled="!isGenerationBaseColor && !canAddGenerationBaseColor"
+      @click.stop="$emit('toggleGenerationBaseColor')"
+      :title="isGenerationBaseColor ? t('palette.removeBaseColorFromGeneration') : t('palette.addBaseColorToGeneration')"
+    >
+      <AppIcon :name="isGenerationBaseColor ? 'lock' : 'lock-open'" :size="13" />
     </button>
 
     <!-- Clickable color body (opens picker) -->
@@ -39,11 +53,11 @@
         class="format-row"
       >
         <span class="format-key">{{ row.key.toUpperCase() }}</span>
-        <span class="format-text" :title="row.value">{{ row.value }}</span>
+        <span class="format-text" :title="row.copyValue">{{ row.displayValue }}</span>
         <button
           class="copy-btn"
           :title="copiedRowKey === row.key ? 'Copied!' : `Copy ${row.key}`"
-          @click.stop="copyValue(row.value, row.key)"
+          @click.stop="copyValue(row.copyValue, row.key)"
         >
           <AppIcon :name="copiedRowKey === row.key ? 'check' : 'copy'" :size="24" />
         </button>
@@ -90,6 +104,9 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import ColorPicker from './ColorPicker.vue'
 import type { PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import { formatHexByMode } from '@/utils/paletteColorFormats'
+import { useI18n } from '@/i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** Current hex and label for this column. */
@@ -106,12 +123,18 @@ const props = defineProps<{
   swapSelected?: boolean
   /** Enabled color formats to display under each label. */
   displaySettings: PaletteDisplaySettings
+  /** Whether this color is currently used as a generation base color. */
+  isGenerationBaseColor?: boolean
+  /** Whether this color can be added as a generation base color. */
+  canAddGenerationBaseColor?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:hex': [hex: string]
   'update:label': [label: string | null]
   'remove': []
+  'openAccessibility': []
+  'toggleGenerationBaseColor': []
   'dragStart': [e: PointerEvent]
   'swapTap': []
 }>()
@@ -129,21 +152,19 @@ const hexTextEl   = ref<HTMLElement | null>(null)
 /** Bounding rect used to position the ColorPicker popover. */
 const anchorRect  = ref<DOMRect | null>(null)
 
-const MOBILE_DRAG_HOLD_MS = 300
-const MOBILE_HOLD_MOVE_CANCEL_PX = 12
-
-const mobileHoldTimer = ref<ReturnType<typeof setTimeout> | null>(null)
-const mobileHoldPointerId = ref<number | null>(null)
-const mobileHoldStartX = ref(0)
-const mobileHoldStartY = ref(0)
-const mobileHoldTriggered = ref(false)
 const suppressNextMobileTap = ref(false)
 
 const formatRows = computed(() => {
-  const rows: Array<{ key: 'rgb' | 'hsl' | 'cmyk'; value: string }> = []
-  if (props.displaySettings.rgb) rows.push({ key: 'rgb', value: formatHexByMode(props.modelValue.hex, 'rgb') })
-  if (props.displaySettings.hsl) rows.push({ key: 'hsl', value: formatHexByMode(props.modelValue.hex, 'hsl') })
-  if (props.displaySettings.cmyk) rows.push({ key: 'cmyk', value: formatHexByMode(props.modelValue.hex, 'cmyk') })
+  const rows: Array<{ key: 'rgb' | 'hsl' | 'cmyk'; displayValue: string; copyValue: string }> = []
+  for (const key of ['rgb', 'hsl', 'cmyk'] as const) {
+    if (!props.displaySettings[key]) continue
+    const copyValue = formatHexByMode(props.modelValue.hex, key)
+    rows.push({
+      key,
+      copyValue,
+      displayValue: copyValue.replace(/^[a-z]+\((.*)\)$/i, '$1'),
+    })
+  }
   return rows
 })
 
@@ -173,6 +194,10 @@ const colStyle = computed(() => ([
  * Opens the ColorPicker anchored below the hex text element.
  */
 function openPicker() {
+  if (suppressNextMobileTap.value) {
+    suppressNextMobileTap.value = false
+    return
+  }
   anchorRect.value = hexTextEl.value?.getBoundingClientRect() ?? null
   pickerOpen.value = true
 }
@@ -198,81 +223,21 @@ async function copyValue(value: string, key: string) {
  * @param e - The originating PointerEvent.
  */
 function onHandlePointerDown(e: PointerEvent) {
-  if (!window.matchMedia('(max-width: 768px)').matches) {
-    emit('dragStart', e)
-    return
-  }
-
-  if (mobileHoldTimer.value) {
-    clearTimeout(mobileHoldTimer.value)
-    mobileHoldTimer.value = null
-  }
-
-  mobileHoldPointerId.value = e.pointerId
-  mobileHoldStartX.value = e.clientX
-  mobileHoldStartY.value = e.clientY
-  mobileHoldTriggered.value = false
-
-  const onMove = (moveEvt: PointerEvent) => {
-    if (mobileHoldPointerId.value !== moveEvt.pointerId) return
-    if (mobileHoldTriggered.value) return
-    const dx = moveEvt.clientX - mobileHoldStartX.value
-    const dy = moveEvt.clientY - mobileHoldStartY.value
-    if (Math.hypot(dx, dy) >= MOBILE_HOLD_MOVE_CANCEL_PX) {
-      cancelMobileHold()
-    }
-  }
-
-  const onUpOrCancel = (upEvt: PointerEvent) => {
-    if (mobileHoldPointerId.value !== upEvt.pointerId) return
-    cancelMobileHold()
-  }
-
-  const cleanupListeners = () => {
-    window.removeEventListener('pointermove', onMove)
-    window.removeEventListener('pointerup', onUpOrCancel)
-    window.removeEventListener('pointercancel', onUpOrCancel)
-  }
-
-  mobileHoldTimer.value = setTimeout(() => {
-    if (mobileHoldPointerId.value !== e.pointerId) return
-    mobileHoldTriggered.value = true
-    suppressNextMobileTap.value = true
-    cleanupListeners()
-    mobileHoldTimer.value = null
-    mobileHoldPointerId.value = null
-    emit('dragStart', e)
-  }, MOBILE_DRAG_HOLD_MS)
-
-  window.addEventListener('pointermove', onMove, { passive: true })
-  window.addEventListener('pointerup', onUpOrCancel, { passive: true })
-  window.addEventListener('pointercancel', onUpOrCancel, { passive: true })
-
-  function cancelMobileHold(): void {
-    cleanupListeners()
-    if (mobileHoldTimer.value) {
-      clearTimeout(mobileHoldTimer.value)
-      mobileHoldTimer.value = null
-    }
-    mobileHoldPointerId.value = null
-    mobileHoldTriggered.value = false
-  }
+  suppressNextMobileTap.value = window.matchMedia('(max-width: 768px)').matches
+  emit('dragStart', e)
 }
 
 /**
  * On mobile: keeps tap-to-swap for quick swaps, except after long-press drag start.
  */
 function onHandleClick() {
-  if (!window.matchMedia('(max-width: 768px)').matches) return
   if (suppressNextMobileTap.value) {
     suppressNextMobileTap.value = false
     return
   }
-  emit('swapTap')
 }
 
 onBeforeUnmount(() => {
-  if (mobileHoldTimer.value) clearTimeout(mobileHoldTimer.value)
   if (copiedTimer) clearTimeout(copiedTimer)
 })
 </script>

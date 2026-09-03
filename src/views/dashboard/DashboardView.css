@@ -643,7 +643,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 360;
   backdrop-filter: blur(4px);
 }
 .modal {
@@ -735,4 +735,80 @@
 @keyframes riseIn {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+  .shell {
+    padding-top: calc(68px + 24px);
+    gap: 24px;
+  }
+
+  .sidebar {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    column-gap: 14px;
+    align-items: center;
+  }
+
+  .avatar {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+  }
+
+  .sidebar-name,
+  .sidebar-fullname,
+  .sidebar-email {
+    grid-column: 2;
+    margin-top: 0;
+  }
+
+  .sidebar-stats {
+    grid-column: 3;
+    grid-row: 1 / span 3;
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+    min-width: 94px;
+    gap: 8px;
+  }
+
+  .sidebar-stats div {
+    gap: 14px;
+  }
+
+  .sidebar-stats dt {
+    font-size: 9px;
+  }
+
+  .sidebar-stats dd {
+    font-size: 22px;
+  }
+
+  .folder-panel,
+  .guest-info {
+    grid-column: 1 / -1;
+  }
+
+  .section-bar {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .section-title,
+  .breadcrumb,
+  .breadcrumb-all {
+    width: 100%;
+  }
+
+  .new-palette-btn,
+  .new-folder-btn {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .dashboard-folder-actions {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

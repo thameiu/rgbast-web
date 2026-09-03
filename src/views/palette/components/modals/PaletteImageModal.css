@@ -5,7 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 200;
+  z-index: 360;
   backdrop-filter: blur(4px);
 }
 
@@ -239,16 +239,14 @@
 
 .extracted-check {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 19px;
-  height: 19px;
-  border-radius: 50%;
-  display: inline-flex;
+  inset: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: rgba(14, 14, 20, 0.68);
+  font-size: 20px;
+  font-weight: 700;
+  mix-blend-mode: difference;
   z-index: 1;
 }
 
@@ -260,7 +258,7 @@
   padding: 0;
   border-radius: 0;
   background: transparent;
-  color: #fff;
+  color: currentColor;
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.03em;

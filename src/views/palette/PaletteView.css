@@ -5,6 +5,9 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  --palette-global-header-height: 68px;
+  --palette-editor-header-height: 56px;
+  --palette-header-top: var(--palette-global-header-height);
 }
 
 .loading-screen,
@@ -17,7 +20,7 @@
   gap: 16px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
-  margin-top: 56px;
+  margin-top: calc(var(--palette-global-header-height) + var(--palette-editor-header-height));
 }
 
 .error-screen button {
@@ -42,7 +45,7 @@
   flex-direction: column;
   flex: 1;
   overflow: hidden;
-  margin-top: 56px;
+  margin-top: calc(var(--palette-global-header-height) + var(--palette-editor-header-height));
 }
 
 .palette-info-overlay {
@@ -128,4 +131,42 @@
   line-height: 1.5;
   white-space: pre-wrap;
   overflow: auto;
+}
+
+.palette-info-dates {
+  margin-top: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.palette-info-dates div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.palette-info-dates span {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.palette-info-dates strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.82);
+}
+
+@media (max-width: 520px) {
+  .palette-info-dates {
+    grid-template-columns: 1fr;
+  }
 }

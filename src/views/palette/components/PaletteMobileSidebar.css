@@ -1,7 +1,7 @@
 .msb-overlay {
   position: fixed;
   inset: 0;
-  z-index: 200;
+  z-index: 300;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(2px);
 }
@@ -11,7 +11,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  z-index: 201;
+  z-index: 301;
   width: min(88vw, 380px);
   background: #0e0e14;
   border-left: 1px solid rgba(255, 255, 255, 0.09);
@@ -65,32 +65,6 @@
   display: flex;
   flex-direction: column;
   gap: 0;
-}
-
-.msb-language-switcher {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 6px;
-  margin-bottom: 14px;
-}
-
-.msb-lang-btn {
-  height: 34px;
-  border-radius: 9px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
-  color: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.14s, border-color 0.14s, color 0.14s;
-}
-
-.msb-lang-btn:hover,
-.msb-lang-btn.active {
-  border-color: rgba(180, 16, 204, 0.42);
-  background: rgba(180, 16, 204, 0.16);
-  color: #fff;
 }
 
 .msb-section-label {

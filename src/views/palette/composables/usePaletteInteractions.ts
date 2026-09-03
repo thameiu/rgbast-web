@@ -23,6 +23,8 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
   const ghostEl = ref<HTMLDivElement | null>(null)
   const ghostOffsetX = ref(0)
   const ghostOffsetY = ref(0)
+  let previousBodyTouchAction = ''
+  let previousBodyOverscrollBehavior = ''
 
   let hexLabelEditing = false
   let hexLabelEditTimer: ReturnType<typeof setTimeout> | null = null
@@ -159,8 +161,12 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     document.addEventListener('pointermove', onPointerMove)
     document.addEventListener('pointercancel', onPointerUp, { once: true })
     document.addEventListener('pointerup', onPointerUp, { once: true })
+    previousBodyTouchAction = document.body.style.touchAction
+    previousBodyOverscrollBehavior = document.body.style.overscrollBehavior
     document.body.style.userSelect = 'none'
     document.body.style.cursor = 'grabbing'
+    document.body.style.touchAction = 'none'
+    document.body.style.overscrollBehavior = 'none'
   }
 
   // Update the drag ghost position and reorder columns in flight.
@@ -220,6 +226,8 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     document.removeEventListener('pointercancel', onPointerUp)
     document.body.style.userSelect = ''
     document.body.style.cursor = ''
+    document.body.style.touchAction = previousBodyTouchAction
+    document.body.style.overscrollBehavior = previousBodyOverscrollBehavior
     dragPointerStartX.value = null
     dragPointerStartY.value = null
 

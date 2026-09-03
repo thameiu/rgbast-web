@@ -338,6 +338,7 @@ export interface ColorInfoResponse {
       protanopia:   { rgb: ColorInfoRGB; hex: string }
       deuteranopia: { rgb: ColorInfoRGB; hex: string }
       tritanopia:   { rgb: ColorInfoRGB; hex: string }
+      achromatopsia: { rgb: ColorInfoRGB; hex: string }
     }
     contrast: {
       on_white: number

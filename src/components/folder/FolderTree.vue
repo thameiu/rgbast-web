@@ -1,22 +1,6 @@
 <template>
   <div class="ft" :class="`ft--${theme}`">
 
-    <!-- All palettes (navigation only) -->
-    <div
-      v-if="mode === 'navigation'"
-      class="ft-item"
-      :class="[`ft-item--${theme}`, modelValue === 'all' && 'ft-item--active']"
-      @click="emit('update:modelValue', 'all')"
-    >
-      <span class="ft-gap" />
-      <svg class="ft-sicon" width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
-        <rect x="1" y="2" width="12" height="9" rx="1.5" />
-        <path d="M1 5.5h12" />
-      </svg>
-      <span class="ft-label">{{ t('folderTree.allPalettes') }}</span>
-      <span class="ft-count">{{ totalCount }}</span>
-    </div>
-
     <!-- Root item (collapsible) -->
     <div
       class="ft-item"
@@ -116,6 +100,22 @@
         <span v-if="rootCreateError" class="ft-name-error">{{ rootCreateError }}</span>
       </div>
     </template>
+
+    <!-- All palettes (navigation only) -->
+    <div
+      v-if="mode === 'navigation'"
+      class="ft-item"
+      :class="[`ft-item--${theme}`, modelValue === 'all' && 'ft-item--active']"
+      @click="emit('update:modelValue', 'all')"
+    >
+      <span class="ft-gap" />
+      <svg class="ft-sicon" width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+        <rect x="1" y="2" width="12" height="9" rx="1.5" />
+        <path d="M1 5.5h12" />
+      </svg>
+      <span class="ft-label">{{ t('folderTree.allPalettes') }}</span>
+      <span class="ft-count">{{ totalCount }}</span>
+    </div>
 
     <!-- Picker mode: folder tree directly + root-level inline create -->
     <template v-if="mode === 'picker'">

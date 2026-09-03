@@ -24,9 +24,13 @@
         :dragStyle="getColStyle(i)"
         :swapSelected="swapSourceIdx === i"
         :displaySettings="displaySettings"
+        :isGenerationBaseColor="isGenerationBaseColor(col.hex)"
+        :canAddGenerationBaseColor="canAddGenerationBaseColor"
         @update:hex="hex => $emit('update:hex', i, hex)"
         @update:label="lbl => $emit('update:label', i, lbl)"
         @remove="$emit('remove', i)"
+        @openAccessibility="$emit('openAccessibility', i)"
+        @toggleGenerationBaseColor="$emit('toggleGenerationBaseColor', col.hex)"
         @dragStart="e => $emit('dragStart', i, e)"
         @swapTap="$emit('swapTap', i)"
       />
@@ -53,6 +57,8 @@ const props = defineProps<{
   showAddBtn: boolean
   isTutorialFocus: boolean
   displaySettings: PaletteDisplaySettings
+  isGenerationBaseColor: (hex: string) => boolean
+  canAddGenerationBaseColor: boolean
   setColsAreaEl: (el: HTMLElement | null) => void
   onColsMouseMove: (e: MouseEvent) => void
   getColStyle: (i: number) => Record<string, string>
@@ -68,6 +74,8 @@ defineEmits<{
   (e: 'update:hex', i: number, hex: string): void
   (e: 'update:label', i: number, label: string | null): void
   (e: 'remove', i: number): void
+  (e: 'openAccessibility', i: number): void
+  (e: 'toggleGenerationBaseColor', hex: string): void
   (e: 'dragStart', i: number, ev: PointerEvent): void
   (e: 'swapTap', i: number): void
   (e: 'add'): void

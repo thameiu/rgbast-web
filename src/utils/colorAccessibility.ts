@@ -1,6 +1,6 @@
 import { rgbToHex } from './paletteColorFormats'
 
-export type DaltonismMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia'
+export type DaltonismMode = 'none' | 'protanopia' | 'deuteranopia' | 'tritanopia' | 'achromatopsia'
 
 const SHARK_TALE_QUOTES = [
   "I'm the shark slayer!",
@@ -97,6 +97,11 @@ export function applyDaltonismToHex(
       [0.7, 0.3, 0],
       [0, 0.3, 0.7],
     ])
+  }
+
+  if (mode === 'achromatopsia') {
+    const gray = clampByte(0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b)
+    return rgbToHex(gray, gray, gray)
   }
 
   return applyDaltonismMatrix(rgb, [

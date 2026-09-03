@@ -392,7 +392,7 @@ const localDraftCards = ref<DashboardPaletteCard[]>([])
 const unsavedDraftPaletteIds = ref<number[]>([])
 const unsavedDraftByPaletteId = ref<Record<number, PaletteDraftEntry>>({})
 const folders = ref<FolderResponse[]>([])
-const activeFolderKey = ref<'all' | 'root' | number>('all')
+const activeFolderKey = ref<'all' | 'root' | number>('root')
 const sortField = ref<'name' | 'date'>('date')
 const sortDir = ref<'asc' | 'desc'>('desc')
 const draggingId = ref<number | null>(null)
@@ -932,7 +932,7 @@ async function doDeleteFolder() {
     }
 
     if (typeof activeFolderKey.value === 'number' && targetIds.has(activeFolderKey.value)) {
-      activeFolderKey.value = 'all'
+      activeFolderKey.value = 'root'
     }
 
     if (user.value?.username) {

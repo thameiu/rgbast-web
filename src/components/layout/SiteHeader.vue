@@ -1,6 +1,24 @@
 <template>
   <header class="site-header">
-    <RouterLink to="/" class="brand">
+    <div v-if="brandTitle" class="brand brand--palette">
+      <RouterLink to="/" class="brand-logo-link" aria-label="RGBAST">
+        <RgbastLogo size="30px" />
+      </RouterLink>
+      <button class="brand-palette-name" type="button" @click="$emit('brandTitleClick')">
+        {{ brandTitle }}
+      </button>
+      <button
+        v-if="brandOwnerUsername"
+        class="brand-palette-owner"
+        :class="{ 'brand-palette-owner--disabled': !brandOwnerClickable }"
+        :disabled="!brandOwnerClickable"
+        type="button"
+        @click="$emit('brandOwnerClick')"
+      >
+        by {{ brandOwnerUsername }}
+      </button>
+    </div>
+    <RouterLink v-else to="/" class="brand">
       <RgbastLogo size="30px" />
       <span class="brand-name">RGBAST</span>
       <span v-if="brandMeta" class="brand-meta font-mono">{{ brandMeta }}</span>
@@ -183,6 +201,14 @@ import { useI18n } from '@/i18n'
 const props = defineProps<{
   user?: { username: string; firstname?: string | null; lastname?: string | null } | null
   brandMeta?: string
+  brandTitle?: string
+  brandOwnerUsername?: string | null
+  brandOwnerClickable?: boolean
+}>()
+
+defineEmits<{
+  brandTitleClick: []
+  brandOwnerClick: []
 }>()
 
 const route  = useRoute()

@@ -217,6 +217,14 @@
       <path d="M12 11.5v4" />
       <path d="M12 8h.01" />
     </template>
+    <template v-else-if="name === 'lock'">
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </template>
+    <template v-else-if="name === 'lock-open'">
+      <rect x="5" y="10" width="14" height="10" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 7.4-2.1" />
+    </template>
     <path v-else-if="name === 'palette'" d="M12 4a8 8 0 1 0 0 16h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h6.2A2.8 2.8 0 0 0 21 8.2 8.2 8.2 0 0 0 12 4Z" />
   </svg>
 </template>
@@ -271,6 +279,8 @@ export type AppIconName =
   | 'leaf'
   | 'alert-circle'
   | 'info-circle'
+  | 'lock'
+  | 'lock-open'
   | 'palette'
 
 withDefaults(defineProps<{

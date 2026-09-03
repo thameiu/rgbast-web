@@ -102,6 +102,10 @@
     "imageExtractTitle": "Extraire une palette depuis une image",
     "exportPalette": "Exporter la palette",
     "accessibilityAudit": "Audit accessibilité",
+    "colorAccessibility": "Accessibilité de la couleur",
+    "removeColor": "Supprimer la couleur",
+    "addBaseColorToGeneration": "Utiliser comme couleur de base",
+    "removeBaseColorFromGeneration": "Retirer des couleurs de base",
     "editPalette": "Modifier la palette",
     "saveSnapshot": "Sauvegarder le snapshot",
     "savingSnapshot": "Sauvegarde...",
@@ -511,7 +515,8 @@
     "colorBlindnessTypes": {
       "protanopia": "Protanopie",
       "deuteranopia": "Deutéranopie",
-      "tritanopia": "Tritanopie"
+      "tritanopia": "Tritanopie",
+      "achromatopsia": "Achromatopsie"
     },
     "seoDescription": "Explore la couleur #{hex} : espaces RGB/HSL/CMYK, contraste d'accessibilité, simulation de daltonisme et outils de sélection 3D.",
     "seoKeywords": {

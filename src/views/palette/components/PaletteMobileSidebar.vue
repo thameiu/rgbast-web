@@ -13,15 +13,6 @@
         </div>
 
         <div class="msb-body">
-          <div class="msb-language-switcher" :aria-label="t('header.language')">
-            <button class="msb-lang-btn" :class="{ active: locale === 'fr' }" @click="setLocale('fr')">
-              FR
-            </button>
-            <button class="msb-lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">
-              EN
-            </button>
-          </div>
-
           <div class="msb-section-label">{{ t('palette.branch') }}</div>
           <div class="msb-branches">
             <button
@@ -211,7 +202,7 @@ const emit = defineEmits<{
   (e: 'openAccessibilityAudit'): void
 }>()
 
-const { locale, setLocale, t } = useI18n()
+const { t } = useI18n()
 </script>
 
 <style scoped src="./PaletteMobileSidebar.css"></style>

@@ -6,7 +6,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 300;
+  z-index: 360;
   animation: fadeIn 0.2s ease;
 }
 .auth-overlay--light {

@@ -430,6 +430,14 @@
               </div>
               <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.tritanopia') }}</span>
             </div>
+            <div class="cb-swatch">
+              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.achromatopsia.hex }">
+                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.achromatopsia.hex) }">
+                  #{{ colorInfo.accessibility.color_blindness.achromatopsia.hex.toUpperCase() }}
+                </span>
+              </div>
+              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.achromatopsia') }}</span>
+            </div>
           </div>
         </div>
       </div>

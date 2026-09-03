@@ -1,9 +1,14 @@
 <template>
   <div class="palette-view">
+    <SiteHeader
+      :brandTitle="ctx.paletteTitle.value"
+      :brandOwnerUsername="ctx.isNewPalette.value ? null : (ctx.history.value?.owner_username ?? ctx.username.value)"
+      :brandOwnerClickable="!ctx.isNewPalette.value"
+      @brandTitleClick="openPaletteInfoModal"
+      @brandOwnerClick="openOwnerProfile"
+    />
+
     <PaletteAppHeader
-      :paletteTitle="ctx.paletteTitle.value"
-      :ownerUsername="ctx.isNewPalette.value ? null : (ctx.history.value?.owner_username ?? ctx.username.value)"
-      :ownerProfileClickable="!ctx.isNewPalette.value"
       :currentBranch="ctx.currentBranchName.value"
       :currentBranchId="ctx.currentBranchId.value"
       :branches="ctx.allBranches.value"
@@ -49,8 +54,6 @@
       @updateAdjustments="onAdjustmentsChange"
       @cancelAdjustments="cancelAdjustments"
       @applyAdjustments="applyAdjustments"
-      @openOwnerProfile="openOwnerProfile"
-      @openPaletteInfo="openPaletteInfoModal"
       @openAccessibilityAudit="openAccessibilityAuditModal"
     />
 
@@ -81,12 +84,16 @@
         :showAddBtn="interactions.showAddBtn.value"
         :isTutorialFocus="tutorial.tutorialFocus.value === 'canvas'"
         :displaySettings="displaySettings"
+        :isGenerationBaseColor="generator.isGenerationBaseColor"
+        :canAddGenerationBaseColor="generator.canAddGenerationBaseColor.value"
         :setColsAreaEl="setColsAreaEl"
         :onColsMouseMove="interactions.onColsMouseMove"
         :getColStyle="interactions.getColStyle"
         @update:hex="interactions.updateHex"
         @update:label="interactions.updateLabel"
         @remove="interactions.removeColor"
+        @openAccessibility="openAccessibilityAuditModal"
+        @toggleGenerationBaseColor="generator.toggleGenerationBaseColor"
         @dragStart="interactions.onDragStart"
         @swapTap="interactions.onSwapTap"
         @add="interactions.addColor"
@@ -295,6 +302,16 @@
           <div class="palette-info-description">
             {{ (ctx.history.value?.description ?? ctx.pendingDescription.value)?.trim() || 'No description.' }}
           </div>
+          <div class="palette-info-dates">
+            <div>
+              <span>{{ t('colorPage.created') }}</span>
+              <strong>{{ paletteInfoCreatedAt }}</strong>
+            </div>
+            <div>
+              <span>{{ t('common.lastEdit') }}</span>
+              <strong>{{ paletteInfoLastEditAt }}</strong>
+            </div>
+          </div>
         </div>
       </div>
     </Teleport>
@@ -337,6 +354,7 @@
 
 <script setup lang="ts">
 import PaletteAppHeader from '@/components/palette/PaletteAppHeader.vue'
+import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import AuthModal from '@/components/auth/AuthModal.vue'
 import PaletteSnapshotBanner from './components/PaletteSnapshotBanner.vue'
@@ -359,6 +377,7 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import analyzeImage from 'rgbaster'
 import { foldersApi } from '@/api/folders'
+import { palettesApi } from '@/api/palettes'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteDraftHistorySnapshot } from '@/api/paletteDrafts'
 import type { PaletteColorSave } from '@/api/types'
@@ -389,7 +408,7 @@ import { useI18n } from '@/i18n'
 
 // PaletteView component: orchestrates the palette editor UI and feature modules.
 const ctx = usePaletteContext()
-const { t } = useI18n()
+const { locale, t } = useI18n()
 
 const undo = usePaletteUndo({
   colors: ctx.colors,
@@ -454,8 +473,42 @@ const editTitleErrorMessage = computed(() =>
   save.showEditModal.value ? getPaletteTitleError(save.editTitle.value) : null,
 )
 
+const paletteHistorySnapshots = computed(() => [
+  ...(ctx.history.value?.main ?? []),
+  ...(ctx.history.value?.branches ?? []).flatMap(branch => branch.snapshots),
+])
+
+const paletteInfoCreatedAt = computed(() => {
+  if (ctx.isNewPalette.value) return '-'
+  const cachedCreatedAt = ctx.paletteId.value ? palettesApi.getCachedPalette(ctx.paletteId.value)?.created_at : null
+  const oldestSnapshotAt = paletteHistorySnapshots.value
+    .map(snapshot => snapshot.created_at)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())[0]
+  return formatPaletteInfoDate(cachedCreatedAt ?? oldestSnapshotAt ?? null)
+})
+
+const paletteInfoLastEditAt = computed(() => {
+  const latestSnapshotAt = paletteHistorySnapshots.value
+    .map(snapshot => snapshot.created_at)
+    .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())[0]
+  return formatPaletteInfoDate(latestSnapshotAt ?? null)
+})
+
 const hydratedDraftKey = ref<string | null>(null)
 const hydratingDraft = ref(false)
+
+function formatPaletteInfoDate(value: string | null): string {
+  if (!value) return '-'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return '-'
+  return new Intl.DateTimeFormat(locale.value, {
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(date)
+}
 
 function getNavigationState(): Record<string, unknown> {
   if (typeof window === 'undefined') return {}
@@ -671,7 +724,10 @@ function openPaletteInfoModal(): void {
   showPaletteInfoModal.value = true
 }
 
-function openAccessibilityAuditModal(): void {
+function openAccessibilityAuditModal(index?: number): void {
+  if (typeof index === 'number') {
+    accessibilityAuditIndex.value = index
+  }
   accessibilityAuditIndex.value = Math.max(0, Math.min(ctx.colors.value.length - 1, accessibilityAuditIndex.value))
   showAccessibilityAuditModal.value = true
 }

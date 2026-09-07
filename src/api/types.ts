@@ -272,7 +272,7 @@ export type PaletteHarmony =
 
 export interface PaletteGenerateRequest {
   count?: number          // 2–8, default 5
-  base_colors?: string[]  // 0–3 hex values (without #)
+  base_colors?: string[]  // 0-5 hex values (without #)
   contrast?: number       // 1–10, default 5
   include_shades?: boolean
   harmony?: PaletteHarmony

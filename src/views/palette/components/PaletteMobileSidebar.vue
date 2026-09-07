@@ -84,15 +84,6 @@
               {{ t('palette.clonePalette') }}
             </button>
 
-            <div class="msb-gen-group">
-              <button class="msb-gen-main" @click="$emit('generate'); $emit('close')">
-                <AppIcon name="sparkles" :size="14" />
-                {{ t('palette.generate') }}
-              </button>
-              <button class="msb-gen-settings" @click="$emit('openGenerateSettings'); $emit('close')">
-                <AppIcon name="settings" :size="12" />
-              </button>
-            </div>
             <button class="msb-action" @click="$emit('openImagePalette'); $emit('close')">
               <AppIcon name="image" :size="15" />
               {{ t('palette.paletteFromImage') }}
@@ -194,8 +185,6 @@ const emit = defineEmits<{
   (e: 'requestSave'): void
   (e: 'clonePalette'): void
   (e: 'deletePalette'): void
-  (e: 'generate'): void
-  (e: 'openGenerateSettings'): void
   (e: 'openImagePalette'): void
   (e: 'openExport'): void
   (e: 'edit'): void

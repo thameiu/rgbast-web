@@ -341,8 +341,6 @@
       @requestSave="save.requestSave"
       @clonePalette="ctx.clonePalette"
       @deletePalette="save.showDeletePaletteModal.value = true"
-      @generate="generator.doGenerate"
-      @openGenerateSettings="generator.generateOpen.value = true"
       @openImagePalette="openImagePaletteModal"
       @openExport="openExportModal"
       @edit="save.openEditPalette"

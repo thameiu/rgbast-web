@@ -120,7 +120,7 @@
     "pasteColorsReplace": "Coller les couleurs (remplacer)",
     "contrast": "Contraste",
     "harmony": "Harmonie",
-    "baseColors": "Couleurs de base (3 max) - incluses dans le résultat",
+    "baseColors": "Couleurs de base (5 max) - incluses dans le résultat",
     "pickColor": "Choisir une couleur",
     "addBaseColor": "Ajouter une couleur de base",
     "generating": "Génération...",
@@ -296,7 +296,7 @@
     "generationIntro": "La génération place les teintes selon l'harmonie sélectionnée, puis ajuste saturation, valeur et répartition pour produire une palette équilibrée. Les couleurs de base sont prioritaires et les couleurs restantes sont construites autour d'elles.",
     "tetradicShades": "Tétradiques / Nuances",
     "baseColorsTitle": "Couleurs de base :",
-    "baseColorsBody": "1 à 3 couleurs d'ancrage utilisées pour guider le résultat généré.",
+    "baseColorsBody": "1 à 5 couleurs d'ancrage utilisées pour guider le résultat généré.",
     "keys": {
       "space": "Espace",
       "delete": "Suppr"

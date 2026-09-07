@@ -12,7 +12,7 @@
           type="range"
           :value="genCount"
           min="2"
-          max="8"
+          max="15"
           step="1"
           class="gen-range"
           @input="$emit('update:genCount', Number(($event.target as HTMLInputElement).value))"
@@ -55,7 +55,7 @@
             </div>
             <button class="gen-base-remove" @click="removeBaseColor(i)">x</button>
           </div>
-          <button v-if="genBaseColors.length < 3" class="gen-add-base" @click="addBaseColor()">
+          <button v-if="genBaseColors.length < 5" class="gen-add-base" @click="addBaseColor()">
             + {{ t('palette.addBaseColor') }}
           </button>
         </div>

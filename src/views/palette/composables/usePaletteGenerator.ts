@@ -83,7 +83,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
     return genBaseColors.value.some(base => normalizeBaseHex(base) === normalized)
   }
 
-  const canAddGenerationBaseColor = computed(() => genBaseColors.value.length < 3)
+  const canAddGenerationBaseColor = computed(() => genBaseColors.value.length < 5)
 
   function toggleGenerationBaseColor(hex: string): void {
     const normalized = normalizeBaseHex(hex)
@@ -92,7 +92,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
       genBaseColors.value.splice(existingIndex, 1)
       return
     }
-    if (genBaseColors.value.length >= 3 || !isValidHex(normalized)) return
+    if (genBaseColors.value.length >= 5 || !isValidHex(normalized)) return
     genBaseColors.value.push(normalized)
   }
 

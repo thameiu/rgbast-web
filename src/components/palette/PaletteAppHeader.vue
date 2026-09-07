@@ -268,7 +268,7 @@
       <div class="gen-btn-group">
         <button class="gen-instant-btn" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
           <AppIcon name="sparkles" :size="13" />
-          {{ t('palette.generate') }}
+          <span>{{ t('palette.generate') }}</span>
         </button>
         <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
           <AppIcon name="settings" :size="12" />
@@ -372,6 +372,14 @@
       >
         <AppIcon name="history" :size="15" />
       </button>
+      <div class="gen-btn-group gen-btn-group--mobile">
+        <button class="gen-instant-btn" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
+          <AppIcon name="sparkles" :size="13" />
+        </button>
+        <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
+          <AppIcon name="settings" :size="12" />
+        </button>
+      </div>
       <div ref="mobileDisplayGroupEl" class="header-dropdown-group mobile-display-group">
         <button
           class="history-mobile-btn"

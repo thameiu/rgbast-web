@@ -810,12 +810,27 @@
 }
 .gen-settings-btn:hover { background: rgba(180, 16, 204, 0.18); color: #d060e8; }
 
+.gen-btn-group--mobile {
+  display: none;
+}
+
 /* ─── Mobile breakpoint ───────────────────────── */
 @media (max-width: 768px) {
   .center-group { display: none; }
   .right-group  { display: none; }
   .mobile-right { display: flex; }
   .mobile-display-group { display: block; }
+  .gen-btn-group--mobile {
+    display: inline-flex;
+    border-radius: 9px;
+  }
+  .gen-btn-group--mobile .gen-instant-btn,
+  .gen-btn-group--mobile .gen-settings-btn {
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    justify-content: center;
+  }
   .left-group   { flex: 1; min-width: 0; }
   .mobile-display-menu {
     position: fixed;

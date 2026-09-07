@@ -2,7 +2,8 @@
   <header class="site-header">
     <div v-if="brandTitle" class="brand brand--palette">
       <RouterLink to="/" class="brand-logo-link" aria-label="RGBAST">
-        <RgbastLogo size="30px" :paletteColors="brandPaletteColors" />
+        <PaletteRgbastLogo v-if="brandPaletteColors?.length" size="30px" :paletteColors="brandPaletteColors" />
+        <RgbastLogo v-else size="30px" />
       </RouterLink>
       <button class="brand-palette-name" type="button" @click="$emit('brandTitleClick')">
         {{ brandTitle }}
@@ -193,6 +194,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
 import RgbastLogo from '../ui/RgbastLogo.vue'
+import PaletteRgbastLogo from '../ui/PaletteRgbastLogo.vue'
 import { searchApi } from '@/api/search'
 import { colleaguesApi } from '@/api/colleagues'
 import type { ColleagueUserItem } from '@/api/types'

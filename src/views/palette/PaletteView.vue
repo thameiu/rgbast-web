@@ -4,6 +4,7 @@
       :brandTitle="ctx.paletteTitle.value"
       :brandOwnerUsername="ctx.isNewPalette.value ? null : (ctx.history.value?.owner_username ?? ctx.username.value)"
       :brandOwnerClickable="!ctx.isNewPalette.value"
+      :brandPaletteColors="ctx.colors.value.map(color => color.hex)"
       @brandTitleClick="openPaletteInfoModal"
       @brandOwnerClick="openOwnerProfile"
     />

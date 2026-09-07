@@ -2,7 +2,7 @@
   <header class="site-header">
     <div v-if="brandTitle" class="brand brand--palette">
       <RouterLink to="/" class="brand-logo-link" aria-label="RGBAST">
-        <RgbastLogo size="30px" />
+        <RgbastLogo size="30px" :paletteColors="brandPaletteColors" />
       </RouterLink>
       <button class="brand-palette-name" type="button" @click="$emit('brandTitleClick')">
         {{ brandTitle }}
@@ -204,6 +204,7 @@ const props = defineProps<{
   brandTitle?: string
   brandOwnerUsername?: string | null
   brandOwnerClickable?: boolean
+  brandPaletteColors?: string[]
 }>()
 
 defineEmits<{

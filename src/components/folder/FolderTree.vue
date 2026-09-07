@@ -344,8 +344,11 @@ function onDrop(event: DragEvent, targetFolderId: number | null) {
   dragTargetId.value = null
   lastDragTarget.value = null
   if (expandTimer.value) { clearTimeout(expandTimer.value); expandTimer.value = null }
-  const paletteId = Number(event.dataTransfer?.getData('palette-id'))
-  if (!isNaN(paletteId) && paletteId) emit('movePalette', { paletteId, targetFolderId })
+  const transferredId = Number(event.dataTransfer?.getData('palette-id'))
+  const paletteId = Number.isFinite(transferredId) && transferredId > 0
+    ? transferredId
+    : draggingPaletteId.value ?? props.draggingId ?? null
+  if (paletteId) emit('movePalette', { paletteId, targetFolderId })
 }
 
 watch(() => props.draggingId, id => {

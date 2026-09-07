@@ -992,7 +992,8 @@ function onFolderCardDragLeave(folderId: number): void {
 
 async function onFolderCardDrop(folderId: number, event: DragEvent): Promise<void> {
   gridDragTargetFolderId.value = null
-  const paletteId = Number(event.dataTransfer?.getData('palette-id'))
+  const transferredId = Number(event.dataTransfer?.getData('palette-id'))
+  const paletteId = Number.isFinite(transferredId) && transferredId > 0 ? transferredId : draggingId.value
   if (!Number.isFinite(paletteId) || !paletteId) return
   await onMovePalette({ paletteId, targetFolderId: folderId })
   draggingId.value = null

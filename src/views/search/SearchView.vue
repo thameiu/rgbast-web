@@ -1,12 +1,12 @@
 <template>
   <main class="search-view">
-    <SiteHeader :user="viewerUser" :brand-meta="t('common.search')" />
+    <SiteHeader :user="viewerUser" :brand-meta="t('common.discover')" />
 
     <section class="search-shell">
       <div class="search-top">
         <header class="search-head">
-          <h1 class="search-title font-display">{{ t('common.search') }}</h1>
-          <p class="search-sub font-mono">{{ t('searchPage.subtitle') }}</p>
+          <h1 class="search-title font-display">{{ t('common.discover') }}</h1>
+          <p class="search-sub font-mono">{{ t('discoverPage.subtitle') }}</p>
         </header>
 
         <form class="search-main" @submit.prevent="runSearch">
@@ -35,7 +35,7 @@
                 @input="onQueryInput"
                 @keydown.escape.prevent="recentOpen = false"
               />
-              <button type="submit" class="search-icon-btn" aria-label="Search">
+              <button type="submit" class="search-icon-btn" :aria-label="t('discoverPage.searchAria')">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.6" />
                   <path d="M10.6 10.6L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
@@ -53,9 +53,9 @@
                   >
                     <span class="recent-dd-main">{{ item.query || t('searchPage.colorsOnly') }}</span>
                     <span class="recent-dd-meta">
-                      {{ item.scope }}
+                      {{ recentScopeLabel(item.scope) }}
                       <template v-if="item.scope === 'palettes' && item.colors.length">
-                        · {{ item.colorMode }} · {{ item.colors.join(' ') }}
+                        · {{ recentColorModeLabel(item.colorMode) }} · {{ item.colors.join(' ') }}
                       </template>
                     </span>
                   </button>
@@ -108,6 +108,42 @@
       </div>
 
       <p v-if="errorMessage" class="search-error">{{ errorMessage }}</p>
+
+      <section v-if="!searchDone" class="discover-sections">
+        <section v-if="colleaguePalettes.length" class="results discover-section">
+          <div class="discover-section-head">
+            <h2 class="results-title font-display">{{ t('discoverPage.byColleagues') }}</h2>
+            <span class="discover-count font-mono">{{ colleaguePalettes.length }}</span>
+          </div>
+          <div class="palettes-grid">
+            <PaletteCard
+              v-for="palette in colleaguePalettes"
+              :key="`colleague-${palette.owner_username}-${palette.id}`"
+              :palette="paletteToCard(palette)"
+              :show-actions="false"
+              @open="openPaletteResult(palette)"
+            />
+          </div>
+        </section>
+
+        <section class="results discover-section">
+          <div class="discover-section-head">
+            <h2 class="results-title font-display">{{ t('discoverPage.mostRecent') }}</h2>
+            <span v-if="recentPalettes.length" class="discover-count font-mono">{{ recentPalettes.length }}</span>
+          </div>
+          <div v-if="discoverLoading" class="empty">{{ t('common.loadingPalettes') }}</div>
+          <div v-else-if="recentPalettes.length === 0" class="empty">{{ t('discoverPage.noPublicPalettes') }}</div>
+          <div v-else class="palettes-grid">
+            <PaletteCard
+              v-for="palette in recentPalettes"
+              :key="`recent-${palette.owner_username}-${palette.id}`"
+              :palette="paletteToCard(palette)"
+              :show-actions="false"
+              @open="openPaletteResult(palette)"
+            />
+          </div>
+        </section>
+      </section>
 
       <section v-if="searchDone && scope === 'users'" class="results">
         <h2 class="results-title font-display">{{ t('searchPage.users') }} · {{ userResults.length }}</h2>
@@ -170,6 +206,9 @@ const errorMessage = ref('')
 const searchDone = ref(false)
 const userResults = ref<UserSearchItem[]>([])
 const paletteResults = ref<PaletteSearchItem[]>([])
+const recentPalettes = ref<PaletteSearchItem[]>([])
+const colleaguePalettes = ref<PaletteSearchItem[]>([])
+const discoverLoading = ref(false)
 const recentSearches = ref<RecentSearchEntry[]>([])
 
 const scopeOpen = ref(false)
@@ -182,6 +221,14 @@ const searchBoxRef = ref<HTMLElement | null>(null)
 
 const scopeLabel = computed(() => scope.value === 'users' ? t('searchPage.users') : t('searchPage.palettes'))
 const colorModeLabel = computed(() => colorMode.value === 'exact' ? t('searchPage.exactColors') : t('searchPage.similarRange'))
+
+function recentScopeLabel(value: RecentSearchEntry['scope']): string {
+  return value === 'users' ? t('searchPage.users') : t('searchPage.palettes')
+}
+
+function recentColorModeLabel(value: RecentSearchEntry['colorMode']): string {
+  return value === 'exact' ? t('searchPage.exactColors') : t('searchPage.similarRange')
+}
 
 const filteredRecentSearches = computed(() => {
   const needle = query.value.trim().toLowerCase()
@@ -201,6 +248,10 @@ function loadRecentSearches() {
 
 function onQueryInput() {
   recentOpen.value = true
+  if (!query.value.trim() && colors.value.length === 0) {
+    searchDone.value = false
+    errorMessage.value = ''
+  }
 }
 
 function setScope(next: 'users' | 'palettes') {
@@ -228,6 +279,7 @@ function addColorsFromInput() {
 
 function removeColor(hex: string) {
   colors.value = colors.value.filter(item => item !== hex)
+  if (!query.value.trim() && colors.value.length === 0) searchDone.value = false
 }
 
 function applyRecent(item: RecentSearchEntry) {
@@ -249,11 +301,11 @@ async function runSearch() {
 
   const trimmed = query.value.trim()
   if (scope.value === 'users' && !trimmed) {
-    errorMessage.value = 'Enter a user query.'
+    errorMessage.value = t('searchPage.enterUserQuery')
     return
   }
   if (scope.value === 'palettes' && !trimmed && colors.value.length === 0) {
-    errorMessage.value = 'Enter a title query or at least one color.'
+    errorMessage.value = t('searchPage.enterPaletteQuery')
     return
   }
 
@@ -278,7 +330,25 @@ async function runSearch() {
     loadRecentSearches()
     searchDone.value = true
   } catch (e: any) {
-    errorMessage.value = e?.message ?? 'Search failed.'
+    errorMessage.value = e?.message ?? t('searchPage.searchFailed')
+  }
+}
+
+async function loadDiscoverPalettes() {
+  discoverLoading.value = true
+  try {
+    const [recent, colleagues] = await Promise.all([
+      searchApi.discoverRecentPalettes(24),
+      localStorage.getItem('access_token')
+        ? searchApi.discoverColleaguePalettes(12).catch(() => ({ total: 0, results: [] }))
+        : Promise.resolve({ total: 0, results: [] }),
+    ])
+    recentPalettes.value = recent.results
+    colleaguePalettes.value = colleagues.results
+  } catch (e: any) {
+    errorMessage.value = e?.message ?? t('discoverPage.loadFailed')
+  } finally {
+    discoverLoading.value = false
   }
 }
 
@@ -315,9 +385,9 @@ function onGlobalPointerDown(event: PointerEvent) {
 
 onMounted(async () => {
   setPageSeo({
-    title: 'Search - RGBAST',
-    description: 'Search users and palettes on RGBAST by title or colors, with exact and similar color matching.',
-    keywords: ['palette search', 'search colors', 'find palettes', 'find designers', 'color matching'],
+    title: `${t('common.discover')} - RGBAST`,
+    description: t('discoverPage.metaDescription'),
+    keywords: ['discover palettes', 'recent palettes', 'palette search', 'search colors', 'find palettes', 'color matching'],
   })
   const savedScope = localStorage.getItem(SEARCH_SCOPE_KEY)
   if (savedScope === 'users' || savedScope === 'palettes') {
@@ -326,12 +396,14 @@ onMounted(async () => {
   loadRecentSearches()
   document.addEventListener('pointerdown', onGlobalPointerDown)
   const token = localStorage.getItem('access_token')
-  if (!token) return
-  try {
-    viewerUser.value = await authApi.checkAuth()
-  } catch {
-    viewerUser.value = null
+  if (token) {
+    try {
+      viewerUser.value = await authApi.checkAuth()
+    } catch {
+      viewerUser.value = null
+    }
   }
+  await loadDiscoverPalettes()
 })
 
 onBeforeUnmount(() => {

@@ -267,6 +267,35 @@
   font-size: clamp(28px, 3.1vw, 35px);
 }
 
+.discover-sections {
+  display: grid;
+  gap: 34px;
+  margin-top: 28px;
+}
+
+.discover-section {
+  min-width: 0;
+}
+
+.discover-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.discover-section-head .results-title {
+  margin-bottom: 0;
+}
+
+.discover-count {
+  color: var(--ink-3);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .empty {
   color: var(--ink-3);
   font-size: 13px;
@@ -349,5 +378,17 @@
 
   .recent-dropdown {
     right: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .search-shell {
+    padding-inline: 16px;
+  }
+
+  .discover-section-head {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
   }
 }

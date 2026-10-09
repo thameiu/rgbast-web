@@ -1,5 +1,5 @@
 import { ApiClient } from './client'
-import type { PaletteSearchResponse, UserSearchResponse } from './types'
+import type { DiscoverPalettesResponse, PaletteSearchResponse, UserSearchResponse } from './types'
 
 export const RECENT_SEARCHES_KEY = 'rgbast_recent_searches'
 
@@ -26,6 +26,14 @@ export const searchApi = {
     if (payload.colors?.length) params.set('colors', payload.colors.join(','))
     params.set('color_mode', payload.colorMode ?? 'exact')
     return ApiClient.request<PaletteSearchResponse>(`/search/palettes?${params.toString()}`, 'GET')
+  },
+
+  discoverRecentPalettes: (limit = 24): Promise<DiscoverPalettesResponse> => {
+    return ApiClient.request<DiscoverPalettesResponse>(`/discover/palettes/recent?limit=${limit}`, 'GET')
+  },
+
+  discoverColleaguePalettes: (limit = 12): Promise<DiscoverPalettesResponse> => {
+    return ApiClient.request<DiscoverPalettesResponse>(`/discover/palettes/colleagues?limit=${limit}`, 'GET')
   },
 
   getRecentSearches(): RecentSearchEntry[] {

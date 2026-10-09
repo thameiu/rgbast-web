@@ -271,7 +271,7 @@ export type PaletteHarmony =
   | 'triadic' | 'split_complementary' | 'tetradic'
 
 export interface PaletteGenerateRequest {
-  count?: number          // 2–8, default 5
+  count?: number          // 2-15, default 5
   base_colors?: string[]  // 0-5 hex values (without #)
   contrast?: number       // 1–10, default 5
   include_shades?: boolean
@@ -468,6 +468,11 @@ export interface PaletteSearchResponse {
   query?: string | null;
   colors: string[];
   color_mode: 'exact' | 'similar';
+  total: number;
+  results: PaletteSearchItem[];
+}
+
+export interface DiscoverPalettesResponse {
   total: number;
   results: PaletteSearchItem[];
 }

@@ -3,6 +3,7 @@
     "features": "Fonctionnalités",
     "colors": "Couleurs",
     "search": "Recherche",
+    "discover": "Découvrir",
     "newPalette": "Nouvelle palette",
     "dashboard": "Dashboard",
     "bookmarks": "Favoris",
@@ -91,6 +92,7 @@
     "displayValues": "Valeurs affichées",
     "copyFullPaletteAs": "Copier toute la palette en",
     "globalAdjustments": "Ajustements globaux",
+    "adjustments": "Ajustements",
     "hue": "Teinte",
     "saturation": "Saturation",
     "temperature": "Température",
@@ -214,7 +216,19 @@
     "colorPlaceholder": "Couleurs : #FF0055 #1A9C6F",
     "add": "Ajouter",
     "noUsers": "Aucun utilisateur trouvé.",
-    "noPalettes": "Aucune palette trouvée."
+    "noPalettes": "Aucune palette trouvée.",
+    "enterUserQuery": "Saisis une recherche utilisateur.",
+    "enterPaletteQuery": "Saisis un titre ou au moins une couleur.",
+    "searchFailed": "La recherche a échoué."
+  },
+  "discoverPage": {
+    "subtitle": "Recherche des palettes et des utilisateurs, ou découvre les nouveautés.",
+    "searchAria": "Rechercher dans Découvrir",
+    "byColleagues": "Par tes collègues",
+    "mostRecent": "Palettes les plus récentes",
+    "noPublicPalettes": "Aucune palette publique pour le moment.",
+    "loadFailed": "Impossible de charger les palettes à découvrir.",
+    "metaDescription": "Découvre les palettes récentes sur RGBAST, parcours celles de tes collègues, et recherche par utilisateur, titre ou couleur."
   },
   "settingsPage": {
     "account": "Compte",

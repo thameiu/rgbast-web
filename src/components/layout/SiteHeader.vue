@@ -33,7 +33,7 @@
       </template>
       <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }">{{ t('common.colors') }}</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
-      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">{{ t('common.search') }}</RouterLink>
+      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">{{ t('common.discover') }}</RouterLink>
       <span class="nav-sep" aria-hidden="true"></span>
       <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">{{ t('common.newPalette') }}</RouterLink>
       <template v-if="isLoggedIn">
@@ -146,7 +146,7 @@
         </template>
 
         <RouterLink :to="lastColorRoute" class="mob-link" @click="closeSidebar">{{ t('common.colors') }}</RouterLink>
-        <RouterLink to="/search" class="mob-link" @click="closeSidebar">{{ t('common.search') }}</RouterLink>
+        <RouterLink to="/search" class="mob-link" @click="closeSidebar">{{ t('common.discover') }}</RouterLink>
         <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">{{ t('common.newPalette') }}</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">{{ t('common.dashboard') }}</RouterLink>
         <RouterLink v-if="isLoggedIn" to="/bookmarks" class="mob-link" :class="{ 'mob-link--active': isOnBookmarks }" @click="closeSidebar">{{ t('common.bookmarks') }}</RouterLink>

@@ -61,6 +61,75 @@
           <input class="cp-input" type="number" min="0" max="255" :value="rgb[2]" @input="e => onRgbInput(2, e)" />
         </div>
       </div>
+
+      <button class="cp-expand-btn" :class="{ open: adjustmentsOpen }" type="button" @click="toggleAdjustments">
+        <span>{{ t('palette.adjustments') }}</span>
+        <AppIcon name="sliders" :size="13" />
+      </button>
+
+      <div v-if="adjustmentsOpen" class="cp-adjustments">
+        <label class="cp-slider-row">
+          <span class="cp-slider-label">{{ t('palette.hue') }}</span>
+          <input
+            class="cp-slider cp-slider--hue"
+            type="range"
+            min="-180"
+            max="180"
+            step="1"
+            :value="adjustments.hue"
+            @input="onAdjustmentInput('hue', Number(($event.target as HTMLInputElement).value))"
+          />
+          <span class="cp-slider-value">{{ adjustments.hue }}</span>
+        </label>
+        <label class="cp-slider-row">
+          <span class="cp-slider-label">{{ t('palette.saturation') }}</span>
+          <input
+            class="cp-slider cp-slider--saturation"
+            type="range"
+            min="-100"
+            max="100"
+            step="1"
+            :value="adjustments.saturation"
+            @input="onAdjustmentInput('saturation', Number(($event.target as HTMLInputElement).value))"
+          />
+          <span class="cp-slider-value">{{ adjustments.saturation }}</span>
+        </label>
+        <label class="cp-slider-row">
+          <span class="cp-slider-label">{{ t('palette.temperature') }}</span>
+          <input
+            class="cp-slider cp-slider--temperature"
+            type="range"
+            min="-100"
+            max="100"
+            step="1"
+            :value="adjustments.temperature"
+            @input="onAdjustmentInput('temperature', Number(($event.target as HTMLInputElement).value))"
+          />
+          <span class="cp-slider-value">{{ adjustments.temperature }}</span>
+        </label>
+        <label class="cp-slider-row">
+          <span class="cp-slider-label">{{ t('palette.luminosity') }}</span>
+          <input
+            class="cp-slider cp-slider--luminosity"
+            type="range"
+            min="-100"
+            max="100"
+            step="1"
+            :value="adjustments.luminosity"
+            @input="onAdjustmentInput('luminosity', Number(($event.target as HTMLInputElement).value))"
+          />
+          <span class="cp-slider-value">{{ adjustments.luminosity }}</span>
+        </label>
+        <div class="cp-vision-block">
+          <span class="cp-slider-label">{{ t('palette.daltonism') }}</span>
+          <div class="cp-vision-grid">
+            <button class="cp-chip" :class="{ active: adjustments.daltonism === 'protanopia' }" @click="toggleDaltonism('protanopia')">Protanopia</button>
+            <button class="cp-chip" :class="{ active: adjustments.daltonism === 'deuteranopia' }" @click="toggleDaltonism('deuteranopia')">Deuteranopia</button>
+            <button class="cp-chip" :class="{ active: adjustments.daltonism === 'tritanopia' }" @click="toggleDaltonism('tritanopia')">Tritanopia</button>
+            <button class="cp-chip" :class="{ active: adjustments.daltonism === 'achromatopsia' }" @click="toggleDaltonism('achromatopsia')">{{ t('colorPage.colorBlindnessTypes.achromatopsia') }}</button>
+          </div>
+        </div>
+      </div>
     </div>
   </Teleport>
 </template>
@@ -74,6 +143,22 @@
  * Emits: update:modelValue, close.
  */
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
+import { applyAdjustmentsToHex, type GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
+import type { DaltonismMode } from '@/utils/colorAccessibility'
+import { useI18n } from '@/i18n'
+
+type AdjustmentSliderKey = 'hue' | 'saturation' | 'temperature' | 'luminosity'
+const COLOR_PICKER_ADJUSTMENTS_OPEN_KEY = 'rgbast_color_picker_adjustments_open_v1'
+const neutralAdjustments = (): GlobalColorAdjustments => ({
+  hue: 0,
+  saturation: 0,
+  temperature: 0,
+  luminosity: 0,
+  daltonism: 'none',
+})
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** Current color as a 6-character hex string without the leading #. */
@@ -141,6 +226,9 @@ function hsvToRgb(h: number, s: number, v: number): RGB {
 
 /** Internal HSV state derived from the incoming hex prop. */
 const hsv = ref<HSV>(rgbToHsv(...hexToRgb(props.modelValue)))
+const adjustmentsOpen = ref(readAdjustmentsOpenPreference())
+const adjustments = ref<GlobalColorAdjustments>(neutralAdjustments())
+const adjustmentBaseHex = ref<string | null>(null)
 
 /** Current hex string derived from HSV state. */
 const hex  = computed(() => rgbToHex(...hsvToRgb(...hsv.value)))
@@ -159,6 +247,58 @@ watch(() => props.modelValue, val => {
 /** Emit updated hex whenever the internal state changes. */
 watch(hex, val => emit('update:modelValue', val))
 
+function readAdjustmentsOpenPreference(): boolean {
+  try {
+    return localStorage.getItem(COLOR_PICKER_ADJUSTMENTS_OPEN_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function persistAdjustmentsOpenPreference(): void {
+  try {
+    localStorage.setItem(COLOR_PICKER_ADJUSTMENTS_OPEN_KEY, adjustmentsOpen.value ? '1' : '0')
+  } catch {}
+}
+
+function toggleAdjustments(): void {
+  adjustmentsOpen.value = !adjustmentsOpen.value
+  persistAdjustmentsOpenPreference()
+}
+
+function resetAdjustmentSession(): void {
+  adjustmentBaseHex.value = null
+  adjustments.value = neutralAdjustments()
+}
+
+function ensureAdjustmentBase(): string {
+  if (!adjustmentBaseHex.value) adjustmentBaseHex.value = props.modelValue
+  return adjustmentBaseHex.value
+}
+
+function emitAdjustedColor(): void {
+  const base = ensureAdjustmentBase()
+  emit('update:modelValue', applyAdjustmentsToHex(base, adjustments.value))
+}
+
+function onAdjustmentInput(key: AdjustmentSliderKey, value: number): void {
+  adjustments.value = { ...adjustments.value, [key]: value }
+  emitAdjustedColor()
+}
+
+function toggleDaltonism(mode: DaltonismMode): void {
+  adjustments.value = {
+    ...adjustments.value,
+    daltonism: adjustments.value.daltonism === mode ? 'none' : mode,
+  }
+  emitAdjustedColor()
+}
+
+function setHsvFromUserInput(next: HSV): void {
+  resetAdjustmentSession()
+  hsv.value = next
+}
+
 // ── Hex / RGB text inputs ─────────────────────────────────────────────────────
 
 /**
@@ -167,7 +307,7 @@ watch(hex, val => emit('update:modelValue', val))
 function onHexInput(e: Event) {
   const raw = (e.target as HTMLInputElement).value.replace(/[^0-9a-fA-F]/g, '')
   if (raw.length === 6) {
-    hsv.value = rgbToHsv(...hexToRgb(raw))
+    setHsvFromUserInput(rgbToHsv(...hexToRgb(raw)))
   }
 }
 
@@ -176,7 +316,7 @@ function onHexInput(e: Event) {
  */
 function onHexBlur(e: Event) {
   const raw = (e.target as HTMLInputElement).value.replace(/[^0-9a-fA-F]/g, '').padEnd(6, '0').slice(0, 6)
-  hsv.value = rgbToHsv(...hexToRgb(raw))
+  setHsvFromUserInput(rgbToHsv(...hexToRgb(raw)))
 }
 
 /**
@@ -187,7 +327,7 @@ function onRgbInput(channel: 0 | 1 | 2, e: Event) {
   const val = Math.max(0, Math.min(255, parseInt((e.target as HTMLInputElement).value) || 0))
   const r = [...rgb.value] as RGB
   r[channel] = val
-  hsv.value = rgbToHsv(...r)
+  setHsvFromUserInput(rgbToHsv(...r))
 }
 
 // ── 2-D area drag ─────────────────────────────────────────────────────────────
@@ -200,6 +340,7 @@ let draggingArea = false
 
 /** Starts a drag on the 2D color area. */
 function startAreaDrag(e: MouseEvent | TouchEvent) {
+  resetAdjustmentSession()
   draggingArea = true
   updateArea(e)
 }
@@ -227,6 +368,7 @@ let draggingHue = false
 
 /** Starts a drag on the hue slider. */
 function startHueDrag(e: MouseEvent | TouchEvent) {
+  resetAdjustmentSession()
   draggingHue = true
   updateHue(e)
 }
@@ -275,7 +417,7 @@ onUnmounted(() => {
 const PANEL_W = 246
 
 /** Height of the picker panel in pixels. */
-const PANEL_H = 310
+const PANEL_H = computed(() => adjustmentsOpen.value ? 560 : 310)
 
 /**
  * Computes the fixed-position style for the picker panel,
@@ -285,11 +427,13 @@ const panelStyle = computed(() => {
   const rect = props.anchorRect
   if (!rect) return { position: 'fixed' as const, bottom: '100px', left: '50%', transform: 'translateX(-50%)' }
 
+  const effectivePanelH = Math.min(PANEL_H.value, window.innerHeight - 16)
   let x = rect.left + rect.width / 2 - PANEL_W / 2
-  let y = rect.top - PANEL_H - 10
+  let y = rect.top - effectivePanelH - 10
 
   x = Math.max(8, Math.min(x, window.innerWidth  - PANEL_W - 8))
   if (y < 8) y = rect.bottom + 10
+  if (y + effectivePanelH > window.innerHeight - 8) y = Math.max(8, window.innerHeight - effectivePanelH - 8)
 
   return { position: 'fixed' as const, left: x + 'px', top: y + 'px', width: PANEL_W + 'px' }
 })

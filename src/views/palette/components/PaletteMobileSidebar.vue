@@ -84,7 +84,7 @@
               {{ t('palette.clonePalette') }}
             </button>
 
-            <button class="msb-action" @click="$emit('openImagePalette'); $emit('close')">
+            <button class="msb-action" :disabled="!isOwned" @click="$emit('openImagePalette'); $emit('close')">
               <AppIcon name="image" :size="15" />
               {{ t('palette.paletteFromImage') }}
             </button>
@@ -100,11 +100,11 @@
               <AppIcon :name="copyFeedback ? 'check' : 'copy'" :size="14" />
               {{ t('palette.copyPaletteTitle') }}
             </button>
-            <button class="msb-action" @click="$emit('pasteAdd'); $emit('close')">
+            <button class="msb-action" :disabled="!isOwned" @click="$emit('pasteAdd'); $emit('close')">
               <AppIcon name="clipboard" :size="14" />
               {{ t('palette.pasteColorsAdd') }}
             </button>
-            <button class="msb-action" @click="$emit('pasteReplace'); $emit('close')">
+            <button class="msb-action" :disabled="!isOwned" @click="$emit('pasteReplace'); $emit('close')">
               <AppIcon name="clipboard" :size="14" />
               {{ t('palette.pasteColorsReplace') }}
             </button>

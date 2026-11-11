@@ -100,3 +100,5 @@
     transform: translateY(100%);
   }
 }
+
+.history-mobile-backdrop{background:transparent!important;backdrop-filter:none!important}

@@ -1,7 +1,7 @@
 <template>
-  <Teleport to="body">
-    <div class="cp-backdrop" @mousedown.self="$emit('close')"></div>
-    <div class="cp-panel" :style="panelStyle" @mousedown.stop>
+  <Teleport to="body" :disabled="inline">
+    <div v-if="!inline" class="cp-backdrop" @mousedown.self="$emit('close')"></div>
+    <div class="cp-panel" :style="inline ? undefined : panelStyle" :class="{'cp-panel--inline': inline}" @mousedown.stop>
       <!-- 2-D gradient picker -->
       <div
         class="cp-area"
@@ -41,7 +41,7 @@
             <input
               class="cp-input"
               :value="hex"
-              maxlength="6"
+              maxlength="6" @paste.prevent="onHexPaste"
               spellcheck="false"
               @input="onHexInput"
               @blur="onHexBlur"
@@ -62,12 +62,12 @@
         </div>
       </div>
 
-      <button class="cp-expand-btn" :class="{ open: adjustmentsOpen }" type="button" @click="toggleAdjustments">
+      <button v-if="!hideAdjustments" class="cp-expand-btn" :class="{ open: adjustmentsOpen }" type="button" @click="toggleAdjustments">
         <span>{{ t('palette.adjustments') }}</span>
         <AppIcon name="sliders" :size="13" />
       </button>
 
-      <div v-if="adjustmentsOpen" class="cp-adjustments">
+      <div v-if="!hideAdjustments && adjustmentsOpen" class="cp-adjustments">
         <label class="cp-slider-row">
           <span class="cp-slider-label">{{ t('palette.hue') }}</span>
           <input
@@ -120,7 +120,7 @@
           />
           <span class="cp-slider-value">{{ adjustments.luminosity }}</span>
         </label>
-        <div class="cp-vision-block">
+        <div v-if="!hideColorBlindness" class="cp-vision-block">
           <span class="cp-slider-label">{{ t('palette.daltonism') }}</span>
           <div class="cp-vision-grid">
             <button class="cp-chip" :class="{ active: adjustments.daltonism === 'protanopia' }" @click="toggleDaltonism('protanopia')">Protanopia</button>
@@ -163,6 +163,9 @@ const { t } = useI18n()
 const props = defineProps<{
   /** Current color as a 6-character hex string without the leading #. */
   modelValue: string
+  inline?: boolean
+  hideAdjustments?: boolean
+  hideColorBlindness?: boolean
   /** Optional bounding rect of the element the picker should anchor to. */
   anchorRect?: DOMRect
 }>()
@@ -304,8 +307,15 @@ function setHsvFromUserInput(next: HSV): void {
 /**
  * Handles live typing in the hex input; updates HSV once 6 chars are entered.
  */
+function onHexPaste(event: ClipboardEvent) {
+  const input = event.target as HTMLInputElement
+  input.value = (event.clipboardData?.getData('text') ?? '').replace(/[^0-9a-f]/gi, '').slice(0, 6).toUpperCase()
+  onHexInput(event)
+}
 function onHexInput(e: Event) {
-  const raw = (e.target as HTMLInputElement).value.replace(/[^0-9a-fA-F]/g, '')
+  const input = e.target as HTMLInputElement
+  const raw = input.value.replace(/[^0-9a-fA-F]/g, '').toUpperCase()
+  input.value = raw
   if (raw.length === 6) {
     setHsvFromUserInput(rgbToHsv(...hexToRgb(raw)))
   }
@@ -417,7 +427,7 @@ onUnmounted(() => {
 const PANEL_W = 246
 
 /** Height of the picker panel in pixels. */
-const PANEL_H = computed(() => adjustmentsOpen.value ? 560 : 310)
+const PANEL_H = computed(() => !props.hideAdjustments && adjustmentsOpen.value ? 560 : 310)
 
 /**
  * Computes the fixed-position style for the picker panel,

@@ -1,5 +1,5 @@
 <template>
-  <header class="pal-header" :class="{ 'focus-header': tutorialFocus === 'header' }">
+  <header ref="headerEl" class="pal-header" :class="{ 'focus-header': tutorialFocus === 'header' }">
     <!-- Left: back navigation -->
     <div class="left-group">
       <button class="back-btn" @click="$emit('back')" :title="t('palette.back')">
@@ -20,7 +20,7 @@
         :class="{ open: branchOpen, 'focus-ring': tutorialFocus === 'branches' }"
         @click="toggleBranchMenu"
       >
-        <AppIcon class="branch-icon" name="git-branch" :size="15" />
+        <AppIcon class="branch-icon" :style="{color: currentBranchId === null ? '#FFFFFF' : branchColor(currentBranchId), opacity: 1}" name="git-branch" :size="15" />
         <span class="branch-name">{{ currentBranch }}</span>
         <AppIcon class="chevron" name="chevron-down" :size="10" :class="{ rotated: branchOpen }" />
       </div>
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Right: actions (desktop) -->
-    <div class="right-group">
+    <div ref="actionsEl" class="right-group">
       <button
         class="icon-action-btn"
         :class="{ 'icon-action-btn--copied': copyFeedback }"
@@ -100,14 +100,14 @@
       <div ref="pasteGroupEl" class="header-dropdown-group">
         <div class="paste-split-btn">
           <button
-            class="icon-action-btn paste-main-btn"
+            class="icon-action-btn paste-main-btn" :disabled="!isOwned"
             :title="t('palette.pasteAddTitle')"
             @click="emit('pasteAdd')"
           >
             <AppIcon name="clipboard" :size="13" />
           </button>
           <button
-            class="paste-menu-toggle"
+            class="paste-menu-toggle" :disabled="!isOwned"
             :class="{ open: pasteMenuOpen }"
             :title="t('palette.pasteOptions')"
             @click.stop="togglePasteMenu"
@@ -174,7 +174,7 @@
             </template>
             <div class="header-menu-divider"></div>
             <p class="header-menu-title">{{ t('palette.globalAdjustments') }}</p>
-            <div class="header-adjustments">
+            <div class="header-adjustments" :inert="!isOwned">
               <label class="header-slider-row">
                 <span class="header-slider-label">{{ t('palette.hue') }}</span>
                 <input
@@ -266,18 +266,18 @@
 
       <!-- Generate split-button -->
       <div class="gen-btn-group">
-        <button class="gen-instant-btn" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
+        <button class="gen-instant-btn" :disabled="!isOwned" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
           <AppIcon name="sparkles" :size="13" />
           <span>{{ t('palette.generate') }}</span>
         </button>
-        <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
+        <button class="gen-settings-btn" :disabled="!isOwned" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
           <AppIcon name="settings" :size="12" />
         </button>
       </div>
       <button
         class="image-action-btn"
         :title="t('palette.imageExtractTitle')"
-        @click="$emit('openImagePalette')"
+        :disabled="!isOwned" @click="$emit('openImagePalette')"
       >
         <AppIcon name="image" :size="13" />
       </button>
@@ -340,6 +340,15 @@
         <AppIcon name="clone" :size="14" />
         {{ t('palette.clonePalette') }}
       </button>
+
+      <div ref="overflowEl" v-show="overflowActions.length" class="toolbar-overflow">
+        <button class="icon-action-btn" :aria-label="t('palette.openMenu')" :aria-expanded="overflowOpen" @click="overflowOpen=!overflowOpen">…</button>
+        <Transition name="header-dd">
+          <div v-if="overflowOpen" class="toolbar-overflow-menu">
+            <button v-for="(action, i) in overflowActions" :key="i" :disabled="action.disabled" @click="runOverflowAction(action.button)">{{ action.label }}</button>
+          </div>
+        </Transition>
+      </div>
     </div>
 
     <!-- Mobile right: unsaved indicator + undo/redo + history + hamburger -->
@@ -373,10 +382,10 @@
         <AppIcon name="history" :size="15" />
       </button>
       <div class="gen-btn-group gen-btn-group--mobile">
-        <button class="gen-instant-btn" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
+        <button class="gen-instant-btn" :disabled="!isOwned" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
           <AppIcon name="sparkles" :size="13" />
         </button>
-        <button class="gen-settings-btn" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
+        <button class="gen-settings-btn" :disabled="!isOwned" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
           <AppIcon name="settings" :size="12" />
         </button>
       </div>
@@ -397,7 +406,7 @@
             @pointerdown="onDisplayMenuPointerDown"
           >
             <p class="header-menu-title">{{ t('palette.globalAdjustments') }}</p>
-            <div class="header-adjustments">
+            <div class="header-adjustments" :inert="!isOwned">
               <label class="header-slider-row">
                 <span class="header-slider-label">{{ t('palette.hue') }}</span>
                 <input
@@ -491,7 +500,7 @@
  * On mobile the center and right groups are hidden; a compact mobile-right
  * group is shown instead (undo/redo controls, history, and hamburger).
  */
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, onMounted, onUnmounted, onUpdated } from 'vue'
 import type { CSSProperties } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import { getBranchColor } from '@/utils/branchColors'
@@ -573,6 +582,62 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+
+
+const headerEl = ref<HTMLElement | null>(null)
+const actionsEl = ref<HTMLElement | null>(null)
+const overflowEl = ref<HTMLElement | null>(null)
+const overflowOpen = ref(false)
+const overflowActions = shallowRef<Array<{ button: HTMLButtonElement; label: string; disabled: boolean }>>([])
+let overflowObserver: ResizeObserver | undefined
+let overflowFrame = 0
+
+// Measure actual translated controls, not viewport breakpoints. Keep their original
+// buttons mounted so split-menu handlers and disabled states remain authoritative.
+function measureOverflow() {
+  const group = actionsEl.value
+  if (!group || !group.clientWidth) return
+  const items = Array.from(group.children).filter(el => el !== overflowEl.value) as HTMLElement[]
+  items.forEach(el => el.classList.remove('toolbar-hidden'))
+  const gap = parseFloat(getComputedStyle(group).gap) || 0
+  const widths = items.map(el => el.getBoundingClientRect().width)
+  const total = widths.reduce((sum, width) => sum + width, 0) + gap * Math.max(0, items.length - 1)
+  let used = 0
+  let hidden = false
+  const next: typeof overflowActions.value = []
+  items.forEach((el, index) => {
+    const width = widths[index] ?? 0
+    if (total > group.clientWidth && used + width > group.clientWidth - 44 - gap) hidden = true
+    if (hidden) {
+      el.classList.add('toolbar-hidden')
+      const buttons = el.matches('button') ? [el as HTMLButtonElement] : Array.from(el.querySelectorAll<HTMLButtonElement>('button')).filter(button => !button.closest('.header-dropdown-menu'))
+      buttons.forEach(button => next.push({ button, label: button.title || button.getAttribute('aria-label') || button.textContent?.trim() || '', disabled: button.disabled }))
+    } else used += width + gap
+  })
+  const previous = overflowActions.value
+  if (next.length !== previous.length || next.some((a,i) => a.button !== previous[i]?.button || a.label !== previous[i]?.label || a.disabled !== previous[i]?.disabled)) overflowActions.value = next
+  if (!next.length) overflowOpen.value = false
+}
+function scheduleOverflow() {
+  cancelAnimationFrame(overflowFrame)
+  overflowFrame = requestAnimationFrame(measureOverflow)
+}
+function runOverflowAction(button: HTMLButtonElement) {
+  overflowOpen.value = false
+  button.click()
+}
+onUpdated(scheduleOverflow)
+onMounted(() => {
+  overflowObserver = new ResizeObserver(scheduleOverflow)
+  if (headerEl.value) overflowObserver.observe(headerEl.value)
+  if (actionsEl.value) overflowObserver.observe(actionsEl.value)
+  void document.fonts.ready.then(scheduleOverflow)
+  scheduleOverflow()
+})
+onUnmounted(() => {
+  overflowObserver?.disconnect()
+  cancelAnimationFrame(overflowFrame)
+})
 
 /** Whether the branch dropdown flyout is open. */
 const branchOpen = ref(false)
@@ -841,6 +906,7 @@ function onDisplayMenuPointerDown(event: PointerEvent): void {
 
 function onDocumentPointerDown(event: Event): void {
   const target = event.target as Node | null
+  if (target && !overflowEl.value?.contains(target)) overflowOpen.value = false
   if (pasteMenuOpen.value && pasteGroupEl.value && target && !pasteGroupEl.value.contains(target)) {
     pasteMenuOpen.value = false
   }
@@ -857,6 +923,7 @@ function onDocumentPointerDown(event: Event): void {
 
 function onDocumentKeydown(event: KeyboardEvent): void {
   if (event.key === 'Escape') {
+    overflowOpen.value = false
     pasteMenuOpen.value = false
     helpMenuOpen.value = false
     if (displayMenuOpen.value) {

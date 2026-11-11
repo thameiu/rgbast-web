@@ -1,21 +1,22 @@
 <template>
   <div
     class="col"
-    :class="{ 'is-dragging': isDragging, 'swap-selected': swapSelected }"
+    :class="{ 'is-dragging': isDragging, 'swap-selected': swapSelected || keyboardSelected }"
     :data-col-key="colKey"
     :style="colStyle"
   >
     <!-- Drag handle -->
-    <div class="drag-handle" aria-hidden="true"
+    <div v-if="!readOnly" class="drag-handle" aria-hidden="true"
       @pointerdown.stop="onHandlePointerDown"
       @click.stop="onHandleClick"
     >
-      <span></span><span></span><span></span>
-      <span></span><span></span><span></span>
+      <svg width="14" height="23" viewBox="0 0 14 23" fill="currentColor" aria-hidden="true">
+        <circle v-for="(point, i) in [[2.5,2.5],[11.5,2.5],[2.5,11.5],[11.5,11.5],[2.5,20.5],[11.5,20.5]]" :key="i" :cx="point[0]" :cy="point[1]" r="2.5" />
+      </svg>
     </div>
 
     <div class="column-actions" aria-label="Color actions">
-      <button class="column-action-btn remove-btn" @click.stop="$emit('remove')" :title="t('palette.removeColor')">
+      <button v-if="!readOnly" class="column-action-btn remove-btn" @click.stop="$emit('remove')" :title="t('palette.removeColor')">
         <AppIcon name="x" :size="12" />
       </button>
       <button class="column-action-btn" @click.stop="$emit('openAccessibility')" :title="t('palette.colorAccessibility')">
@@ -24,7 +25,7 @@
     </div>
 
     <button
-      class="column-action-btn lock-btn"
+      v-if="!readOnly" class="column-action-btn lock-btn"
       :class="{ active: isGenerationBaseColor }"
       :disabled="!isGenerationBaseColor && !canAddGenerationBaseColor"
       @click.stop="$emit('toggleGenerationBaseColor')"
@@ -39,7 +40,7 @@
     <!-- Footer -->
     <div class="col-footer">
       <input
-        class="label-input"
+        class="label-input" :readonly="readOnly"
         :value="modelValue.label ?? ''"
         placeholder="label"
         maxlength="50"
@@ -97,7 +98,7 @@
  * in the palette editor.
  * Clicking the body or hex text opens the inline ColorPicker popover.
  * The 6-dot drag handle emits dragStart on pointerdown for pointer-based
- * horizontal reordering on desktop; on mobile it starts drag after a 300ms hold.
+ * horizontal reordering on desktop; on mobile it starts dragging immediately.
  */
 import { ref, computed, onBeforeUnmount } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
@@ -113,6 +114,8 @@ const props = defineProps<{
   modelValue: { hex: string; label: string | null }
   /** Unique key used by TransitionGroup and drag logic. */
   colKey?: string
+  readOnly?: boolean
+  keyboardSelected?: boolean
   /** True while this column is being dragged. */
   isDragging?: boolean
   /** Inline style applied by the drag layer (e.g. transform). */
@@ -194,6 +197,7 @@ const colStyle = computed(() => ([
  * Opens the ColorPicker anchored below the hex text element.
  */
 function openPicker() {
+  if (props.readOnly) return
   if (suppressNextMobileTap.value) {
     suppressNextMobileTap.value = false
     return
@@ -219,7 +223,7 @@ async function copyValue(value: string, key: string) {
 
 /**
  * On desktop: emits dragStart immediately.
- * On mobile: starts drag only after 300ms hold on the handle.
+ * On mobile: starts drag immediately on the handle.
  * @param e - The originating PointerEvent.
  */
 function onHandlePointerDown(e: PointerEvent) {

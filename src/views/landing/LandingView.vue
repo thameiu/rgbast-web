@@ -1,18 +1,16 @@
 <template>
   <main class="landing">
     <RgbBackground />
+    <div class="demo-columns" aria-hidden="true"><div v-for="(hex,i) in demoColors" :key="i" :style="{background: '#'+hex, '--exit': Math.min(1,Math.max(0,scrollProgress-i*.24))}" /></div>
     <SiteHeader brand-meta="v1.3 · 2026" />
 
     <section class="hero">
       <div class="hero-left">
-        <p class="eyebrow font-mono">
-          <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
-          {{ t('landing.meta') }}
-        </p>
+
 
         <h1 class="headline font-display">
-          {{ t('landing.headline') }}
-          <span class="headline-line"><em>{{ t('landing.headlineLine') }}</em></span>
+          <span class="headline-intro">{{ t('landing.headline') }}</span>
+          <span class="headline-line rainbow-title">{{ t('landing.headlineLine') }}</span><span>{{ t('landing.headlineEnd') }}</span>
         </h1>
 
         <p class="lede">
@@ -24,93 +22,71 @@
             {{ t('landing.createPalette') }}
             <span class="btn-arrow" aria-hidden="true">→</span>
           </RouterLink>
-          <RouterLink to="/login" class="btn-ghost">
-            <span class="font-mono">→</span> {{ t('common.login') }}
-          </RouterLink>
           <RouterLink to="/color/B410CC" class="btn-ghost btn-ghost--color">
             <span class="color-dot" aria-hidden="true"></span> {{ t('landing.colorExplorer') }}
           </RouterLink>
         </div>
-
-        <dl class="stats">
-          <div class="stat">
-            <dt class="font-mono">01</dt>
-            <dd>{{ t('landing.statGenerate') }}</dd>
-          </div>
-          <div class="stat">
-            <dt class="font-mono">02</dt>
-            <dd>{{ t('landing.statCommit') }}</dd>
-          </div>
-          <div class="stat">
-            <dt class="font-mono">03</dt>
-            <dd>{{ t('landing.statBranch') }}</dd>
-          </div>
-        </dl>
       </div>
 
       <aside class="hero-right" aria-label="Sample palette history">
         <div class="graph-card">
           <div class="graph-topbar font-mono">
-            <span class="graph-path">~/palettes/<strong>dusk</strong></span>
-            <span class="graph-pill"><span class="pill-dot"></span>main</span>
+            <span class="graph-path">~/palettes/<strong>RGBAST</strong></span>
+            <span class="graph-pill">main</span>
           </div>
           <div class="graph-body">
-            <HistoryGraph :history="dummyHistory" />
+            <HistoryGraph :history="dummyHistory" @selectSnapshot="selectDemoSnapshot" />
           </div>
-          <div class="annotation font-mono" aria-hidden="true">
-            <span class="ann-arrow">↱</span>
-            every change,<br />diffed by color.
-          </div>
+
         </div>
       </aside>
     </section>
 
     <section id="features" class="features">
       <div class="features-stack">
-        <article class="feat feat--wide feat--generator" :ref="registerFeatureEl">
-          <span class="feat-num font-mono">F.01</span>
-          <h3 class="feat-title font-display">{{ t('landing.featureGeneratorTitle') }}</h3>
-          <p class="feat-body">{{ t('landing.featureGeneratorBody') }}</p>
+        <article class="feat feat--atelier" :ref="registerFeatureEl">
+          <div class="feat-copy">
+            <h2 class="feat-title font-display"><span>{{ t('landing.featureAtelierTitleFirst') }}</span> <strong>{{ t('landing.featureAtelierTitleLast') }}</strong></h2>
+            <p class="feat-body">{{ t('landing.featureAtelierBody') }}</p>
+          </div>
+          <div class="feat-art folder-scene" aria-hidden="true">
+            <div class="folder-demo">
+              <div v-for="palette in samplePalettes" :key="palette.name" class="pc folder-demo-card" :class="{ 'pc--big': palette.name === 'Kwester', 'pc--med': palette.name === 'ErgoSix' }">
+                <div class="pc-strip"><span v-for="hex in palette.colors" :key="hex" class="pc-col" :style="{ background: `#${hex}` }"></span></div>
+                <div class="pc-foot"><span class="pc-name">{{ palette.name }}</span></div>
+              </div>
+              <div class="folder-demo-shape"><span>My palettes</span><span class="folder-count">03 palettes</span></div>
+            </div>
+          </div>
         </article>
-        <article class="feat feat--wide feat--atelier" :ref="registerFeatureEl">
-          <span class="feat-num font-mono">F.02</span>
-          <h3 class="feat-title font-display">{{ t('landing.featureAtelierTitle') }}</h3>
-          <p class="feat-body">{{ t('landing.featureAtelierBody') }}</p>
+        <article class="feat feat--generator" :ref="registerFeatureEl">
+          <div class="feat-copy"><h2 class="feat-title font-display"><span>{{ t('landing.featureGeneratorTitleFirst') }}</span> <strong>{{ t('landing.featureGeneratorTitleLast') }}</strong></h2><p class="feat-body">{{ t('landing.featureGeneratorBody') }}</p></div>
+          <div class="feat-art generator-scene" aria-hidden="true"><div class="generator-card"><span class="art-label">COLOR HARMONY / ANALOGOUS</span><div class="generator-wheel"><span></span><span></span><span></span></div><div class="generator-swatches"><span v-for="hex in generatorColors" :key="hex" :style="{ background: `#${hex}` }"></span></div><span class="art-label">6 COLORS GENERATED</span></div></div>
         </article>
-        <article class="feat feat--wide feat--history" :ref="registerFeatureEl">
-          <span class="feat-num font-mono">F.03</span>
-          <h3 class="feat-title font-display">{{ t('landing.featureHistoryTitle') }}</h3>
-          <p class="feat-body">{{ t('landing.featureHistoryBody') }}</p>
+        <article class="feat feat--color" :ref="registerFeatureEl">
+          <div class="feat-copy"><h2 class="feat-title font-display"><span>{{ t('landing.featureExplorerTitleFirst') }}</span> <strong>{{ t('landing.featureExplorerTitleLast') }}</strong></h2><p class="feat-body">{{ t('landing.featureExplorerBody') }}</p></div>
+          <div class="feat-art color-scene" aria-hidden="true"><div class="color-sample"><span>MAGENTA</span><strong>#B410CC</strong></div><div class="color-detail color-detail--rgb"><div class="color-detail-content"><span>RGB</span><strong>180 · 16 · 204</strong></div></div><div class="color-detail color-detail--hsl"><div class="color-detail-content"><span>HSL</span><strong>292° · 85% · 43%</strong></div></div><div class="color-detail color-detail--bast"><div class="color-detail-content"><span>BAST INDEX</span><strong>☥ 15.9</strong></div></div></div>
         </article>
-        <article class="feat feat--wide feat--color" :ref="registerFeatureEl">
-          <span class="feat-num font-mono">F.04</span>
-          <h3 class="feat-title font-display">{{ t('landing.featureExplorerTitle') }}</h3>
-          <p class="feat-body">{{ t('landing.featureExplorerBody') }}</p>
-          <RouterLink to="/color/B410CC" class="feat-link font-mono">{{ t('landing.tryIt') }} →</RouterLink>
+        <article class="feat feat--history" :ref="registerFeatureEl">
+          <div class="feat-copy"><h2 class="feat-title font-display"><span>{{ t('landing.featureHistoryTitleFirst') }}</span> <strong>{{ t('landing.featureHistoryTitleLast') }}</strong></h2><p class="feat-body">{{ t('landing.featureHistoryBody') }}</p></div>
+          <div class="feat-art community-scene" aria-hidden="true">
+            <div class="community-profile"><span class="community-avatar">T</span><span class="community-username font-display">thameiu<small>5 public palettes</small></span></div>
+            <div v-for="palette in colleaguePalettes" :key="palette.name" class="pc community-palette-card" :class="{ 'pc--med': palette.name === 'Kwester' }">
+              <div class="pc-strip"><span v-for="hex in palette.colors" :key="hex" class="pc-col" :style="{ background: `#${hex}` }"></span></div>
+              <div class="pc-foot"><span class="pc-name">{{ palette.name }}</span></div>
+            </div>
+          </div>
         </article>
       </div>
     </section>
 
-    <footer class="foot">
-      <span class="foot-copy font-mono">{{ t('landing.footer') }}</span>
-      <div class="foot-mark">
-        <RgbastLogo size="28px" />
-        <a
-          class="foot-badge-link"
-          href="https://mathieu-hernandez.fr"
-          target="_blank"
-          rel="noreferrer"
-          aria-label="Projet by thameiu"
-        >
-          <img class="foot-badge" :src="thameiuBadge" alt="thameiu 88x31 badge" />
-        </a>
-      </div>
-    </footer>
+
   </main>
 </template>
 
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount } from 'vue'
+import {ref} from 'vue'
 import type { ComponentPublicInstance } from 'vue'
 import { RouterLink } from 'vue-router'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
@@ -162,114 +138,34 @@ onBeforeUnmount(() => {
   featureObserver = null
 })
 
-const now = Date.now()
-const dummyHistory: PaletteHistoryGraphResponse = {
-  palette_id: 0,
-  owner_username: 'demo-user',
-  title: 'dusk',
-  folder_path: [],
-  main: [
-    {
-      id: 4,
-      palette_id: 1,
-      parent_snapshot_id: 3,
-      branch_id: null,
-      comment: "Merge branch 'experiment/neon'",
-      created_at: new Date(now - 14 * 60_000).toISOString(),
-      palette_colors: [
-        { hex: '0e0e10' },
-        { hex: '2b2035' },
-        { hex: 'd61fee' },
-        { hex: '0ec6d4' },
-        { hex: 'f4efe6' },
-      ],
-      colors_added: 0,
-      colors_deleted: 0,
-      colors_modified: 2,
-    },
-    {
-      id: 3,
-      palette_id: 1,
-      parent_snapshot_id: 1,
-      branch_id: null,
-      comment: 'Warm the shadow, cool the highlight',
-      created_at: new Date(now - 2 * 3_600_000).toISOString(),
-      palette_colors: [
-        { hex: '0e0e10' },
-        { hex: '2b2035' },
-        { hex: 'b410cc' },
-        { hex: 'f6c343' },
-        { hex: 'f4efe6' },
-      ],
-      colors_added: 1,
-      colors_deleted: 0,
-      colors_modified: 1,
-    },
-    {
-      id: 1,
-      palette_id: 1,
-      parent_snapshot_id: null,
-      branch_id: null,
-      comment: 'Initial commit - dusk palette',
-      created_at: new Date(now - 3 * 86_400_000).toISOString(),
-      palette_colors: [
-        { hex: '1b1b1f' },
-        { hex: '4b3a55' },
-        { hex: '9c19ad' },
-        { hex: 'f0eadd' },
-      ],
-      colors_added: 0,
-      colors_deleted: 0,
-      colors_modified: 0,
-    },
-  ],
-  branches: [
-    {
-      id: 1,
-      title: 'experiment/neon',
-      merged_at: new Date(now - 14 * 60_000).toISOString(),
-      is_merged: true,
-      snapshots: [
-        {
-          id: 6,
-          palette_id: 1,
-          parent_snapshot_id: 5,
-          branch_id: 1,
-          comment: 'Pop the neon - max saturation',
-          created_at: new Date(now - 45 * 60_000).toISOString(),
-          palette_colors: [
-            { hex: '0e0e10' },
-            { hex: '3c1a4e' },
-            { hex: 'd61fee' },
-            { hex: '0ec6d4' },
-            { hex: 'f4efe6' },
-          ],
-          colors_added: 0,
-          colors_deleted: 0,
-          colors_modified: 1,
-        },
-        {
-          id: 5,
-          palette_id: 1,
-          parent_snapshot_id: 1,
-          branch_id: 1,
-          comment: 'Fork neon experiment',
-          created_at: new Date(now - 86_400_000).toISOString(),
-          palette_colors: [
-            { hex: '0e0e10' },
-            { hex: '3c1a4e' },
-            { hex: 'd61fee' },
-            { hex: '0ec6d4' },
-            { hex: 'f4efe6' },
-          ],
-          colors_added: 2,
-          colors_deleted: 0,
-          colors_modified: 1,
-        },
-      ],
-    },
-  ],
-}
+const demoColors = ref(['B410CC','D56A88','F6C343','82C58C','0EC6D4','616BD0'])
+const generatorColors = ['7D28C8', '9630D0', 'B410CC', 'C72CB9', 'D742AB', 'E0569E']
+const samplePalettes = [
+  { name: 'Kwester', colors: ['FFA62B', '16697B', '001C3E'] },
+  { name: 'ErgoSix', colors: ['FBFFFB', 'D3FCB6', '339936', '3C3C9C', '1F1F3F'] },
+  { name: 'PlanMyAsso', colors: ['FFFFFF', 'D2D6CE', 'A9B299', '627356'] },
+]
+const colleaguePalettes = [
+  samplePalettes[0]!,
+  { name: 'GGPS', colors: ['BD0000', '393938', '030303'] },
+  samplePalettes[2]!,
+  samplePalettes[1]!,
+  { name: 'Roadica', colors: ['002232', '1F2937', 'FFFFFF'] },
+]
+const scrollProgress=ref(0)
+let scrollFrame=0
+function updateDemoScroll(){cancelAnimationFrame(scrollFrame);scrollFrame=requestAnimationFrame(()=>{scrollProgress.value=window.scrollY/Math.max(1,window.innerHeight*.7)})}
+onMounted(()=>window.addEventListener('scroll',updateDemoScroll,{passive:true}))
+onBeforeUnmount(()=>{window.removeEventListener('scroll',updateDemoScroll);cancelAnimationFrame(scrollFrame)})
+function snapshot(id:number,parent:number|null,branch:number|null,hexes:string[],comment:string){return {id,palette_id:1,parent_snapshot_id:parent,branch_id:branch,comment,created_at:new Date(1700000000000+id*3600000).toISOString(),palette_colors:hexes.map(hex=>({hex})),colors_added:hexes.length,colors_deleted:0,colors_modified:0}}
+const first=snapshot(1,null,null,['B410CC'],'01')
+const second=snapshot(2,1,null,['B410CC','CCB410','10CCB4'],'02')
+const abandoned=snapshot(3,2,1,['746C18','9D756B','497456'],'03')
+const merged=snapshot(4,2,2,demoColors.value,'04')
+const final=snapshot(5,4,null,demoColors.value,'RGBAST')
+const dummyHistory:PaletteHistoryGraphResponse={palette_id:1,owner_username:'thameiu',title:'RGBAST',folder_path:[],main:[final,second,first],branches:[{id:1,title:'experiment',is_merged:false,merged_at:null,snapshots:[abandoned]},{id:2,title:'RGBAST',is_merged:true,merged_at:final.created_at,snapshots:[merged]}]}
+function selectDemoSnapshot(id:number){const snap=[first,second,abandoned,merged,final].find(s=>s.id===id);if(snap)demoColors.value=snap.palette_colors.map(c=>c.hex)}
+
 </script>
 
 <style src="./LandingView.css" scoped></style>

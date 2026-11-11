@@ -25,17 +25,17 @@
       </div>
       <transition name="hero-loader-fade">
         <div v-if="loading" class="hero-loader-overlay">
-          <AppLoader :message="t('colorPage.loadingInfo')" />
+          <AppLoader message="" />
         </div>
       </transition>
     </div>
 
     <!-- Body -->
-    <div class="body-layout" :class="{ 'body-layout--3d': pickerMode === '3d' }">
+    <div class="body-layout" :class="{ 'body-layout--3d': pickerMode !== '2d' }">
 
       <!-- Left: picker -->
-      <aside class="picker-col" :class="{ 'picker-col--3d': pickerMode === '3d' }">
-        <div class="card picker-card" :class="{ 'picker-card--3d': pickerMode === '3d' }">
+      <aside class="picker-col" :class="{ 'picker-col--3d': pickerMode !== '2d' }">
+        <div class="card picker-card" :class="{ 'picker-card--3d': pickerMode !== '2d' }">
           <div class="picker-mode-tabs">
             <button class="color-history-btn" :disabled="!canGoBackColor" :title="t('colorPage.previousColorTitle')" @click="goToPreviousColor">
               <AppIcon name="arrow-left" :size="13" />
@@ -44,48 +44,27 @@
               <AppIcon name="arrow-right" :size="13" />
             </button>
             <button class="picker-mode-btn" :class="{ active: pickerMode === '2d' }" @click="pickerMode = '2d'">
-              {{ t('colorPage.normalSelector') }}
+              {{ t('oklab.classic') }}
             </button>
             <button class="picker-mode-btn" :class="{ active: pickerMode === '3d' }" @click="pickerMode = '3d'">
-              {{ t('colorPage.selector3d') }}
+              RGB 3D
             </button>
+            <button class="picker-mode-btn" :class="{ active: pickerMode === 'oklab' }" @click="pickerMode = 'oklab'">OKLab 3D</button>
           </div>
 
           <!-- 2D sat/val area -->
-          <template v-if="pickerMode === '2d'">
-            <div
-              class="cp-area"
-              ref="areaEl"
-              :style="{ background: `hsl(${hsv[0]}, 100%, 50%)` }"
-              @mousedown="startAreaDrag"
-              @touchstart.prevent="startAreaDrag"
-            >
-              <div class="cp-sat-overlay"></div>
-              <div class="cp-val-overlay"></div>
-              <div
-                class="cp-cursor"
-                :style="{
-                  left: (hsv[1] * 100) + '%',
-                  top:  ((1 - hsv[2]) * 100) + '%',
-                  background: '#' + displayHex,
-                }"
-              ></div>
-            </div>
-
-            <!-- Hue slider -->
-            <div class="cp-hue-track" ref="hueEl" @mousedown="startHueDrag" @touchstart.prevent="startHueDrag">
-              <div class="cp-hue-thumb" :style="{ left: (hsv[0] / 360 * 100) + '%' }"></div>
-            </div>
-          </template>
+          <ClassicColorPicker v-if="pickerMode === '2d'" inline hide-color-blindness :model-value="displayHex" @update:model-value="applyHex" />
 
           <RgbCube3DPicker
-            v-else
+            v-else-if="pickerMode === '3d'"
             :hex="displayHex"
             @pick="applyHex"
           />
 
+          <Oklab3DPicker v-else :hex="displayHex" @pick="applyHex" />
+
           <!-- Inputs -->
-          <div class="cp-inputs">
+          <div v-if="pickerMode !== '2d'" class="cp-inputs">
             <div class="cp-field cp-field--hex">
               <label>{{ t('colorPage.hex') }}</label>
               <div class="cp-hex-row">
@@ -112,10 +91,7 @@
           </div>
 
           <!-- Copy hex -->
-          <button class="copy-btn" :class="{ 'copy-btn--copied': copied }" @click="copyHex">
-            <span v-if="copied">✓ {{ t('colorPage.copied') }}</span>
-            <span v-else>{{ t('colorPage.copyColor', { hex: displayHex.toUpperCase() }) }}</span>
-          </button>
+
         </div>
       </aside>
 
@@ -237,13 +213,7 @@
         </div>
         <div class="card">
           <span class="skel" style="width:110px;height:10px;"></span>
-          <div class="cb-row">
-            <div v-for="i in 3" :key="i" class="cb-swatch">
-              <div class="skel" style="width:100%;height:40px;border-radius:8px;"></div>
-              <span class="skel" style="width:60%;height:9px;"></span>
-              <span class="skel" style="width:50%;height:11px;"></span>
-            </div>
-          </div>
+          <div class="cb-row"><div v-for="i in 4" :key="i" class="skel" style="width:100%;aspect-ratio:1"></div></div>
         </div>
       </div>
 
@@ -405,40 +375,7 @@
 
         <div class="card">
           <span class="card-label">{{ t('colorPage.colorBlindness') }}</span>
-          <div class="cb-row">
-            <div class="cb-swatch">
-              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.protanopia.hex }">
-                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.protanopia.hex) }">
-                  #{{ colorInfo.accessibility.color_blindness.protanopia.hex.toUpperCase() }}
-                </span>
-              </div>
-              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.protanopia') }}</span>
-            </div>
-            <div class="cb-swatch">
-              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.deuteranopia.hex }">
-                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.deuteranopia.hex) }">
-                  #{{ colorInfo.accessibility.color_blindness.deuteranopia.hex.toUpperCase() }}
-                </span>
-              </div>
-              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.deuteranopia') }}</span>
-            </div>
-            <div class="cb-swatch">
-              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.tritanopia.hex }">
-                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.tritanopia.hex) }">
-                  #{{ colorInfo.accessibility.color_blindness.tritanopia.hex.toUpperCase() }}
-                </span>
-              </div>
-              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.tritanopia') }}</span>
-            </div>
-            <div class="cb-swatch">
-              <div class="cb-dot" :style="{ background: '#' + colorInfo.accessibility.color_blindness.achromatopsia.hex }">
-                <span class="cb-inline-hex" :style="{ color: getSwatchTextColor(colorInfo.accessibility.color_blindness.achromatopsia.hex) }">
-                  #{{ colorInfo.accessibility.color_blindness.achromatopsia.hex.toUpperCase() }}
-                </span>
-              </div>
-              <span class="cb-label">{{ t('colorPage.colorBlindnessTypes.achromatopsia') }}</span>
-            </div>
-          </div>
+          <ColorBlindnessSwatches :entries="(['protanopia','deuteranopia','tritanopia','achromatopsia'] as const).map(key => ({name:t('colorPage.colorBlindnessTypes.'+key),hex:colorInfo!.accessibility.color_blindness[key].hex}))" />
         </div>
       </div>
     </div>
@@ -467,6 +404,8 @@
 </template>
 
 <script setup lang="ts">
+import ClassicColorPicker from '@/components/palette/ColorPicker.vue'
+import ColorBlindnessSwatches from '@/components/color/ColorBlindnessSwatches.vue'
 import { ref, watch } from 'vue'
 import type { UserMeResponse, ColorBookmarkResponse } from '@/api/types'
 import { authApi } from '@/api'
@@ -476,6 +415,7 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import Oklab3DPicker from '@/components/color/Oklab3DPicker.vue'
 import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
 import ColorBookmarkModal from '@/views/color/components/ColorBookmarkModal.vue'
 import { useColorView } from './composables/useColorView'
@@ -532,7 +472,7 @@ const {
   goToNextColor,
 } = view
 
-const pickerMode = ref<'2d' | '3d'>('2d')
+const pickerMode = ref<'2d' | '3d' | 'oklab'>('2d')
 const viewerUser = ref<UserMeResponse | null>(null)
 const currentBookmark = ref<ColorBookmarkResponse | null>(null)
 const bookmarkModalOpen = ref(false)

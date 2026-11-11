@@ -299,7 +299,6 @@ export interface ColorContrastCheckResponse {
 // ── Color info ────────────────────────────────────────────────────────────────
 
 export interface ColorInfoRGB { r: number; g: number; b: number }
-export interface ColorInfoRGBPercent { r: number; g: number; b: number }
 export interface ColorHexReference { hex: string }
 export interface ColorReferenceRow {
   hex: string
@@ -317,10 +316,8 @@ export interface ColorInfoResponse {
   closest_name: string | null
   label_is_approximate: boolean
   rgb: ColorInfoRGB
-  rgb_percent: ColorInfoRGBPercent
   hsl: { h: number; s: number; l: number }
   cmyk: { c: number; m: number; y: number; k: number }
-  cmyk_percent: { c: number; m: number; y: number; k: number }
   hsb: { h: number; s: number; b: number }
   lab: { l: number; a: number; b: number }
   xyz: { x: number; y: number; z: number }

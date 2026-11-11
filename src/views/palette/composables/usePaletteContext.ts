@@ -63,7 +63,8 @@ export interface PaletteContext {
   mkKey: () => string
   wrapColors: (cols: PaletteColorSave[]) => WorkingColor[]
   mobileBranchColor: (idx: number) => string
-  loadHistory: () => Promise<void>
+  preserveNextRouteLoad: Ref<boolean>
+  loadHistory: (showLoader?: boolean) => Promise<void>
   loadFolders: (forUsername?: string | null) => Promise<void>
   applyBranchState: () => void
   switchBranch: (id: number | null) => Promise<void>
@@ -142,6 +143,7 @@ export function usePaletteContext(): PaletteContext {
 
   const history = ref<PaletteHistoryGraphResponse | null>(null)
   const loading = ref(true)
+  const preserveNextRouteLoad = ref(false)
   const error = ref<string | null>(null)
   const pendingTitle = ref('')
   const pendingDescription = ref('')
@@ -282,8 +284,9 @@ export function usePaletteContext(): PaletteContext {
   }
 
   // Load palette history and reset the editor state in PaletteView.
-  async function loadHistory(): Promise<void> {
-    loading.value = true
+  async function loadHistory(showLoader = false): Promise<void> {
+    // Refresh saved metadata without unmounting the existing editor.
+    loading.value = showLoader || colors.value.length === 0
     error.value = null
     try {
       await loadFolders()
@@ -344,7 +347,9 @@ export function usePaletteContext(): PaletteContext {
       }
     }
 
-    colors.value = wrapColors(sourceColors)
+    colors.value = sourceColors.map((color, index) => ({
+      ...color, label: color.label ?? null, _key: colors.value[index]?._key ?? mkKey(),
+    }))
     latestSnapshotId.value = snapshotId
     savedColorsSig.value = currentColorsSig.value
     if (paletteId.value !== null) {
@@ -395,7 +400,12 @@ export function usePaletteContext(): PaletteContext {
     selectedSnapshotId.value = id
     const snap = findSnapshot(id)
     if (snap) {
-      colors.value = wrapColors(snap.palette_colors)
+      const available = [...colors.value]
+      colors.value = snap.palette_colors.map((color, index) => {
+        const match = available.findIndex(old => old && old.hex === color.hex && old.label === (color.label ?? null))
+        const previous = match >= 0 ? available.splice(match,1)[0] : undefined
+        return {...color, label:color.label ?? null, _key:previous?._key ?? mkKey()}
+      })
       savedColorsSig.value = currentColorsSig.value
     }
   }
@@ -451,7 +461,8 @@ export function usePaletteContext(): PaletteContext {
         if (isNewPalette.value) {
           initNewPaletteDraft()
         } else {
-          void loadHistory()
+          void loadHistory(!preserveNextRouteLoad.value)
+          preserveNextRouteLoad.value = false
         }
       },
       { immediate: true },
@@ -506,6 +517,7 @@ export function usePaletteContext(): PaletteContext {
     mkKey,
     wrapColors,
     mobileBranchColor,
+    preserveNextRouteLoad,
     loadHistory,
     loadFolders,
     applyBranchState,

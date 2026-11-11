@@ -6,6 +6,7 @@ import { MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
 export interface InteractionContext {
   colors: Ref<WorkingColor[]>
   mkKey: () => string
+  isOwned: Ref<boolean>
 }
 
 export interface InteractionActions {
@@ -56,6 +57,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Update a color hex value in PaletteView and register it for undo.
   function updateHex(i: number, hex: string): void {
+    if (!ctx.isOwned.value) return
     startHexLabelEdit()
     const c = ctx.colors.value[i]
     if (c) ctx.colors.value[i] = { ...c, hex }
@@ -63,6 +65,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Update a color label in PaletteView and register it for undo.
   function updateLabel(i: number, label: string | null): void {
+    if (!ctx.isOwned.value) return
     startHexLabelEdit()
     const c = ctx.colors.value[i]
     if (c) ctx.colors.value[i] = { ...c, label }
@@ -70,6 +73,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Remove a color column from the palette editor.
   function removeColor(i: number): void {
+    if (!ctx.isOwned.value) return
     if (ctx.colors.value.length <= 1) return
     actions.captureForUndo()
     ctx.colors.value.splice(i, 1)
@@ -77,6 +81,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Add a new random color to the palette editor.
   function addColor(): void {
+    if (!ctx.isOwned.value) return
     if (ctx.colors.value.length >= MAX_PALETTE_COLORS) return
     actions.captureForUndo()
     ctx.colors.value.push({ hex: randomHex(), label: null, _key: ctx.mkKey() })
@@ -107,6 +112,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Handle tap-to-swap logic for PaletteView mobile interactions.
   function onSwapTap(i: number): void {
+    if (!ctx.isOwned.value) return
     if (swapSourceIdx.value === null) {
       swapSourceIdx.value = i
     } else if (swapSourceIdx.value === i) {
@@ -124,6 +130,7 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Begin drag and drop for a palette column and create a ghost element.
   function onDragStart(i: number, e: PointerEvent): void {
+    if (!ctx.isOwned.value) return
     actions.captureForUndo()
     const key = ctx.colors.value[i]?._key
     if (key && colsAreaEl.value) {

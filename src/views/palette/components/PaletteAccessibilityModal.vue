@@ -127,14 +127,7 @@
 
           <section class="audit-card audit-card--wide">
             <span class="audit-card-label">{{ t('colorPage.colorBlindness') }}</span>
-            <div class="audit-cb-row">
-              <div v-for="entry in colorBlindnessCards" :key="entry.name" class="audit-cb-card">
-                <div class="audit-cb-dot" :style="{ background: '#' + entry.hex }">
-                  <span class="audit-cb-inline-hex" :style="{ color: getSwatchTextColor(entry.hex) }">#{{ entry.hex.toUpperCase() }}</span>
-                </div>
-                <span class="audit-cb-label">{{ entry.name }}</span>
-              </div>
-            </div>
+            <ColorBlindnessSwatches :entries="colorBlindnessCards" dark />
           </section>
         </div>
 
@@ -145,6 +138,7 @@
 </template>
 
 <script setup lang="ts">
+import ColorBlindnessSwatches from '@/components/color/ColorBlindnessSwatches.vue'
 import { colorApi } from '@/api/color'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import type {
@@ -250,12 +244,10 @@ const colorSpaces = computed(() => {
   return [
     { name: 'HEX', value: `#${c.normalized_hex.toUpperCase()}` },
     { name: 'RGB', value: `${c.rgb.r}  ${c.rgb.g}  ${c.rgb.b}` },
-    { name: 'RGB %', value: `${c.rgb_percent.r.toFixed(2)}%  ${c.rgb_percent.g.toFixed(2)}%  ${c.rgb_percent.b.toFixed(2)}%` },
     { name: 'HSL', value: `${c.hsl.h.toFixed(1)}°  ${c.hsl.s.toFixed(1)}%  ${c.hsl.l.toFixed(1)}%` },
     { name: 'HSB', value: `${c.hsb.h.toFixed(1)}°  ${c.hsb.s.toFixed(1)}%  ${c.hsb.b.toFixed(1)}%` },
     { name: 'HWB', value: `${c.hwb.h.toFixed(1)}°  ${c.hwb.w.toFixed(1)}%  ${c.hwb.b.toFixed(1)}%` },
     { name: 'CMYK', value: `${c.cmyk.c.toFixed(1)}  ${c.cmyk.m.toFixed(1)}  ${c.cmyk.y.toFixed(1)}  ${c.cmyk.k.toFixed(1)}` },
-    { name: 'CMYK %', value: `${c.cmyk_percent.c.toFixed(1)}%  ${c.cmyk_percent.m.toFixed(1)}%  ${c.cmyk_percent.y.toFixed(1)}%  ${c.cmyk_percent.k.toFixed(1)}%` },
     { name: 'LAB', value: `${c.lab.l.toFixed(2)}  ${c.lab.a.toFixed(2)}  ${c.lab.b.toFixed(2)}` },
     { name: 'LCH', value: `${c.lch.l.toFixed(2)}  ${c.lch.c.toFixed(2)}  ${c.lch.h.toFixed(2)}°` },
     { name: 'LUV', value: `${c.luv.l.toFixed(2)}  ${c.luv.u.toFixed(2)}  ${c.luv.v.toFixed(2)}` },

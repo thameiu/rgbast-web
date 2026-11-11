@@ -6,19 +6,23 @@
     @mousemove="onColsMouseMove"
     @mouseleave="$emit('mouseleave')"
   >
-    <TransitionGroup
+    <TransitionGroup appear
       tag="div"
       class="cols-tg"
+      :style="{ '--column-size': `calc(100% / ${Math.max(colors.length, 1)})` }"
       name="col"
       move-class="col-move"
-      @before-enter="el => $emit('before-enter', el)"
-      @enter="(el, done) => $emit('enter', el, done)"
+      @appear="(el, done) => $emit('enter', el, done)"
+      @enter="(el, done) => $emit('add-enter', el, done)"
       @leave="(el, done) => $emit('leave', el, done)"
     >
       <ColorColumn
         v-for="(col, i) in colors"
         :key="col._key"
+        :data-index="i"
         :modelValue="col"
+        :readOnly="readOnly"
+        :keyboardSelected="selectedIndex === i"
         :colKey="col._key"
         :isDragging="draggedIdx === i"
         :dragStyle="getColStyle(i)"
@@ -36,7 +40,7 @@
       />
     </TransitionGroup>
 
-    <button class="add-col-btn" :class="{ visible: showAddBtn }" @click="$emit('add')" title="Add color">
+    <button v-if="!readOnly" class="add-col-btn" :class="{ visible: showAddBtn }" @click="$emit('add')" title="Add color">
       <AppIcon name="plus" :size="20" />
     </button>
   </div>
@@ -52,6 +56,8 @@ import type { PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 // PaletteColumnsArea component: renders and manages the color column list in PaletteView.
 const props = defineProps<{
   colors: WorkingColor[]
+  readOnly?: boolean
+  selectedIndex?: number
   draggedIdx: number | null
   swapSourceIdx: number | null
   showAddBtn: boolean
@@ -82,6 +88,7 @@ defineEmits<{
   (e: 'mouseleave'): void
   (e: 'before-enter', el: Element): void
   (e: 'enter', el: Element, done: () => void): void
+  (e: 'add-enter', el: Element, done: () => void): void
   (e: 'leave', el: Element, done: () => void): void
 }>()
 </script>

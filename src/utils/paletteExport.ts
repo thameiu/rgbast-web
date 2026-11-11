@@ -1,6 +1,7 @@
+import { svgToLegacyIllustrator } from './illustratorExport'
 import { hexToRgb } from './paletteColorFormats'
 
-export type ExportVisualFormat = 'pdf' | 'png' | 'svg'
+export type ExportVisualFormat = 'pdf' | 'png' | 'svg' | 'ai'
 export type ExportOrientation = 'portrait' | 'landscape'
 export type ExportCodeFormat = 'css-hex' | 'css-hsl' | 'css-rgba' | 'scss-hex' | 'scss-hsl' | 'scss-rgba'
 
@@ -18,8 +19,9 @@ export interface ExportFontOption {
 }
 
 export const EXPORT_FONT_OPTIONS: ExportFontOption[] = [
-  { key: 'satoshi', label: 'Satoshi (default)', cssFamily: 'Satoshi' },
   { key: 'inter', label: 'Inter', cssFamily: 'Inter', googleFamily: 'Inter' },
+  { key: 'satoshi', label: 'Satoshi', cssFamily: 'Satoshi' },
+  { key: 'comic-sans', label: 'Comic Sans MS', cssFamily: 'Comic Sans MS' },
   { key: 'poppins', label: 'Poppins', cssFamily: 'Poppins', googleFamily: 'Poppins' },
   { key: 'space-grotesk', label: 'Space Grotesk', cssFamily: 'Space Grotesk', googleFamily: 'Space+Grotesk' },
   { key: 'ibm-plex-sans', label: 'IBM Plex Sans', cssFamily: 'IBM Plex Sans', googleFamily: 'IBM+Plex+Sans' },
@@ -33,6 +35,7 @@ interface RenderPaletteOptions {
   width: number
   height: number
   showLabels: boolean
+  rendering?: 'cards' | 'block'
 }
 
 interface LayoutCard {
@@ -113,6 +116,7 @@ function computeLayout(
   colorCount: number,
   columns: number,
   showLabels: boolean,
+  rendering: 'cards' | 'block' = 'cards',
 ): RenderLayout {
   const pagePadX = Math.round(width * 0.06)
   const pagePadTop = Math.round(height * 0.06)
@@ -120,6 +124,10 @@ function computeLayout(
   const titleY = pagePadTop
   const gridTop = pagePadTop + Math.round(height * 0.07)
 
+  if (rendering === 'block') {
+    const horizontal = width > height, w = width-pagePadX*2, h = horizontal ? (height-gridTop-pagePadBottom)*.65 : height-gridTop-pagePadBottom
+    return {titleY,cardLabelOffset:0,cards:Array.from({length:colorCount},(_,i)=>({x:pagePadX+(horizontal?i*w/colorCount:0),y:gridTop+(horizontal?0:i*h/colorCount),w:horizontal?w/colorCount:w,h:horizontal?h:h/colorCount}))}
+  }
   const rows = Math.max(1, Math.ceil(colorCount / columns))
   const gapX = Math.max(12, Math.round(width * 0.012))
   const gapY = Math.max(20, Math.round(height * 0.02))
@@ -194,6 +202,7 @@ function renderToCanvas(options: RenderPaletteOptions): HTMLCanvasElement {
     options.colors.length,
     options.columns,
     options.showLabels,
+    options.rendering,
   )
 
   ctx.fillStyle = '#111118'
@@ -211,10 +220,18 @@ function renderToCanvas(options: RenderPaletteOptions): HTMLCanvasElement {
     const name = truncate((color.colorName || `Color ${index + 1}`).trim(), 24)
     const customLabel = truncate((color.customLabel?.trim() || ''), 36)
 
-    drawRoundedRect(ctx, frame.x, frame.y, frame.w, frame.h, Math.max(12, frame.w * 0.08))
+    drawRoundedRect(ctx, frame.x, frame.y, frame.w, frame.h, options.rendering === 'block' ? 0 : Math.max(12, frame.w * 0.08))
     ctx.fillStyle = `#${hex}`
     ctx.fill()
 
+    if (options.rendering === 'block') {
+      const size=Math.max(10,Math.min(frame.w/5.5,frame.h*.28,46)),padding=Math.min(18,frame.h*.16)
+      ctx.fillStyle=onColor;ctx.textAlign='left';ctx.font=`800 ${size}px "${options.fontFamily}", sans-serif`
+      const textY=options.width>options.height?frame.y+frame.h-padding-size*(options.showLabels&&customLabel?1.8:1):frame.y+(frame.h-size)/2
+      ctx.fillText(`#${hex}`,frame.x+padding,textY,frame.w-padding*2)
+      if(options.showLabels && customLabel){ctx.font=`400 ${size*.65}px "${options.fontFamily}", sans-serif`;ctx.fillText(customLabel,frame.x+padding,textY+size*1.15,frame.w-padding*2)}
+      return
+    }
     ctx.fillStyle = onColor
     ctx.font = `600 ${Math.round(frame.h * 0.072)}px "${options.fontFamily}", sans-serif`
     ctx.textAlign = 'right'
@@ -254,10 +271,11 @@ function renderToSvg(options: RenderPaletteOptions): string {
     options.colors.length,
     options.columns,
     options.showLabels,
+    options.rendering,
   )
   const lines: string[] = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${options.width}" height="${options.height}" viewBox="0 0 ${options.width} ${options.height}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${options.width > options.height ? 297 : 210}mm" height="${options.width > options.height ? 210 : 297}mm" viewBox="0 0 ${options.width} ${options.height}">`,
     `<rect width="${options.width}" height="${options.height}" fill="#FFFFFF" />`,
     `<text x="${Math.round(options.width * 0.06)}" y="${layout.titleY}" font-family="${escapeXml(options.fontFamily)}" font-size="${Math.round(options.height * 0.038)}" font-weight="700" fill="#111118">${escapeXml(truncate(options.title || 'Untitled palette', 52))}</text>`,
   ]
@@ -270,10 +288,17 @@ function renderToSvg(options: RenderPaletteOptions): string {
     const onColor = textOnColor(hex)
     const name = truncate((color.colorName || `Color ${index + 1}`).trim(), 24)
     const customLabel = truncate((color.customLabel?.trim() || ''), 36)
-    const radius = Math.max(12, frame.w * 0.08)
+    const radius = options.rendering === 'block' ? 0 : Math.max(12, frame.w * 0.08)
 
     lines.push(`<rect x="${frame.x}" y="${frame.y}" width="${frame.w}" height="${frame.h}" rx="${radius}" ry="${radius}" fill="#${hex}" />`)
 
+    if(options.rendering === 'block') {
+      const size=Math.max(10,Math.min(frame.w/5.5,frame.h*.28,46)),padding=Math.min(18,frame.h*.16)
+      const textY=options.width>options.height?frame.y+frame.h-padding-(options.showLabels&&customLabel?size*.85:0):frame.y+(frame.h+size*.7)/2
+      lines.push(`<text x="${frame.x+padding}" y="${textY}" font-family="${escapeXml(options.fontFamily)}, sans-serif" font-size="${size}" font-weight="800" fill="${onColor}">#${hex}</text>`)
+      if(options.showLabels && customLabel)lines.push(`<text x="${frame.x+padding}" y="${textY+size*.8}" font-family="${escapeXml(options.fontFamily)}, sans-serif" font-size="${size*.65}" fill="${onColor}">${escapeXml(truncate(customLabel,Math.floor(frame.w/(size*.4))))}</text>`)
+      return
+    }
     const rgbX = frame.x + frame.w - Math.max(12, frame.w * 0.08)
     const rgbY = frame.y + Math.max(12, frame.h * 0.08)
     const rgbStep = Math.max(16, frame.h * 0.1)
@@ -284,7 +309,7 @@ function renderToSvg(options: RenderPaletteOptions): string {
     lines.push(`<text x="${rgbX}" y="${rgbY + (rgbStep * 2)}" text-anchor="end" font-family="${escapeXml(options.fontFamily)}" font-size="${rgbSize}" font-weight="600" fill="${onColor}">B ${rgb.b}</text>`)
 
     const leftX = frame.x + Math.max(12, frame.w * 0.08)
-    const hexY = frame.y + frame.h - Math.max(18, frame.h * 0.16)
+    const hexY = frame.y + frame.h - Math.max(12, frame.h * 0.06)
     const nameY = hexY - Math.max(16, frame.h * 0.105)
     const labelY = frame.y + frame.h + Math.max(14, layout.cardLabelOffset * 0.55)
 
@@ -309,7 +334,9 @@ function dataUrlToUint8Array(dataUrl: string): Uint8Array {
 
 function buildSingleImagePdf(jpegData: Uint8Array, width: number, height: number): Uint8Array {
   const encoder = new TextEncoder()
-  const content = `q\n${width} 0 0 ${height} 0 0 cm\n/Im0 Do\nQ\n`
+  const pageWidth = width > height ? 841.89 : 595.28
+  const pageHeight = width > height ? 595.28 : 841.89
+  const content = `q\n${pageWidth} 0 0 ${pageHeight} 0 0 cm\n/Im0 Do\nQ\n`
   const chunks: Uint8Array[] = []
   const offsets: number[] = [0]
   let cursor = 0
@@ -334,7 +361,7 @@ function buildSingleImagePdf(jpegData: Uint8Array, width: number, height: number
   pushText('2 0 obj\n<< /Type /Pages /Count 1 /Kids [3 0 R] >>\nendobj\n')
 
   offsets.push(cursor)
-  pushText(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${width} ${height}] /Resources << /ProcSet [/PDF /ImageC] /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`)
+  pushText(`3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /ProcSet [/PDF /ImageC] /XObject << /Im0 4 0 R >> >> /Contents 5 0 R >>\nendobj\n`)
 
   offsets.push(cursor)
   pushText(`4 0 obj\n<< /Type /XObject /Subtype /Image /Width ${width} /Height ${height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${jpegData.length} >>\nstream\n`)
@@ -428,11 +455,12 @@ export async function exportVisualPalette(options: {
   fontFamily: string
   fileBaseName: string
   showLabels: boolean
+  rendering?: 'cards' | 'block'
 }): Promise<void> {
   const columns = getColumnsForExport(options.orientation)
   const size = getCanvasSizeForExport(options.orientation)
 
-  if (options.format === 'svg') {
+  if (options.format === 'svg' || options.format === 'ai') {
     const svg = renderToSvg({
       title: options.title,
       colors: options.colors,
@@ -441,7 +469,12 @@ export async function exportVisualPalette(options: {
       width: size.width,
       height: size.height,
       showLabels: options.showLabels,
+      rendering: options.rendering,
     })
+    if (options.format === 'ai') {
+      triggerDownload(new Blob([svgToLegacyIllustrator(svg)], { type: 'application/postscript' }), options.fileBaseName + '.ai')
+      return
+    }
     triggerDownload(new Blob([svg], { type: 'image/svg+xml;charset=utf-8' }), `${options.fileBaseName}.svg`)
     return
   }
@@ -454,6 +487,7 @@ export async function exportVisualPalette(options: {
     width: size.width,
     height: size.height,
     showLabels: options.showLabels,
+    rendering: options.rendering,
   })
 
   if (options.format === 'png') {

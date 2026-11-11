@@ -87,7 +87,7 @@
                 :placeholder="t('searchPage.colorPlaceholder')"
                 @keydown.enter.prevent="addColorsFromInput"
               />
-              <button type="button" class="small-btn" @click="addColorsFromInput">{{ t('searchPage.add') }}</button>
+              <button type="button" class="small-btn" :aria-label="t('searchPage.add')" @click="addColorsFromInput">+</button>
             </div>
           </div>
 
@@ -113,7 +113,7 @@
         <section v-if="colleaguePalettes.length" class="results discover-section">
           <div class="discover-section-head">
             <h2 class="results-title font-display">{{ t('discoverPage.byColleagues') }}</h2>
-            <span class="discover-count font-mono">{{ colleaguePalettes.length }}</span>
+
           </div>
           <div class="palettes-grid">
             <PaletteCard
@@ -129,9 +129,9 @@
         <section class="results discover-section">
           <div class="discover-section-head">
             <h2 class="results-title font-display">{{ t('discoverPage.mostRecent') }}</h2>
-            <span v-if="recentPalettes.length" class="discover-count font-mono">{{ recentPalettes.length }}</span>
+
           </div>
-          <div v-if="discoverLoading" class="empty">{{ t('common.loadingPalettes') }}</div>
+          <ContentSkeleton v-if="discoverLoading" />
           <div v-else-if="recentPalettes.length === 0" class="empty">{{ t('discoverPage.noPublicPalettes') }}</div>
           <div v-else class="palettes-grid">
             <PaletteCard
@@ -180,6 +180,7 @@
 </template>
 
 <script setup lang="ts">
+import ContentSkeleton from '@/components/ui/ContentSkeleton.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
@@ -370,7 +371,7 @@ function openPaletteResult(item: PaletteSearchItem) {
   const path = [...item.folder_path, item.title].join('/')
   router.push({
     name: 'palette',
-    params: { username: item.owner_username, pathMatch: path },
+    params: { username: item.owner_username, pathMatch: path.split('/') },
   })
 }
 

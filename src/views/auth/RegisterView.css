@@ -157,7 +157,7 @@
 .pc {
   position: absolute;
   width: 148px;
-  background: #faf7f0;
+  background: #fff;
   border: 1px solid rgba(14, 14, 16, 0.12);
   border-radius: 11px;
   overflow: hidden;
@@ -177,7 +177,7 @@
 
 .pc-foot {
   padding: 7px 10px 9px;
-  background: #faf7f0;
+  background: #fff;
 }
 .pc--big .pc-foot { padding: 9px 12px 11px; }
 
@@ -385,4 +385,12 @@
 @keyframes riseIn {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+.auth-page{height:auto;overflow:visible;padding-top:68px}
+.auth{margin-top:0;height:auto;min-height:calc(100dvh - 68px);overflow:visible;align-items:start}
+.palette-card{background:#fff}
+@media(min-width:961px){
+  .panel{position:sticky;top:68px;height:calc(100dvh - 68px)}
+  .form-col{overflow:visible;min-height:calc(100dvh - 68px)}
 }

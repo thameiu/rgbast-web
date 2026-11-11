@@ -18,8 +18,12 @@
   overflow: visible;
 }
 
-.col-move,
-:deep(.col-move) {
+.cols-tg :deep(.col) {
+  flex: 0 0 var(--column-size);
+  transition: flex-basis 0.3s cubic-bezier(0.2, 0.9, 0.2, 1), background-color 0.2s ease-in-out;
+}
+
+.cols-tg :deep(.col.col-move) {
   transition: transform 0.29s cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
@@ -69,8 +73,13 @@
     overflow: visible;
   }
 
-  .cols-tg :deep(.col-move) {
-    transition: transform 0.26s cubic-bezier(0.2, 0.9, 0.2, 1) !important;
+  .cols-tg :deep(.col) {
+    flex: 0 0 auto;
+    transition: height 0.3s cubic-bezier(0.2, 0.9, 0.2, 1), background-color 0.2s ease-in-out;
+  }
+
+  .cols-tg :deep(.col.col-move) {
+    transition-duration: 0.26s;
     will-change: transform;
   }
 

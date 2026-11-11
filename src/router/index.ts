@@ -7,7 +7,6 @@ import ForgotPasswordView from '@/views/auth/ForgotPasswordView.vue'
 import ResetPasswordView from '@/views/auth/ResetPasswordView.vue'
 import AuthCompleteView from '@/views/auth/AuthCompleteView.vue'
 import DashboardView from '@/views/dashboard/DashboardView.vue'
-import BookmarksView from '@/views/bookmarks/BookmarksView.vue'
 import PaletteView from '@/views/palette/PaletteView.vue'
 import ColorView from '@/views/color/ColorView.vue'
 import ProfileView from '@/views/profile/ProfileView.vue'
@@ -16,7 +15,15 @@ import SettingsView from '@/views/settings/SettingsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
+  scrollBehavior(to, from, savedPosition) {
+    if (to.name === from.name && to.fullPath === from.fullPath) return false
+    return { ...(savedPosition ?? { top: 0, left: 0 }), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }
+  },
   routes: [
+    { path: '/about', component: () => import('@/views/AboutView.vue') },
+    { path: '/atelier', redirect: '/atelier/palettes' },
+    { path: '/dashboard', redirect: '/atelier/palettes' },
+    { path: '/bookmarks', redirect: '/atelier/bookmarks' },
     {
       path: '/',
       name: 'landing',
@@ -50,14 +57,14 @@ const router = createRouter({
       component: AuthCompleteView,
     },
     {
-      path: '/dashboard',
+      path: '/atelier/palettes/:folders(.*)*',
       name: 'dashboard',
       component: DashboardView,
     },
     {
-      path: '/bookmarks',
+      path: '/atelier/bookmarks',
       name: 'bookmarks',
-      component: BookmarksView,
+      component: DashboardView,
       meta: { requiresAuth: true },
     },
     {

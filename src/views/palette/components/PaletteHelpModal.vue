@@ -68,17 +68,17 @@
         </div>
 
         <div v-else class="help-modal-body">
-          <ul class="shortcut-list">
+          <ul class="shortcut-list"><li><span class="shortcut-keys"><kbd>+</kbd></span><span>{{ t('paletteHelp.shortcuts.addColor') }}</span></li><li><span class="shortcut-keys"><kbd>1–9</kbd><kbd>A–F</kbd></span><span>{{ t('paletteHelp.shortcuts.selectColor') }}</span></li><li><span class="shortcut-keys"><kbd>L</kbd></span><span>{{ t('paletteHelp.shortcuts.lockColor') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Z</kbd></span><span>{{ t('paletteHelp.shortcuts.undo') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Y</kbd><span class="shortcut-sep">/</span><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>Z</kbd></span><span>{{ t('paletteHelp.shortcuts.redo') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.save') }}</span></li>
-            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.edit') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.edit') }}</span></li>
             <li><span class="shortcut-keys"><kbd>{{ t('paletteHelp.keys.space') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.generate') }}</span></li>
-            <li><span class="shortcut-keys"><kbd>Alt</kbd><span class="shortcut-plus">+</span><kbd>{{ t('paletteHelp.keys.space') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.generationSettings') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>{{ t('paletteHelp.keys.space') }}</kbd></span><span>{{ t('paletteHelp.shortcuts.generationSettings') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>I</kbd></span><span>{{ t('paletteHelp.shortcuts.image') }}</span></li>
             <li><span class="shortcut-keys"><kbd>S</kbd></span><span>{{ t('paletteHelp.shortcuts.share') }}</span></li>
-            <li><span class="shortcut-keys"><kbd>A</kbd></span><span>{{ t('paletteHelp.shortcuts.accessibility') }}</span></li>
-            <li><span class="shortcut-keys"><kbd>D</kbd></span><span>{{ t('paletteHelp.shortcuts.display') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>I</kbd></span><span>{{ t('paletteHelp.shortcuts.accessibility') }}</span></li>
+            <li><span class="shortcut-keys"><kbd>P</kbd></span><span>{{ t('paletteHelp.shortcuts.display') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>C</kbd></span><span>{{ t('paletteHelp.shortcuts.copy') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>{{ t('paletteHelp.shortcuts.pasteAdd') }}</span></li>
             <li><span class="shortcut-keys"><kbd>Ctrl</kbd><span class="shortcut-plus">+</span><kbd>Shift</kbd><span class="shortcut-plus">+</span><kbd>V</kbd></span><span>{{ t('paletteHelp.shortcuts.pasteReplace') }}</span></li>

@@ -12,9 +12,8 @@
         >
           <AppIcon name="trash" :size="12" />
         </button>
-        <button class="filter-clear" @click="activeBranchId = null">
-          <AppIcon name="clear" :size="12" />
-          clear
+        <button aria-label="Clear filter" class="filter-clear" @click="activeBranchId = null">
+          <AppIcon name="x" :size="12" />
         </button>
       </div>
     </div>

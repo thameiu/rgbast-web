@@ -22,32 +22,21 @@
     <RouterLink v-else to="/" class="brand">
       <RgbastLogo size="30px" />
       <span class="brand-name">RGBAST</span>
-      <span v-if="brandMeta" class="brand-meta font-mono">{{ brandMeta }}</span>
     </RouterLink>
 
     <!-- Desktop nav -->
     <nav class="site-nav">
-      <template v-if="isOnLanding">
-        <a href="#features" class="nav-link">{{ t('common.features') }}</a>
-        <span class="nav-sep" aria-hidden="true"></span>
-      </template>
-      <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }">{{ t('common.colors') }}</RouterLink>
-      <span class="nav-sep" aria-hidden="true"></span>
-      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }">{{ t('common.discover') }}</RouterLink>
-      <span class="nav-sep" aria-hidden="true"></span>
-      <RouterLink :to="newPaletteTo" class="nav-link" :class="{ 'nav-link--active': isOnNewPalette }">{{ t('common.newPalette') }}</RouterLink>
-      <template v-if="isLoggedIn">
-        <span class="nav-sep" aria-hidden="true"></span>
-        <RouterLink to="/dashboard" class="nav-link" :class="{ 'nav-link--active': isOnDashboard }">{{ t('common.dashboard') }}</RouterLink>
-        <span class="nav-sep" aria-hidden="true"></span>
-        <RouterLink to="/bookmarks" class="nav-link" :class="{ 'nav-link--active': isOnBookmarks }">{{ t('common.bookmarks') }}</RouterLink>
-      </template>
+      <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }"><AppIcon name="paint-palette" :size="16" />{{ t('common.colors') }}</RouterLink>
+      <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }"><AppIcon name="search" :size="16" />{{ t('common.discover') }}</RouterLink>
+      <div class="atelier-slot" ref="atelierEl" @mouseenter="atelierOpen=true" @mouseleave="atelierOpen=false" @focusin="atelierOpen=true">
+        <button class="nav-link" :class="{ 'nav-link--active': isOnDashboard || isOnBookmarks }" :aria-expanded="atelierOpen" @click="atelierOpen = !atelierOpen"><AppIcon name="desk" :size="16" />Atelier <AppIcon name="chevron-down" :size="12" /></button>
+        <Transition name="profile-menu-fade"><div v-if="atelierOpen" class="profile-menu">
+          <RouterLink to="/atelier/palettes" class="profile-menu-item"><AppIcon name="palette" :size="16" />{{ t('searchPage.palettes') }}</RouterLink>
+          <RouterLink to="/atelier/bookmarks" class="profile-menu-item"><AppIcon name="bookmark" :size="16" />{{ t('common.bookmarks') }}</RouterLink>
+          <RouterLink :to="newPaletteTo" class="profile-menu-item"><AppIcon name="plus" :size="16" />{{ t('common.newPalette') }}</RouterLink>
+        </div></Transition>
+      </div>
     </nav>
-
-    <div class="language-switcher" :aria-label="t('header.language')">
-      <button class="lang-btn" :class="{ active: locale === 'fr' }" @click="setLocale('fr')" title="Français">FR</button>
-      <button class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')" title="English">EN</button>
-    </div>
 
     <div v-if="isLoggedIn" class="notif-slot" ref="notifEl">
       <button
@@ -85,7 +74,7 @@
       </Transition>
     </div>
 
-    <div class="account-slot" ref="accountEl">
+    <div class="account-slot" ref="accountEl" @mouseenter="isLoggedIn && (profileMenuOpen = true)" @mouseleave="profileMenuOpen = false">
       <button
         v-if="isLoggedIn"
         class="profile-link"
@@ -100,9 +89,10 @@
 
       <Transition name="profile-menu-fade">
         <div v-if="isLoggedIn && profileMenuOpen" class="profile-menu">
-          <button class="profile-menu-item" @click="goToProfile">{{ t('common.profile') }}</button>
-          <button class="profile-menu-item" @click="onSettingsSoon">{{ t('common.settings') }}</button>
-          <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout">{{ t('common.signOut') }}</button>
+          <button class="profile-menu-item" @click="goToProfile"><AppIcon name="user" :size="16" />{{ t('common.profile') }}</button>
+          <button class="profile-menu-item" @click="onSettingsSoon"><AppIcon name="settings" :size="16" />{{ t('common.settings') }}</button>
+          <button class="profile-menu-item" @click="openColleagues"><AppIcon name="users" :size="16" />{{ t('colleaguesModal.title') }}</button>
+          <button class="profile-menu-item profile-menu-item--danger" @click="handleLogout"><AppIcon name="logout" :size="16" />{{ t('common.signOut') }}</button>
         </div>
       </Transition>
     </div>
@@ -114,9 +104,7 @@
       @click="openSidebar"
       :aria-label="t('header.openNavigation')"
     >
-      <span></span>
-      <span></span>
-      <span></span>
+      <AppIcon name="menu" :size="24" />
     </button>
   </header>
 
@@ -126,31 +114,15 @@
       <div v-if="mobileOpen" class="mob-overlay" @click="closeSidebar"></div>
     </Transition>
 
-    <nav ref="sidebarEl" class="mob-sidebar" :aria-hidden="!mobileOpen">
-      <div class="mob-top">
-        <RouterLink to="/" class="mob-brand" @click="closeSidebar">
-          <RgbastLogo size="28px" />
-          <span class="mob-brand-name"><span style="color:#B410CC">R</span><span style="color:#D56A88">G</span><span style="color:#F6C343">B</span><span style="color:#82C58C">A</span><span style="color:#0EC6D4">S</span><span style="color:#616BD0">T</span></span>
-        </RouterLink>
-        <button class="mob-close" @click="closeSidebar" :aria-label="t('header.close')">×</button>
-      </div>
-
+    <nav ref="sidebarEl" class="mob-sidebar" :aria-hidden="!mobileOpen" :inert="!mobileOpen">
       <div class="mob-links">
-        <div class="mob-language-switcher" :aria-label="t('header.language')">
-          <button class="lang-btn" :class="{ active: locale === 'fr' }" @click="setLocale('fr')">FR</button>
-          <button class="lang-btn" :class="{ active: locale === 'en' }" @click="setLocale('en')">EN</button>
-        </div>
-
-        <template v-if="isOnLanding">
-          <a href="#features" class="mob-link" @click="closeSidebar">{{ t('common.features') }}</a>
-        </template>
-
-        <RouterLink :to="lastColorRoute" class="mob-link" @click="closeSidebar">{{ t('common.colors') }}</RouterLink>
-        <RouterLink to="/search" class="mob-link" @click="closeSidebar">{{ t('common.discover') }}</RouterLink>
-        <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar">{{ t('common.newPalette') }}</RouterLink>
-        <RouterLink v-if="isLoggedIn" to="/dashboard" class="mob-link" :class="{ 'mob-link--active': isOnDashboard }" @click="closeSidebar">{{ t('common.dashboard') }}</RouterLink>
-        <RouterLink v-if="isLoggedIn" to="/bookmarks" class="mob-link" :class="{ 'mob-link--active': isOnBookmarks }" @click="closeSidebar">{{ t('common.bookmarks') }}</RouterLink>
-
+        <RouterLink :to="lastColorRoute" class="mob-link" @click="closeSidebar"><AppIcon name="paint-palette" :size="18" />{{ t('common.colors') }}</RouterLink>
+        <RouterLink to="/search" class="mob-link" @click="closeSidebar"><AppIcon name="search" :size="18" />{{ t('common.discover') }}</RouterLink>
+        <div><button class="mob-link" :aria-expanded="mobileAtelierOpen" @click="mobileAtelierOpen=!mobileAtelierOpen"><AppIcon name="desk" :size="18" />Atelier <AppIcon name="chevron-down" :size="12" /></button><Transition name="mob-submenu"><div v-if="mobileAtelierOpen" class="mob-submenu">
+          <RouterLink to="/atelier/palettes" class="mob-link" @click="closeSidebar"><AppIcon name="palette" :size="18" />{{ t('searchPage.palettes') }}</RouterLink>
+          <RouterLink to="/atelier/bookmarks" class="mob-link" @click="closeSidebar"><AppIcon name="bookmark" :size="18" />{{ t('common.bookmarks') }}</RouterLink>
+          <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar"><AppIcon name="plus" :size="18" />{{ t('common.newPalette') }}</RouterLink>
+        </div></Transition></div>
         <template v-if="isLoggedIn">
           <span class="mob-user font-mono">
             <span class="mob-user-avatar">{{ profileInitial }}</span>
@@ -168,10 +140,10 @@
               </div>
             </div>
           </div>
-          <button class="mob-link" @click="goToProfile">{{ t('common.profile') }}</button>
-          <button class="mob-link" @click="goToBookmarks">{{ t('common.bookmarks') }}</button>
-          <button class="mob-link" @click="onSettingsSoon">{{ t('common.settings') }}</button>
-          <button class="mob-link mob-signout" @click="handleLogout">{{ t('common.signOut') }}</button>
+          <div><button class="mob-link" :aria-expanded="mobileProfileOpen" @click="mobileProfileOpen=!mobileProfileOpen"><AppIcon name="user" :size="18" />{{ t('common.profile') }} <AppIcon name="chevron-down" :size="12" /></button><Transition name="mob-submenu"><div v-if="mobileProfileOpen" class="mob-submenu"><button class="mob-link" @click="goToProfile"><AppIcon name="users" :size="16" />{{ t('common.profile') }}</button>
+          <button class="mob-link" @click="onSettingsSoon"><AppIcon name="settings" :size="16" />{{ t('common.settings') }}</button>
+          <button class="mob-link" @click="openColleagues"><AppIcon name="users" :size="16" />{{ t('colleaguesModal.title') }}</button>
+          <button class="mob-link mob-signout" @click="handleLogout"><AppIcon name="logout" :size="16" />{{ t('common.signOut') }}</button></div></Transition></div>
         </template>
         <template v-else>
           <RouterLink to="/login" class="mob-cta" @click="closeSidebar">{{ t('common.login') }}</RouterLink>
@@ -180,6 +152,8 @@
       </div>
     </nav>
   </Teleport>
+
+  <ColleaguesModal :open="showColleaguesModal" removeConfirmMode="inline" @close="showColleaguesModal = false" />
 </template>
 
 <script setup lang="ts">
@@ -190,11 +164,13 @@
  *        brandMeta (string) - optional meta text shown after the brand name
  * Used in: LandingView, DashboardView, ColorView
  */
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import gsap from 'gsap'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import RgbastLogo from '../ui/RgbastLogo.vue'
 import PaletteRgbastLogo from '../ui/PaletteRgbastLogo.vue'
+import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
 import { searchApi } from '@/api/search'
 import { colleaguesApi } from '@/api/colleagues'
 import type { ColleagueUserItem } from '@/api/types'
@@ -222,8 +198,10 @@ const { locale, setLocale, t } = useI18n()
 const isOnLanding   = computed(() => route.path === '/')
 
 /** True when the current route is the dashboard. */
-const isOnDashboard = computed(() => route.path === '/dashboard')
-const isOnBookmarks = computed(() => route.path === '/bookmarks')
+const mobileAtelierOpen = ref(false)
+const mobileProfileOpen = ref(false)
+const isOnDashboard = computed(() => route.path.startsWith('/atelier/palettes'))
+const isOnBookmarks = computed(() => route.path === '/atelier/bookmarks')
 
 /** True when the current route starts with /color. */
 const isOnColor     = computed(() => route.path.startsWith('/color'))
@@ -264,8 +242,17 @@ const newPaletteTo = computed(() => {
 const lastColorRoute = computed(() => `/color/${lastWatchedColor.value}`)
 
 /** Whether the mobile sidebar is visually open. */
+const atelierOpen = ref(false)
+const atelierEl = ref<HTMLElement | null>(null)
+let previousOverflow = ''
 const mobileOpen = ref(false)
+watch(mobileOpen, open => {
+  if (open) { previousOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden' }
+  else document.body.style.overflow = previousOverflow
+})
+watch(() => route.fullPath, () => { atelierOpen.value = false; if (mobileOpen.value) closeSidebar() })
 const profileMenuOpen = ref(false)
+const showColleaguesModal = ref(false)
 const notifMenuOpen = ref(false)
 const incomingRequests = ref<ColleagueUserItem[]>([])
 const notifError = ref('')
@@ -280,6 +267,7 @@ onMounted(() => {
   syncLastWatchedColor()
   if (sidebarEl.value) gsap.set(sidebarEl.value, { x: '100%' })
   document.addEventListener('pointerdown', onGlobalPointerDown)
+  document.addEventListener('keydown', closeMenusOnEscape)
   window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
   window.addEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
   if (isLoggedIn.value) {
@@ -288,7 +276,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  if (mobileOpen.value) document.body.style.overflow = previousOverflow
   document.removeEventListener('pointerdown', onGlobalPointerDown)
+  document.removeEventListener('keydown', closeMenusOnEscape)
   window.removeEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
   window.removeEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
 })
@@ -310,8 +300,8 @@ function onLastWatchedColorChanged(event: Event): void {
 }
 
 function toggleProfileMenu(): void {
-  profileMenuOpen.value = !profileMenuOpen.value
-  if (profileMenuOpen.value) notifMenuOpen.value = false
+  profileMenuOpen.value = true
+  notifMenuOpen.value = false
 }
 
 function toggleNotifMenu(): void {
@@ -337,9 +327,17 @@ function onSettingsSoon(): void {
   router.push('/settings')
 }
 
+function openColleagues(): void {
+  profileMenuOpen.value = false
+  if (mobileOpen.value) closeSidebar()
+  showColleaguesModal.value = true
+}
+
+function closeMenusOnEscape(event:KeyboardEvent) { if(event.key==='Escape') { atelierOpen.value=false; profileMenuOpen.value=false; notifMenuOpen.value=false; showColleaguesModal.value=false; if(mobileOpen.value) closeSidebar() } }
 function onGlobalPointerDown(event: PointerEvent): void {
   const target = event.target as Node | null
   if (!target) return
+  if (!atelierEl.value?.contains(target)) atelierOpen.value = false
 
   if (profileMenuOpen.value) {
     if (accountEl.value?.contains(target)) return
@@ -354,6 +352,8 @@ function onGlobalPointerDown(event: PointerEvent): void {
  * Slides the mobile sidebar in from the right using GSAP.
  */
 function openSidebar() {
+  mobileAtelierOpen.value = false
+  mobileProfileOpen.value = false
   mobileOpen.value = true
   gsap.to(sidebarEl.value, { x: '0%', duration: 0.42, ease: 'power3.out' })
 }

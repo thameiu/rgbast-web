@@ -207,15 +207,22 @@
 .audit-spaces-grid {
   margin-top: 10px;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #13131a;
 }
 
 .audit-space-cell {
   position: relative;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.03);
+  min-width: 0;
+  border-radius: 0;
+  border: 0;
+  border-right: 1px solid rgba(255,255,255,.1);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+  background: transparent;
   color: rgba(255,255,255,0.88);
   padding: 10px;
   text-align: left;
@@ -604,4 +611,15 @@
     font-size: 10px;
     letter-spacing: 0.01em;
   }
+}
+
+.audit-space-cell:nth-child(5n){border-right:0}
+.audit-space-cell:nth-last-child(-n+5){border-bottom:0}
+.audit-space-value{overflow-wrap:anywhere}
+@media(max-width:768px){
+  .audit-spaces-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .audit-space-cell:nth-child(5n){border-right:1px solid rgba(255,255,255,.1)}
+  .audit-space-cell:nth-last-child(-n+5){border-bottom:1px solid rgba(255,255,255,.1)}
+  .audit-space-cell:nth-child(2n){border-right:0}
+  .audit-space-cell:nth-last-child(-n+2){border-bottom:0}
 }

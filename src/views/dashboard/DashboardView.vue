@@ -9,21 +9,22 @@
 
     <div class="shell">
       <aside class="sidebar">
-        <AppLoader v-if="loading" :message="t('common.loadingPalettes')" />
+        <ContentSkeleton v-if="loading" :message="t('common.loadingPalettes')" />
 
         <template v-else-if="user">
-          <div class="avatar">{{ user.username?.charAt(0)?.toUpperCase() }}</div>
+          <div class="sidebar-profile"><div class="sidebar-identity"><div class="avatar">{{ user.username?.charAt(0)?.toUpperCase() }}</div>
           <p class="sidebar-name font-display">{{ user.username }}</p>
           <p v-if="user.firstname || user.lastname" class="sidebar-fullname">
             {{ [user.firstname, user.lastname].filter(Boolean).join(' ') }}
           </p>
-          <p class="sidebar-email">{{ user.email || t('dashboard.noEmail') }}</p>
 
-          <dl class="sidebar-stats">
-            <div>
-              <dt class="font-mono">{{ t('dashboard.palettes') }}</dt>
+
+          </div><dl class="sidebar-stats">
+            <div class="stat-row stat-row--clickable" role="button" tabindex="0" @click="router.push(palettesTabPath)" @keydown.enter="router.push(palettesTabPath)" @keydown.space.prevent="router.push(palettesTabPath)">
+              <dt class="font-mono"><AppIcon name="palette" :size="16" :title="t('dashboard.palettes')" /></dt>
               <dd>{{ palettes.length }}</dd>
             </div>
+            <div class="stat-row stat-row--clickable" role="button" tabindex="0" @click="router.push('/atelier/bookmarks')" @keydown.enter="router.push('/atelier/bookmarks')" @keydown.space.prevent="router.push('/atelier/bookmarks')"><dt><AppIcon name="bookmark" :size="16" :title="t('common.bookmarks')" /></dt><dd>{{ bookmarkCount }}</dd></div>
             <div
               class="stat-row stat-row--clickable"
               role="button"
@@ -32,14 +33,14 @@
               @keydown.enter.prevent="showColleaguesModal = true"
               @keydown.space.prevent="showColleaguesModal = true"
             >
-              <dt class="font-mono">{{ t('dashboard.colleagues') }}</dt>
+              <dt class="font-mono"><AppIcon name="users" :size="16" :title="t('dashboard.colleagues')" /></dt>
               <dd>
                 <span class="stat-link">{{ colleaguesCount }}</span>
               </dd>
             </div>
-          </dl>
+          </dl></div>
 
-          <div class="folder-panel">
+          <div v-show="!bookmarksActive" class="folder-panel">
             <p class="folder-panel-label font-mono">{{ t('dashboard.folders') }}</p>
             <div class="folder-panel-tree">
               <FolderTree
@@ -72,22 +73,21 @@
 
       <section class="content">
         <header class="content-head">
-          <p class="eyebrow font-mono">
-            <RgbastLogo size="13px" :mono="true" class="eyebrow-logo" />
-            {{ t('dashboard.workspace') }}
-          </p>
-          <h1 class="content-title font-display">
-            {{ t('dashboard.titleBefore') }} <em>{{ t('dashboard.titleFocus') }}</em>, {{ t('dashboard.titleAfter') }}
-          </h1>
+
+          <h1 class="content-title font-display">Atelier</h1>
+          <AtelierTabs :palettes-to="palettesTabPath" />
           <p v-if="!user" class="guest-note font-mono">{{ t('dashboard.guestMode') }}</p>
         </header>
 
-        <div class="palettes-section">
+        <BookmarksView v-if="bookmarksVisited" v-show="bookmarksActive" embedded @count="bookmarkCount=$event" />
+        <div v-show="!bookmarksActive" class="palettes-section">
+          <input v-model="localQuery" class="atelier-search" :placeholder="t('searchPage.palettePlaceholder')" :aria-label="t('searchPage.palettePlaceholder')" />
           <div class="section-bar">
-            <h2 class="section-title font-display">{{ t('dashboard.palettes') }}</h2>
+
 
             <!-- Breadcrumb path -->
             <nav v-if="activeFolderKey !== 'all'" class="breadcrumb font-mono">
+              <button class="root-button" :aria-label="typeof activeFolderKey === 'number' ? t('palette.back') : t('folderTree.root')" @click="activeFolderKey=typeof activeFolderKey === 'number' ? (folders.find(f => f.id === activeFolderKey)?.parent_folder_id ?? 'root') : 'root'"><AppIcon :name="typeof activeFolderKey === 'number' ? 'arrow-left' : 'home'" :size="18" /></button>
               <template v-for="(seg, i) in breadcrumbSegments" :key="String(seg.key)">
                 <span
                   class="bc-seg"
@@ -101,15 +101,9 @@
             </nav>
             <p v-else class="breadcrumb-all font-mono">{{ t('dashboard.allPalettes') }}</p>
 
-            <button class="new-palette-btn" @click="newPalette">
-              {{ t('dashboard.newPalette') }}
-              <span aria-hidden="true">+</span>
-            </button>
-            <button v-if="activeFolderKey !== 'all'" class="new-folder-btn" @click="createFolderHere">
-              {{ t('folderTree.newFolder') }}
-              <span aria-hidden="true">+</span>
-            </button>
+            <div class="new-menu" @mouseenter="newMenuOpen=true" @mouseleave="newMenuOpen=false" @keydown.esc="newMenuOpen=false"><button class="new-palette-btn" :aria-expanded="newMenuOpen" @click="newMenuOpen=!newMenuOpen">{{ t('common.new') }} <AppIcon name="chevron-down" :size="12" /></button><Transition name="new-menu-fade"><div v-if="newMenuOpen" class="new-menu-options"><button @click="newMenuOpen=false;newPalette()">{{ t('common.newPalette') }}</button><button v-if="activeFolderKey !== 'all'" @click="newMenuOpen=false;createFolderHere()">{{ t('common.newFolder') }}</button></div></Transition></div>
           </div>
+
 
           <div class="sort-bar font-mono">
             <span class="sort-label">{{ t('dashboard.sort') }}</span>
@@ -136,7 +130,7 @@
           </div>
 
           <div v-if="!isCreatingFolderCard && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="empty-state">
-            <div class="empty-icon">◐</div>
+            <AppIcon class="empty-icon" name="palette" :size="36" />
             <p>{{ activeFolderKey === 'all' ? t('dashboard.noPalettes') : t('dashboard.noFolderPalettes') }}</p>
             <button class="empty-cta" @click="newPalette">{{ emptyCta }}</button>
           </div>
@@ -146,12 +140,7 @@
               v-if="isCreatingFolderCard"
               class="dashboard-folder-card dashboard-folder-card--editing dashboard-folder-card--new"
             >
-              <div class="dashboard-folder-icon" aria-hidden="true">
-                <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
-                  <path d="M3 10.5C3 7.74 5.24 5.5 8 5.5h8.9l4.2 4.1H34c2.76 0 5 2.24 5 5V28c0 2.76-2.24 5-5 5H8c-2.76 0-5-2.24-5-5V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                  <path d="M3 14h36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </div>
+
               <div class="dashboard-folder-body">
                 <input
                   v-model="folderCreateDraftName"
@@ -197,12 +186,7 @@
                   </svg>
                 </button>
               </div>
-              <div class="dashboard-folder-icon" aria-hidden="true">
-                <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
-                  <path d="M3 10.5C3 7.74 5.24 5.5 8 5.5h8.9l4.2 4.1H34c2.76 0 5 2.24 5 5V28c0 2.76-2.24 5-5 5H8c-2.76 0-5-2.24-5-5V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                  <path d="M3 14h36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </div>
+
               <div class="dashboard-folder-body">
                 <template v-if="folderEditTarget?.id === folder.id">
                   <input
@@ -225,7 +209,7 @@
                 <template v-else>
                   <h3 class="dashboard-folder-title font-display">{{ folder.name }}</h3>
                   <p class="dashboard-folder-meta font-mono">
-                    {{ folderPaletteCount(folder.id) }} {{ t('dashboard.palettes') }} · {{ childFolderCount(folder.id) }} {{ t('dashboard.folders').toLowerCase() }}
+                    <AppIcon name="palette" :size="14" /> {{ folderPaletteCount(folder.id) }} · <AppIcon name="folder" :size="14" /> {{ childFolderCount(folder.id) }}
                   </p>
                 </template>
               </div>
@@ -357,8 +341,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import BookmarksView from '@/views/bookmarks/BookmarksView.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import AtelierTabs from '@/components/layout/AtelierTabs.vue'
+import { colorBookmarksApi } from '@/api/colorBookmarks'
+import { useRouter, useRoute } from 'vue-router'
 import { authApi } from '@/api'
 import { foldersApi } from '@/api/folders'
 import { palettesApi } from '@/api/palettes'
@@ -368,7 +356,7 @@ import type { PaletteDraftEntry } from '@/api/paletteDrafts'
 import type { FolderResponse, PaletteCache } from '@/api/types'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
-import AppLoader from '@/components/ui/AppLoader.vue'
+import ContentSkeleton from '@/components/ui/ContentSkeleton.vue'
 import FolderTree from '@/components/folder/FolderTree.vue'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
@@ -378,6 +366,27 @@ import { setPageSeo } from '@/utils/seo'
 import { useI18n } from '@/i18n'
 
 const router = useRouter()
+const route = useRoute()
+const bookmarksActive = computed(() => route.name === 'bookmarks')
+const bookmarksVisited = ref(bookmarksActive.value)
+watch(bookmarksActive, active => { if (active) bookmarksVisited.value = true })
+const palettesTabPath = ref(route.name === 'dashboard' ? route.path : '/atelier/palettes')
+watch(() => route.path, path => { if (route.name === 'dashboard') palettesTabPath.value = path })
+const newMenuOpen = ref(false)
+const bookmarkCount = ref(0)
+function syncFolderRoute() {
+  if (route.name !== 'dashboard') return
+  const raw = route.params.folders
+  const segments = Array.isArray(raw) ? raw : String(raw || '').split('/').filter(Boolean)
+  let parent: number | null = null
+  for (const name of segments) {
+    const folder = folders.value.find(f => f.parent_folder_id === parent && f.name === name)
+    if (!folder) { activeFolderKey.value = 'root'; return }
+    parent = folder.id
+  }
+  activeFolderKey.value = parent ?? 'root'
+}
+
 const { t } = useI18n()
 const loading = ref(true)
 const user = ref<any>(null)
@@ -392,6 +401,7 @@ const localDraftCards = ref<DashboardPaletteCard[]>([])
 const unsavedDraftPaletteIds = ref<number[]>([])
 const unsavedDraftByPaletteId = ref<Record<number, PaletteDraftEntry>>({})
 const folders = ref<FolderResponse[]>([])
+const localQuery = ref('')
 const activeFolderKey = ref<'all' | 'root' | number>('root')
 const sortField = ref<'name' | 'date'>('date')
 const sortDir = ref<'asc' | 'desc'>('desc')
@@ -498,9 +508,18 @@ const displayPalettes = computed<DashboardPaletteCard[]>(() => {
   return [...localDraftCards.value, ...mergedServer]
 })
 
+watch(() => route.params.folders, syncFolderRoute)
+watch(activeFolderKey, key => {
+  if (route.name !== 'dashboard') return
+  if (key === 'all') return
+  const names = typeof key === 'number' ? getFolderAncestors(key).map(id => folders.value.find(f=>f.id===id)!.name) : []
+  void router.push({name:'dashboard',params:{folders:names}})
+})
+
 const filteredPalettes = computed(() => {
   let list: DashboardPaletteCard[]
-  if (activeFolderKey.value === 'all') list = [...displayPalettes.value]
+  if (localQuery.value.trim()) list = displayPalettes.value.filter(p => p.title.toLocaleLowerCase().includes(localQuery.value.trim().toLocaleLowerCase()))
+  else if (activeFolderKey.value === 'all') list = [...displayPalettes.value]
   else if (activeFolderKey.value === 'root') list = displayPalettes.value.filter(p => p.folder_id == null)
   else list = displayPalettes.value.filter(p => p.folder_id === activeFolderKey.value)
 
@@ -515,7 +534,7 @@ const filteredPalettes = computed(() => {
 })
 
 const visibleFolderCards = computed(() => {
-  if (activeFolderKey.value === 'all') return []
+  if (localQuery.value.trim() || activeFolderKey.value === 'all') return []
   const parentId = activeFolderKey.value === 'root' ? null : activeFolderKey.value
   const dir = sortField.value === 'name' && sortDir.value === 'desc' ? -1 : 1
   return folders.value
@@ -635,8 +654,10 @@ async function loadDashboard() {
     })
     const serverIds = new Set(palettes.value.map(p => p.id))
     applyDraftsToState(paletteDraftsApi.listByOwner(user.value.username), serverIds)
+    bookmarkCount.value = await colorBookmarksApi.listMine().then(r=>r.bookmarks.length).catch(()=>0)
     await loadColleaguesSummary()
     await loadFolders()
+    syncFolderRoute()
   } catch {
     localStorage.removeItem('access_token')
     user.value = null
@@ -696,7 +717,7 @@ function openPalette(p: DashboardPaletteCard) {
   }
   if (!user.value?.username) return
   const segments = [...(p.folder_path ?? []), p.title].filter(Boolean)
-  router.push({ name: 'palette', params: { username: user.value.username, pathMatch: segments.join('/') } })
+  router.push({ name: 'palette', params: { username: user.value.username, pathMatch: segments } })
 }
 
 function onFolderCardClick(folder: FolderResponse) {

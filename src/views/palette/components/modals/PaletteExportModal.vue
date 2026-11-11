@@ -1,19 +1,23 @@
 <template>
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
-      <div class="modal export-modal">
+      <div class="modal export-modal" :class="{ 'export-modal--visual': exportStep && exportStep !== 'css' }">
         <button class="modal-close-btn" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
-        <h3 class="modal-title font-display">Export Palette</h3>
+        <h3 class="modal-title font-display">{{ t('palette.exportPalette') }}</h3>
+        <div v-if="exportStep === null" class="export-choice-grid">
+          <button v-for="format in ['svg','png','pdf','ai','css'] as const" :key="format" class="modal-btn secondary" @click="exportStep=format; if(format !== 'css') selectFormat(format)"><AppIcon :name="format==='css'?'code':format==='png'?'file-png':format==='svg'?'file-svg':format==='pdf'?'file-pdf':'file-ai'" :size="24" />{{ format.toUpperCase() }}</button>
+          <button v-if="isSavedPalette" class="modal-btn secondary" :class="{'share-btn--copied':shareCopied}" @click="copyShareLink"><AppIcon :name="shareCopied?'check':'copy'" :size="24" />{{ shareCopied ? t('colorPage.copied') : t('exportUi.copyLink') }}</button>
+        </div>
+        <template v-else>
+        <button class="modal-btn secondary export-back" @click="exportStep=null"><AppIcon name="arrow-left" :size="14" />{{ t('palette.back') }}</button>
 
-        <p class="modal-sub">
-          Export this palette as <strong>PDF</strong>, <strong>PNG</strong>, <strong>SVG</strong>, or editable code variables.
-        </p>
 
-        <div class="field-row">
-          <div ref="fontDropdownEl" class="field-group custom-dropdown-wrap">
-            <label class="field-label">Font</label>
+
+        <div v-if="exportStep !== 'css'" class="field-row">
+          <div v-if="visualFormat !== 'svg'" ref="fontDropdownEl" class="field-group custom-dropdown-wrap">
+            <label class="field-label">{{ t('exportUi.font') }}</label>
             <button class="custom-dd-btn" :class="{ open: fontDropdownOpen }" @click="toggleFontDropdown">
               <span>{{ selectedFontLabel }}</span>
               <AppIcon name="chevron-down" :size="10" :class="{ rotated: fontDropdownOpen }" />
@@ -37,7 +41,7 @@
           </div>
 
           <div ref="formatDropdownEl" class="field-group custom-dropdown-wrap">
-            <label class="field-label">Visual format</label>
+            <label class="field-label">{{ t('exportUi.format') }}</label>
             <button class="custom-dd-btn" :class="{ open: formatDropdownOpen }" @click="toggleFormatDropdown">
               <span>{{ visualFormat.toUpperCase() }}</span>
               <AppIcon name="chevron-down" :size="10" :class="{ rotated: formatDropdownOpen }" />
@@ -62,14 +66,15 @@
                     <AppIcon name="check" :size="12" />
                   </span>
                 </button>
+                <button class="custom-dd-opt" :class="{active:visualFormat==='ai'}" @click="selectFormat('ai')">AI</button>
               </div>
             </Transition>
           </div>
         </div>
 
-        <div class="field-row field-row--export">
+        <div v-if="exportStep !== 'css'" class="field-row field-row--export">
           <div ref="orientationDropdownEl" class="field-group custom-dropdown-wrap">
-            <label class="field-label">Orientation (A4)</label>
+            <label class="field-label">{{ t('exportUi.orientation') }}</label>
             <button class="custom-dd-btn" :class="{ open: orientationDropdownOpen }" @click="toggleOrientationDropdown">
               <span>{{ orientationLabel }}</span>
               <AppIcon name="chevron-down" :size="10" :class="{ rotated: orientationDropdownOpen }" />
@@ -83,7 +88,7 @@
                   </span>
                 </button>
                 <button class="custom-dd-opt" :class="{ active: orientation === 'landscape' }" @click="selectOrientation('landscape')">
-                  <span>Landscape</span>
+                  <span>{{ t('exportUi.landscape') }}</span>
                   <span v-if="orientation === 'landscape'" class="dd-check" aria-hidden="true">
                     <AppIcon name="check" :size="12" />
                   </span>
@@ -93,20 +98,22 @@
           </div>
 
           <div class="field-group export-actions-group">
-            <label class="field-label">Visual export</label>
+            <label class="field-label">{{ t('exportUi.download') }}</label>
             <button class="modal-btn confirm export-btn" :disabled="isBusy || !colors.length" @click="downloadVisualExport">
-              {{ isBusy ? 'Exporting...' : `Download ${visualFormat.toUpperCase()}` }}
+              {{ isBusy ? t('exportUi.busy') : `${t('exportUi.download')} ${visualFormat.toUpperCase()}` }}
             </button>
           </div>
         </div>
 
+        <p v-if="visualFormat==='ai' && exportStep!=='css'" class="field-hint">{{ t('exportUi.aiLegacy') }}</p>
         <div class="modal-divider"></div>
 
-        <label class="toggle-row">
+        <div v-if="exportStep !== 'css'" class="code-format-grid"><button class="chip-btn" :class="{active:rendering==='cards'}" @click="rendering='cards'">{{t('exportUi.cards')}}</button><button class="chip-btn" :class="{active:rendering==='block'}" @click="rendering='block'">{{t('exportUi.block')}}</button></div>
+        <label v-if="exportStep !== 'css'" class="toggle-row">
           <input v-model="showLabels" type="checkbox" />
-          <span>Show custom labels</span>
+          <span>{{ t('exportUi.labels') }}</span>
         </label>
-        <label class="field-label">CSS / SCSS Variables</label>
+        <template v-if="exportStep === 'css'"><label class="field-label">CSS / SCSS Variables</label>
         <div class="code-format-grid">
           <button
             v-for="option in codeOptions"
@@ -134,9 +141,9 @@
             @click="copyCode"
           >
             <span v-if="codeCopied">✓ Copied</span>
-            <span v-else>Copy code</span>
+            <span v-else>{{ t('exportUi.copyCode') }}</span>
           </button>
-          <button class="modal-btn secondary" :disabled="!editableCode.trim()" @click="downloadCode">Download code</button>
+          <button class="modal-btn secondary" :disabled="!editableCode.trim()" @click="downloadCode">{{ t('exportUi.downloadCode') }}</button>
           <button
             v-if="isSavedPalette"
             class="modal-btn share-btn"
@@ -149,6 +156,8 @@
           </button>
         </div>
 
+        </template>
+        </template>
         <p v-if="error" class="modal-error">{{ error }}</p>
 
         <Transition name="image-modal-loader-fade">
@@ -162,6 +171,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from '@/i18n'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
@@ -189,11 +199,14 @@ defineEmits<{
   (e: 'close'): void
 }>()
 
+const {t}=useI18n()
+const exportStep=ref<'svg'|'png'|'pdf'|'ai'|'css'|null>(null)
 const fontOptions = EXPORT_FONT_OPTIONS
-const fontKey = ref<string>('satoshi')
+const fontKey = ref<string>('inter')
 const visualFormat = ref<ExportVisualFormat>('pdf')
 const orientation = ref<ExportOrientation>('portrait')
 const showLabels = ref(true)
+const rendering=ref<'cards'|'block'>('cards')
 const codeFormat = ref<ExportCodeFormat>('css-hex')
 const editableCode = ref('')
 const error = ref('')
@@ -221,7 +234,7 @@ const codeOptions: Array<{ value: ExportCodeFormat; label: string }> = [
 ]
 
 const selectedFontLabel = computed(() => {
-  return fontOptions.find(font => font.key === fontKey.value)?.label ?? 'Satoshi (default)'
+  return fontOptions.find(font => font.key === fontKey.value)?.label ?? 'Inter'
 })
 const orientationLabel = computed(() => (orientation.value === 'portrait' ? 'Portrait' : 'Landscape'))
 
@@ -257,6 +270,7 @@ watch(codeFormat, () => {
 
 watch(() => props.open, (open) => {
   if (!open) {
+    exportStep.value=null
     fontDropdownOpen.value = false
     formatDropdownOpen.value = false
     orientationDropdownOpen.value = false
@@ -373,7 +387,7 @@ async function downloadVisualExport(): Promise<void> {
 
   isBusy.value = true
   try {
-    const fontFamily = await ensureExportFontLoaded(fontKey.value)
+    const fontFamily = await ensureExportFontLoaded(visualFormat.value === 'svg' ? 'inter' : fontKey.value)
     await exportVisualPalette({
       format: visualFormat.value,
       orientation: orientation.value,
@@ -382,6 +396,7 @@ async function downloadVisualExport(): Promise<void> {
       fontFamily,
       fileBaseName: fileBasename(),
       showLabels: showLabels.value,
+      rendering:rendering.value,
     })
   } catch (e: any) {
     error.value = e?.message || 'Export failed.'

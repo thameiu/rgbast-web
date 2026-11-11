@@ -21,11 +21,9 @@
 
       <div class="panel-inner">
         <div class="panel-lede">
-          <p class="eyebrow font-mono">
-            {{ t('auth.loginEyebrow') }}
-          </p>
+
           <h1 class="panel-title font-display">
-            {{ t('auth.loginTitleBefore') }} <em>{{ t('auth.loginTitleFocus') }}</em>.
+            {{ t('auth.loginTitleBefore') }} <em>{{ t('auth.loginTitleFocus') }}</em>
           </h1>
           <p class="panel-copy">
             {{ t('auth.loginCopy') }}

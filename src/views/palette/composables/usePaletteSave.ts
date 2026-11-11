@@ -147,7 +147,9 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
         paletteDraftsApi.removeDraft(oldDraftKey)
         const pathMatch = [...created.folder_path, created.title].join('/')
         const ownerUsername = getTokenUsername() ?? ctx.username.value
-        await ctx.router.replace({ name: 'palette', params: { username: ownerUsername, pathMatch } })
+        ctx.preserveNextRouteLoad.value = true
+        await ctx.router.replace({ name: 'palette', params: { username: ownerUsername, pathMatch: typeof pathMatch === 'string' ? pathMatch.split('/') : pathMatch } })
+
         await actions.loadHistory()
         return
       }
@@ -206,6 +208,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       ctx.selectedSnapshotId.value = null
       paletteDraftsApi.removeByPaletteId(ctx.paletteId.value)
       paletteDraftsApi.removeDraft(ctx.draftKey.value)
+
       await actions.loadHistory()
       ctx.showSaveModal.value = false
       saveComment.value = ''
@@ -215,6 +218,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
     } catch (e: any) {
       saveError.value = e.message ?? 'Save failed'
     } finally {
+      ctx.preserveNextRouteLoad.value = false
       isSaving.value = false
     }
   }
@@ -238,6 +242,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       await palettesApi.mergeBranch(ctx.paletteId.value, mergeTargetId.value)
       mergeTargetId.value = null
       ctx.currentBranchId.value = null
+
       await actions.loadHistory()
     } catch (e: any) {
       mergeError.value = e.message ?? 'Merge failed'
@@ -283,6 +288,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       await palettesApi.deleteBranch(ctx.paletteId.value, deleteBranchTargetId.value)
       if (ctx.currentBranchId.value === deleteBranchTargetId.value) ctx.currentBranchId.value = null
       deleteBranchTargetId.value = null
+
       await actions.loadHistory()
     } catch (e: any) {
       deleteBranchError.value = e.message ?? 'Delete failed'
@@ -309,6 +315,7 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
       }
       showRevertModal.value = false
       ctx.selectedSnapshotId.value = null
+
       await actions.loadHistory()
     } catch (e: any) {
       revertError.value = e.message ?? 'Revert failed'
@@ -355,12 +362,15 @@ export function usePaletteSave(ctx: PaletteContext, actions: SaveActions) {
 
       const pathMatch = [...updated.folder_path, updated.title].join('/')
       const ownerUsername = ctx.history.value?.owner_username ?? getTokenUsername() ?? ctx.username.value
-      await ctx.router.replace({ name: 'palette', params: { username: ownerUsername, pathMatch } })
+      ctx.preserveNextRouteLoad.value = true
+      await ctx.router.replace({ name: 'palette', params: { username: ownerUsername, pathMatch: typeof pathMatch === 'string' ? pathMatch.split('/') : pathMatch } })
       showEditModal.value = false
+
       await actions.loadHistory()
     } catch (e: any) {
       editError.value = e.message ?? 'Update failed'
     } finally {
+      ctx.preserveNextRouteLoad.value = false
       isEditing.value = false
     }
   }

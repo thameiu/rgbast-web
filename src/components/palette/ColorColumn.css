@@ -17,20 +17,15 @@
   top: 14px;
   left: 50%;
   transform: translateX(-50%);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4px;
+  display: flex;
+  color: var(--fg);
   opacity: 0;
   transition: opacity 0.15s;
   cursor: grab;
   pointer-events: none;
 }
 .col:hover .drag-handle { opacity: 0.5; pointer-events: all; }
-.drag-handle span {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: var(--fg);
-}
+.drag-handle svg { display:block; flex:none; }
 
 /* Column actions */
 .column-actions {
@@ -205,10 +200,7 @@
     touch-action: none;
   }
   .col.swap-selected .drag-handle { opacity: 1; }
-  .col.swap-selected .drag-handle span {
-    background: rgba(180,16,204,0.9);
-    box-shadow: 0 0 0 2.5px rgba(180,16,204,0.35);
-  }
+
   .column-actions {
     top: 8px;
     right: 8px;
@@ -237,4 +229,13 @@
   .copy-btn {
     opacity: 0.75;
   }
+}
+
+.col.swap-selected .drag-handle{opacity:1;pointer-events:auto;color:var(--fg)}
+.col.swap-selected::after{content:"";position:absolute;inset:0;border:1px solid var(--fg);pointer-events:none;z-index:2}
+
+.col{transition:background-color .2s ease-in-out}
+
+@media (min-width: 769px) {
+  .col { min-width: 0; }
 }

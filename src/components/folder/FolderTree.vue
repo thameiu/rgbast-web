@@ -27,9 +27,7 @@
       </button>
       <span v-else class="ft-gap" />
 
-      <svg class="ft-sicon" :class="{ 'ft-sicon--active': mode === 'navigation' ? modelValue === 'root' : modelValue === null }" width="14" height="12" viewBox="0 0 14 12" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
-        <path d="M1 10V5a1 1 0 0 1 .5-.87l5-2.88a1 1 0 0 1 1 0l5 2.88A1 1 0 0 1 13 5v5a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1Z" />
-      </svg>
+      <AppIcon name="home" class="ft-sicon" :class="{ 'ft-sicon--active': mode === 'navigation' ? modelValue === 'root' : modelValue === null }" :size="14" />
       <span class="ft-label ft-label--root">{{ mode === 'picker' ? t('folderTree.rootNoFolder') : t('folderTree.root') }}</span>
       <span v-if="mode === 'navigation'" class="ft-count-icons">
         <span class="ft-count-item" :title="t('folderTree.palettes')">
@@ -164,6 +162,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, nextTick, provide, ref, watch } from 'vue'
 import type { FolderResponse, PaletteCache } from '@/api/types'
 import type { FolderTreeState } from './folderTreeTypes'

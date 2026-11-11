@@ -3,9 +3,16 @@ import type { Ref } from 'vue'
 
 export interface KeyboardContext {
   generateOpen: Ref<boolean>
+  isOwned: Ref<boolean>
 }
 
 export interface KeyboardActions {
+  addColor: () => void
+  selectColor: (index:number) => void
+  clearColor: () => void
+  moveSelectedColor: (direction:number) => void
+  deleteSelectedColor: () => void
+  lockSelectedColor: () => void
   doUndo: () => void
   doRedo: () => void
   requestSave: () => void
@@ -42,6 +49,15 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
     }
 
     const key = keyOf(e)
+    const target = e.target as HTMLElement
+    if (target?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], .modal, .help-modal')) return
+    if ((key === '+' || e.code === 'NumpadAdd') && !e.ctrlKey && !e.metaKey && !e.altKey && ctx.isOwned.value) { e.preventDefault(); if (!e.repeat) actions.addColor(); return }
+    if (key === 'escape') { actions.clearColor(); return }
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey && /^[1-9a-f]$/.test(key)) {
+      e.preventDefault(); actions.selectColor(parseInt(key,16)-1); return
+    }
+    if (!ctx.isOwned.value && (['delete',' ','l','v','z','y'].includes(key) || (key === 'i' && (e.ctrlKey || e.metaKey)) || (key === 's' && e.shiftKey))) return
+    if (key === 'l' && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); actions.lockSelectedColor(); return }
 
     if ((e.ctrlKey || e.metaKey) && key === 'z' && !e.shiftKey) {
       e.preventDefault()
@@ -55,7 +71,7 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       if (!e.repeat) actions.doRedo()
       return
     }
-    if ((e.ctrlKey || e.metaKey) && key === 's' && e.shiftKey) {
+    if (key === 's' && e.shiftKey && !e.ctrlKey && !e.metaKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openEditPalette()
@@ -107,7 +123,7 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       } else if (e.shiftKey) {
         if (!e.repeat) actions.deleteFirstColor()
       } else if (!e.altKey) {
-        if (!e.repeat) actions.deleteLastColor()
+        if (!e.repeat) actions.deleteSelectedColor()
       }
       return
     }
@@ -116,13 +132,13 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       if (e.code === 'ArrowLeft') {
         e.preventDefault()
         e.stopImmediatePropagation()
-        if (!e.repeat) actions.historyLeft()
+        if (!e.repeat) actions.moveSelectedColor(-1)
         return
       }
       if (e.code === 'ArrowRight') {
         e.preventDefault()
         e.stopImmediatePropagation()
-        if (!e.repeat) actions.historyRight()
+        if (!e.repeat) actions.moveSelectedColor(1)
         return
       }
     }
@@ -141,14 +157,14 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
       return
     }
 
-    if (key === 'a' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (key === 'i' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.openAccessibilityAudit()
       return
     }
 
-    if (key === 'd' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
+    if (key === 'p' && !e.ctrlKey && !e.metaKey && !e.altKey && !e.shiftKey) {
       e.preventDefault()
       e.stopImmediatePropagation()
       if (!e.repeat) actions.toggleDisplaySettings()
@@ -173,7 +189,7 @@ export function usePaletteKeyboard(ctx: KeyboardContext, actions: KeyboardAction
     if (e.code !== 'Space') return
     const tag = (e.target as HTMLElement)?.tagName?.toLowerCase()
     if (['input', 'textarea', 'select'].includes(tag) || (e.target as HTMLElement)?.isContentEditable) return
-    if (e.altKey || e.shiftKey || altHeld) {
+    if ((e.ctrlKey || e.metaKey) && ctx.isOwned.value) {
       e.preventDefault()
       e.stopImmediatePropagation()
       ctx.generateOpen.value = true

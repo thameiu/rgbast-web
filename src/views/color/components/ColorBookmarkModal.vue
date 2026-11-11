@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div v-if="open" class="bookmark-modal-overlay" @click.self="$emit('close')">
-      <form class="bookmark-modal" @submit.prevent="$emit('save')">
+      <form class="bookmark-modal" role="dialog" aria-modal="true" @keydown.esc.prevent="$emit('close')" @submit.prevent="$emit('save')">
         <button class="bookmark-modal-close" type="button" :aria-label="t('colorPage.closeSaveColorModal')" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
@@ -9,7 +9,8 @@
         <h3 class="bookmark-modal-title font-display">{{ existing ? t('colorPage.updateBookmark') : t('colorPage.saveBookmark') }}</h3>
         <p class="bookmark-modal-sub">{{ t('colorPage.bookmarkSub') }}</p>
 
-        <div class="bookmark-preview" :style="{ background: '#' + hex }">
+        <slot name="picker"></slot>
+        <div v-if="!$slots.picker" class="bookmark-preview" :style="{ background: '#' + hex }">
           <span class="bookmark-preview-hex" :style="{ color: textColor }">#{{ hex.toUpperCase() }}</span>
         </div>
 

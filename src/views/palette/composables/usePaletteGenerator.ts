@@ -9,6 +9,7 @@ import { useI18n } from '@/i18n'
 export interface GeneratorContext {
   colors: Ref<WorkingColor[]>
   mkKey: () => string
+  isOwned: Ref<boolean>
 }
 
 export interface GeneratorActions {
@@ -86,6 +87,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
   const canAddGenerationBaseColor = computed(() => genBaseColors.value.length < 5)
 
   function toggleGenerationBaseColor(hex: string): void {
+    if (!ctx.isOwned.value) return
     const normalized = normalizeBaseHex(hex)
     const existingIndex = genBaseColors.value.findIndex(base => normalizeBaseHex(base) === normalized)
     if (existingIndex >= 0) {
@@ -109,6 +111,7 @@ export function usePaletteGenerator(ctx: GeneratorContext, actions: GeneratorAct
 
   // Generate a palette from the API and replace current colors.
   async function doGenerate(): Promise<void> {
+    if (!ctx.isOwned.value) return
     const now = Date.now()
     if (now - lastGenerateMs < GENERATE_COOLDOWN_MS) return
     lastGenerateMs = now

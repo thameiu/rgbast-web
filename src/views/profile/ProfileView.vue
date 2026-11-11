@@ -8,7 +8,7 @@
     <SiteHeader :user="viewerUser" :brand-meta="t('profilePage.brand')" />
 
     <section class="profile-shell">
-      <AppLoader v-if="loading" :message="t('profilePage.loading')" />
+      <ContentSkeleton v-if="loading" :message="t('profilePage.loading')" />
 
       <div v-else-if="errorMessage" class="profile-error">
         <h1 class="profile-error-title font-display">{{ t('profilePage.unavailable') }}</h1>
@@ -79,7 +79,7 @@
               <span class="profile-view-toggle-label">{{ t('profilePage.bookmarks') }}</span>
             </button>
           </div>
-          <p class="breadcrumb-all font-mono">{{ contentMode === 'palettes' ? palettesSubtitle : bookmarksSubtitle }}</p>
+          <p class="breadcrumb-all font-mono"><button v-if="contentMode==='palettes'" class="root-button" :aria-label="typeof activeFolderKey === 'number' ? t('palette.back') : t('folderTree.root')" @click="activeFolderKey=typeof activeFolderKey === 'number' ? (folders.find(f => f.id === activeFolderKey)?.parent_folder_id ?? 'root') : 'root'"><AppIcon :name="typeof activeFolderKey === 'number' ? 'arrow-left' : 'home'" :size="18" /></button>{{ contentMode === 'palettes' ? palettesSubtitle : bookmarksSubtitle }}</p>
         </div>
 
         <div class="profile-content" :class="{ 'profile-content--bookmarks': contentMode === 'bookmarks' }">
@@ -101,7 +101,7 @@
 
           <section class="profile-palettes">
             <p v-if="contentMode === 'palettes' && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="profile-empty">
-              {{ t('profilePage.noPalettesInFolder') }}
+              <AppIcon name="palette" :size="36" />{{ t('dashboard.noPalettes') }}
             </p>
 
             <div v-else-if="contentMode === 'palettes'" class="palettes-grid">
@@ -111,12 +111,7 @@
                 class="profile-folder-card"
                 @click="activeFolderKey = folder.id"
               >
-                <div class="profile-folder-icon" aria-hidden="true">
-                  <svg width="42" height="36" viewBox="0 0 42 36" fill="none">
-                    <path d="M3 10.5C3 7.74 5.24 5.5 8 5.5h8.9l4.2 4.1H34c2.76 0 5 2.24 5 5V28c0 2.76-2.24 5-5 5H8c-2.76 0-5-2.24-5-5V10.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-                    <path d="M3 14h36" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                  </svg>
-                </div>
+
                 <div class="profile-folder-body">
                   <h3 class="profile-folder-title font-display">{{ folder.name }}</h3>
                   <p class="profile-folder-meta font-mono">
@@ -135,7 +130,7 @@
             </div>
 
             <p v-else-if="sortedBookmarks.length === 0" class="profile-empty">
-              {{ t('profilePage.noSavedColors') }}
+              <AppIcon name="bookmark" :size="36" />{{ t('bookmarksPage.empty') }}
             </p>
 
             <div v-else class="palettes-grid">
@@ -213,6 +208,7 @@
 </template>
 
 <script setup lang="ts">
+import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import type { ColorBookmarkResponse, FolderResponse, PaletteCache, UserGetResponse } from '@/api/types'
@@ -223,7 +219,7 @@ import { colleaguesApi } from '@/api/colleagues'
 import { palettesApi } from '@/api/palettes'
 import { foldersApi } from '@/api/folders'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
-import AppLoader from '@/components/ui/AppLoader.vue'
+import ContentSkeleton from '@/components/ui/ContentSkeleton.vue'
 import FolderTree from '@/components/folder/FolderTree.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
 import ColorBookmarkCard from '@/components/bookmarks/ColorBookmarkCard.vue'
@@ -468,7 +464,7 @@ async function loadProfile() {
 function openPalette(palette: PaletteCache) {
   if (!profileUser.value) return
   const path = [...(palette.folder_path ?? []), palette.title].filter(Boolean).join('/')
-  router.push({ name: 'palette', params: { username: profileUser.value.username, pathMatch: path } })
+  router.push({ name: 'palette', params: { username: profileUser.value.username, pathMatch: path.split('/') } })
 }
 
 function childFolderCount(folderId: number): number {

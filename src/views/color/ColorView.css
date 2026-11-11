@@ -366,11 +366,6 @@
     letter-spacing: 0.01em;
   }
 
-  .cc-swatch-hex {
-    font-size: 10px;
-    letter-spacing: 0.02em;
-  }
-
   .cb-row {
     flex-direction: column;
     gap: 8px;
@@ -663,7 +658,7 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
 }
 .cc-swatch-hex {
   font-family: 'Sora', monospace;
-  font-size: 11px;
+  font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -839,3 +834,11 @@ input[type="number"].cp-input::-webkit-outer-spin-button { -webkit-appearance: n
   padding: 24px 0; text-align: center;
 }
 .state-msg--error { color: #c0392b; }
+
+.spaces-grid{gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:#fff}
+.space-cell{border-radius:0;border:0;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:#fff}
+.space-cell:nth-child(2n){border-right:0}
+.space-cell:nth-last-child(-n+2){border-bottom:0}
+
+@media(min-width:769px){.body-layout{grid-template-columns:440px minmax(0,1fr);gap:28px}}
+.picker-col,.picker-card{min-width:0;width:100%}

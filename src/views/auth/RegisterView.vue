@@ -21,11 +21,9 @@
 
       <div class="panel-inner">
         <div class="panel-lede">
-          <p class="eyebrow font-mono">
-            {{ t('auth.registerEyebrow') }}
-          </p>
+
           <h1 class="panel-title font-display">
-            {{ t('auth.registerTitleBefore') }} <em>{{ t('auth.registerTitleFocus') }}</em>.
+            {{ t('auth.registerTitleBefore') }} <em>{{ t('auth.registerTitleFocus') }}</em>
           </h1>
           <p class="panel-copy">
             {{ t('auth.registerCopy') }}

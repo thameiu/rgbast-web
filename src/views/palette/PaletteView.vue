@@ -59,7 +59,7 @@
     />
 
     <div v-if="ctx.loading.value" class="loading-screen">
-      <AppLoader message="Loading palette..." textTone="light" />
+      <div class="palette-skeleton" role="status" :aria-label="t('common.loadingPalettes')"><span v-for="i in 5" :key="i" :style="{ animationDelay: `${(i-1)*0.08}s` }"></span></div>
     </div>
 
     <div v-else-if="ctx.error.value" class="error-screen">
@@ -80,6 +80,8 @@
 
       <PaletteColumnsArea
         :colors="ctx.colors.value"
+        :readOnly="!ctx.isOwned.value"
+        :selectedIndex="selectedColorIndex"
         :draggedIdx="interactions.draggedIdx.value"
         :swapSourceIdx="interactions.swapSourceIdx.value"
         :showAddBtn="interactions.showAddBtn.value"
@@ -97,10 +99,10 @@
         @toggleGenerationBaseColor="generator.toggleGenerationBaseColor"
         @dragStart="interactions.onDragStart"
         @swapTap="interactions.onSwapTap"
-        @add="interactions.addColor"
+        @add="addColorSmoothly"
         @mouseleave="interactions.hideAddButton"
-        @before-enter="onBeforeEnter"
         @enter="onEnter"
+        @add-enter="onAddEnter"
         @leave="onLeave"
       />
 
@@ -417,12 +419,12 @@ const undo = usePaletteUndo({
 })
 
 const interactions = usePaletteInteractions(
-  { colors: ctx.colors, mkKey: ctx.mkKey },
+  { colors: ctx.colors, mkKey: ctx.mkKey, isOwned: ctx.isOwned },
   { captureForUndo: undo.captureForUndo },
 )
 
 const generator = usePaletteGenerator(
-  { colors: ctx.colors, mkKey: ctx.mkKey },
+  { colors: ctx.colors, mkKey: ctx.mkKey, isOwned: ctx.isOwned },
   { captureForUndo: undo.captureForUndo },
 )
 
@@ -516,11 +518,12 @@ function getNavigationState(): Record<string, unknown> {
 }
 
 function goBackOrDashboard(): void {
-  if (window.history.length > 1) {
+  const back = getNavigationState().back
+  if (typeof back === 'string' && back.startsWith('/') && !back.startsWith('//')) {
     ctx.router.back()
     return
   }
-  void ctx.router.push('/dashboard')
+  void ctx.router.push('/atelier/palettes')
 }
 
 function toSaveColors(colors: Array<{ hex: string; label: string | null }>): PaletteColorSave[] {
@@ -546,6 +549,7 @@ function fromDraftHistorySnapshot(snap: PaletteDraftHistorySnapshot): HistorySna
 }
 
 function hydrateDraftIfReady(): void {
+  if (!ctx.isOwned.value) return
   if (ctx.loading.value) return
   const key = ctx.draftKey.value
   if (!key || hydratedDraftKey.value === key) return
@@ -580,6 +584,7 @@ function hydrateDraftIfReady(): void {
 }
 
 function persistDraftIfNeeded(): void {
+  if (!ctx.isOwned.value) return
   if (save.isSaving.value) return
   if (hydratingDraft.value || ctx.loading.value) return
   const key = ctx.draftKey.value
@@ -633,11 +638,37 @@ const historyActions = usePaletteHistoryActions({
   showRevertModal: save.showRevertModal,
 })
 
+const selectedColorKey = ref<string | null>(null)
+const newlyAddedColorKey = ref<string | null>(null)
+function addColorSmoothly(): void {
+  const previousLength = ctx.colors.value.length
+  interactions.addColor()
+  if (ctx.colors.value.length > previousLength) {
+    newlyAddedColorKey.value = ctx.colors.value[previousLength]?._key ?? null
+  }
+}
+const selectedColorIndex = computed(() => ctx.colors.value.findIndex(c => c._key === selectedColorKey.value))
+function selectColorShortcut(index:number) { selectedColorKey.value = ctx.colors.value[index]?._key ?? null }
+function moveSelectedColor(direction:number) {
+  if (selectedColorIndex.value < 0) { openHistorySidebarShortcut(); return }
+  if (!ctx.isOwned.value) return
+  const index=selectedColorIndex.value, target=index+direction
+  if(index<0 || target<0 || target>=ctx.colors.value.length)return
+  undo.captureForUndo()
+  const [color]=ctx.colors.value.splice(index,1)
+  ctx.colors.value.splice(target,0,color!)
+}
 usePaletteKeyboard(
-  { generateOpen: generator.generateOpen },
+  { generateOpen: generator.generateOpen, isOwned: ctx.isOwned },
   {
-    doUndo: undo.doUndo,
-    doRedo: undo.doRedo,
+    addColor: addColorSmoothly,
+    selectColor: selectColorShortcut,
+    clearColor: () => { selectedColorKey.value=null },
+    moveSelectedColor,
+    deleteSelectedColor: () => { if(selectedColorIndex.value>=0) interactions.removeColor(selectedColorIndex.value); else deleteLastColorShortcut() },
+    lockSelectedColor: () => { const color=ctx.colors.value[selectedColorIndex.value]; if(color) generator.toggleGenerationBaseColor(color.hex) },
+    doUndo: () => { if (ctx.isOwned.value) undo.doUndo() },
+    doRedo: () => { if (ctx.isOwned.value) undo.doRedo() },
     requestSave: save.requestSave,
     doGenerate: generator.doGenerate,
     openImagePalette: openImagePaletteModal,
@@ -652,7 +683,7 @@ usePaletteKeyboard(
     pasteReplaceFromClipboard,
     openCheatSheet: openCheatSheetHelp,
     openShare: openExportModal,
-    openAccessibilityAudit: openAccessibilityAuditModal,
+    openAccessibilityAudit: () => openAccessibilityAuditModal(selectedColorIndex.value >= 0 ? selectedColorIndex.value : undefined),
     toggleDisplaySettings: toggleDisplaySettingsShortcut,
   },
 )
@@ -680,6 +711,7 @@ function setGenPaletteDropIdx(value: number | null): void {
 }
 
 function openImagePaletteModal(): void {
+  if (!ctx.isOwned.value) return
   imagePaletteOpen.value = true
   imagePaletteError.value = ''
 }
@@ -793,6 +825,7 @@ function buildAdjustedColorsFromBase(): Array<{ hex: string; label: string | nul
 }
 
 function onAdjustmentsChange(next: GlobalColorAdjustments): void {
+  if (!ctx.isOwned.value) return
   if (!adjustmentsBaseColors.value) startAdjustmentsSession()
   globalAdjustments.value = next
   if (!adjustmentsBaseColors.value) return
@@ -808,6 +841,7 @@ function cancelAdjustments(): void {
 }
 
 function applyAdjustments(): void {
+  if (!ctx.isOwned.value) return
   if (!adjustmentsBaseColors.value) {
     globalAdjustments.value = { hue: 0, saturation: 0, temperature: 0, luminosity: 0, daltonism: 'none' }
     return
@@ -848,6 +882,7 @@ async function readClipboardColors(): Promise<string[]> {
 }
 
 function applyClipboardColors(hexes: string[], mode: 'add' | 'replace'): void {
+  if (!ctx.isOwned.value) return
   if (!hexes.length) return
   undo.captureForUndo()
   const nextColors = hexes
@@ -1206,42 +1241,52 @@ watch(
 ctx.startRouteWatch(undo.clearHistory)
 
 // Prepare transition styles for column enter animations.
-function onBeforeEnter(el: Element): void {
-  const e = el as HTMLElement
-  e.style.flexBasis = '0px'
-  e.style.flexGrow = '0'
-  e.style.flexShrink = '0'
-  e.style.minWidth = '0'
-  e.style.opacity = '0'
-  e.style.overflow = 'hidden'
-}
-
-// Animate column entry during palette edits.
 function onEnter(el: Element, done: () => void): void {
-  const e = el as HTMLElement
-  const container = e.parentElement!
-  const targetBasis = container.getBoundingClientRect().width / container.children.length
-  e.offsetWidth
-  e.style.transition = 'flex-basis 0.2s cubic-bezier(0.2,0,0,1), opacity 0.16s ease'
-  e.style.flexBasis = targetBasis + 'px'
-  e.style.opacity = '1'
-  e.addEventListener(
-    'transitionend',
-    () => {
-      e.style.flexBasis = ''
-      e.style.flexGrow = ''
-      e.style.flexShrink = ''
-      e.style.minWidth = ''
-      e.style.overflow = ''
-      e.style.transition = ''
-      e.style.opacity = ''
-      done()
-    },
-    { once: true },
-  )
+  const element=el as HTMLElement
+  const delay=Number(element.dataset.index??0)*60
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches){element.style.opacity='';done();return}
+  const animation=element.animate([{opacity:0},{opacity:1}],{duration:240,delay,easing:'ease-in',fill:'both'})
+  const finish=()=>{element.style.opacity='';animation.oncancel=null;animation.cancel();done()}
+  animation.onfinish=finish
+  animation.oncancel=()=>{element.style.opacity='';done()}
 }
 
-// Animate column removal during palette edits.
+function onAddEnter(el: Element, done: () => void): void {
+  const element = el as HTMLElement
+  if (element.dataset.colKey !== newlyAddedColorKey.value || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    done()
+    return
+  }
+  newlyAddedColorKey.value = null
+  const mobile = window.matchMedia('(max-width: 768px)').matches
+  const target = mobile ? element.scrollHeight : element.parentElement!.clientWidth / ctx.colors.value.length
+  const property = mobile ? 'height' : 'flexBasis'
+  element.style.overflow = 'hidden'
+  if (!mobile) element.style.minWidth = '0'
+  element.style.transition = 'none'
+  element.style[property] = '0px'
+  element.offsetWidth
+  element.style.transition = `${mobile ? 'height' : 'flex-basis'} 0.3s cubic-bezier(0.2, 0.9, 0.2, 1)`
+  element.style[property] = `${target}px`
+  let finished = false
+  const finish = () => {
+    if (finished) return
+    finished = true
+    element.removeEventListener('transitionend', onTransitionEnd)
+    clearTimeout(timeout)
+    element.style.removeProperty(mobile ? 'height' : 'flex-basis')
+    element.style.removeProperty('overflow')
+    element.style.removeProperty('min-width')
+    element.style.removeProperty('transition')
+    done()
+  }
+  const onTransitionEnd = (event: TransitionEvent) => {
+    if (event.target === element && event.propertyName === (mobile ? 'height' : 'flex-basis')) finish()
+  }
+  const timeout = setTimeout(finish, 360)
+  element.addEventListener('transitionend', onTransitionEnd)
+}
+
 function onLeave(el: Element, done: () => void): void {
   const e = el as HTMLElement
   const w = e.getBoundingClientRect().width

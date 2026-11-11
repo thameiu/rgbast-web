@@ -1,5 +1,6 @@
 <template>
-  <svg
+  <img v-if="fileIcon" :src="fileIcon" :width="size" :height="size" alt="" aria-hidden="true" /><component v-else-if="libraryIcon" :is="libraryIcon" :size="Number(size)" aria-hidden="true" />
+  <svg v-else
     :width="size"
     :height="size"
     viewBox="0 0 24 24"
@@ -230,6 +231,13 @@
 </template>
 
 <script setup lang="ts">
+import {computed} from 'vue'
+import pdfIcon from '@/assets/icons/file-pdf.svg'
+import svgIcon from '@/assets/icons/file-svg.svg'
+import aiIcon from '@/assets/icons/file-ai.svg'
+import pngIcon from '@/assets/icons/file-png.svg'
+import { Palette, Columns3, Users, User, Bookmark, Folder, ArrowLeft, LogOut, Settings, PanelsTopLeft, GitBranch, House, Image, FileText, CodeXml, Asterisk, PenTool } from 'lucide-vue-next'
+
 export type AppIconName =
   | 'arrow-left'
   | 'arrow-right'
@@ -282,13 +290,26 @@ export type AppIconName =
   | 'lock'
   | 'lock-open'
   | 'palette'
+  | 'paint-palette'
+  | 'user'
+  | 'desk'
+  | 'home'
+  | 'file-pdf'
+  | 'file-svg'
+  | 'file-ai'
+  | 'file-png'
+  | 'code'
 
-withDefaults(defineProps<{
+const props=withDefaults(defineProps<{
   name: AppIconName
   size?: number | string
 }>(), {
   size: 16,
 })
+const iconMap={palette:Columns3,'paint-palette':Palette,users:Users,user:User,bookmark:Bookmark,folder:Folder,'arrow-left':ArrowLeft,logout:LogOut,settings:Settings,desk:PanelsTopLeft,'git-branch':GitBranch,home:House,image:Image,'file-pdf':FileText,'file-svg':Asterisk,'file-ai':PenTool,code:CodeXml}
+const fileIcons={'file-pdf':pdfIcon,'file-svg':svgIcon,'file-ai':aiIcon,'file-png':pngIcon}
+const fileIcon=computed(()=>fileIcons[props.name as keyof typeof fileIcons])
+const libraryIcon=computed(()=>iconMap[props.name as keyof typeof iconMap])
 </script>
 
 <style scoped>

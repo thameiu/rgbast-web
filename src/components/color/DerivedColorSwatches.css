@@ -1,0 +1,11 @@
+/* The same swatch geometry and controls used by ColorView's harmony rows. */
+.vision-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.vision-swatch.derived-swatch{position:relative;display:flex;align-items:center;justify-content:center;min-height:114px;width:100%;border-radius:12px;flex:none;min-width:0}
+.vision-swatch .derived-swatch-actions{display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .15s ease-in-out}
+.vision-swatch:hover .derived-swatch-actions,.vision-swatch:focus-within .derived-swatch-actions,.vision-swatch.vision-swatch--active .derived-swatch-actions{opacity:1}
+.vision-swatch .derived-action-btn{width:32px;height:32px;border:0;border-radius:7px;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease-in-out,background .15s ease-in-out}
+.vision-swatch .derived-action-btn:hover{transform:scale(1.05);background:rgba(255,255,255,.3)}
+.vision-swatch .derived-inline-hex{position:absolute;left:10px;bottom:8px;font:700 22px/1 'Sora',monospace;letter-spacing:.04em}
+.vision-label{display:block;margin-top:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);overflow-wrap:anywhere}
+.vision-grid--dark .vision-label{color:rgba(255,255,255,.72)}
+@media(max-width:768px){.vision-swatch.derived-swatch{min-height:104px}}

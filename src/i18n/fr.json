@@ -60,7 +60,7 @@
     "headlineLine": "système de versions",
     "lead": "Génère ou compose ta palette, sauvegarde chaque changement et retrouve toutes ses versions.",
     "createPalette": "Créer une palette",
-    "colorExplorer": "Explorateur couleur",
+    "colorExplorer": "Explorer les couleurs",
     "statGenerate": "Génère avec des harmonies, une image ou des couleurs de base.",
     "statCommit": "Commit chaque itération - rien n'est perdu.",
     "statBranch": "Branche tes expérimentations sans toucher à ta version principale.",

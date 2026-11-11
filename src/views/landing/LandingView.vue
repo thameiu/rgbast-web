@@ -19,11 +19,11 @@
 
         <div class="cta-row">
           <RouterLink :to="{ name: 'palette', params: { username: 'local', pathMatch: 'new' } }" class="btn-primary">
+            <AppIcon name="palette" :size="16" />
             {{ t('landing.createPalette') }}
-            <span class="btn-arrow" aria-hidden="true">→</span>
           </RouterLink>
           <RouterLink to="/color/B410CC" class="btn-ghost btn-ghost--color">
-            <span class="color-dot" aria-hidden="true"></span> {{ t('landing.colorExplorer') }}
+            <AppIcon name="paint-palette" :size="16" /> {{ t('landing.colorExplorer') }}
           </RouterLink>
         </div>
       </div>
@@ -70,7 +70,6 @@
         <article class="feat feat--history" :ref="registerFeatureEl">
           <div class="feat-copy"><h2 class="feat-title font-display"><span>{{ t('landing.featureHistoryTitleFirst') }}</span> <strong>{{ t('landing.featureHistoryTitleLast') }}</strong></h2><p class="feat-body">{{ t('landing.featureHistoryBody') }}</p></div>
           <div class="feat-art community-scene" aria-hidden="true">
-            <div class="community-profile"><span class="community-avatar">T</span><span class="community-username font-display">thameiu<small>5 public palettes</small></span></div>
             <div v-for="palette in colleaguePalettes" :key="palette.name" class="pc community-palette-card" :class="{ 'pc--med': palette.name === 'Kwester' }">
               <div class="pc-strip"><span v-for="hex in palette.colors" :key="hex" class="pc-col" :style="{ background: `#${hex}` }"></span></div>
               <div class="pc-foot"><span class="pc-name">{{ palette.name }}</span></div>
@@ -92,6 +91,7 @@ import { RouterLink } from 'vue-router'
 import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import RgbBackground from '@/components/layout/RgbBackground.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import HistoryGraph from '@/components/palette/HistoryGraph.vue'
 import type { PaletteHistoryGraphResponse } from '@/api/types'
 import { setPageSeo } from '@/utils/seo'

@@ -28,8 +28,8 @@
     <nav class="site-nav">
       <RouterLink :to="lastColorRoute" class="nav-link" :class="{ 'nav-link--active': isOnColor }"><AppIcon name="paint-palette" :size="16" />{{ t('common.colors') }}</RouterLink>
       <RouterLink to="/search" class="nav-link" :class="{ 'nav-link--active': isOnSearch }"><AppIcon name="search" :size="16" />{{ t('common.discover') }}</RouterLink>
-      <div class="atelier-slot" ref="atelierEl" @mouseenter="atelierOpen=true" @mouseleave="atelierOpen=false" @focusin="atelierOpen=true">
-        <button class="nav-link" :class="{ 'nav-link--active': isOnDashboard || isOnBookmarks }" :aria-expanded="atelierOpen" @click="atelierOpen = !atelierOpen"><AppIcon name="desk" :size="16" />Atelier <AppIcon name="chevron-down" :size="12" /></button>
+      <div class="atelier-slot" ref="atelierEl" @mouseenter="atelierOpen=true" @mouseleave="!atelierPinned && (atelierOpen=false)" @focusin="atelierOpen=true">
+        <button class="nav-link" :class="{ 'nav-link--active': isOnDashboard || isOnBookmarks }" :aria-expanded="atelierOpen" @click="toggleAtelierMenu"><AppIcon name="desk" :size="16" />Atelier <AppIcon name="chevron-down" :size="12" /></button>
         <Transition name="profile-menu-fade"><div v-if="atelierOpen" class="profile-menu">
           <RouterLink to="/atelier/palettes" class="profile-menu-item"><AppIcon name="palette" :size="16" />{{ t('searchPage.palettes') }}</RouterLink>
           <RouterLink to="/atelier/bookmarks" class="profile-menu-item"><AppIcon name="bookmark" :size="16" />{{ t('common.bookmarks') }}</RouterLink>
@@ -74,7 +74,7 @@
       </Transition>
     </div>
 
-    <div class="account-slot" ref="accountEl" @mouseenter="isLoggedIn && (profileMenuOpen = true)" @mouseleave="profileMenuOpen = false">
+    <div class="account-slot" ref="accountEl" @mouseenter="isLoggedIn && (profileMenuOpen = true)" @mouseleave="!profilePinned && (profileMenuOpen = false)">
       <button
         v-if="isLoggedIn"
         class="profile-link"
@@ -243,6 +243,8 @@ const lastColorRoute = computed(() => `/color/${lastWatchedColor.value}`)
 
 /** Whether the mobile sidebar is visually open. */
 const atelierOpen = ref(false)
+const atelierPinned = ref(false)
+const profilePinned = ref(false)
 const atelierEl = ref<HTMLElement | null>(null)
 let previousOverflow = ''
 const mobileOpen = ref(false)
@@ -250,7 +252,7 @@ watch(mobileOpen, open => {
   if (open) { previousOverflow = document.body.style.overflow; document.body.style.overflow = 'hidden' }
   else document.body.style.overflow = previousOverflow
 })
-watch(() => route.fullPath, () => { atelierOpen.value = false; if (mobileOpen.value) closeSidebar() })
+watch(() => route.fullPath, () => { closeDropdowns(); if (mobileOpen.value) closeSidebar() })
 const profileMenuOpen = ref(false)
 const showColleaguesModal = ref(false)
 const notifMenuOpen = ref(false)
@@ -299,14 +301,23 @@ function onLastWatchedColorChanged(event: Event): void {
   syncLastWatchedColor()
 }
 
+function toggleAtelierMenu(): void {
+  atelierPinned.value = !atelierPinned.value
+  atelierOpen.value = atelierPinned.value
+}
+
 function toggleProfileMenu(): void {
-  profileMenuOpen.value = true
+  profilePinned.value = !profilePinned.value
+  profileMenuOpen.value = profilePinned.value
   notifMenuOpen.value = false
 }
 
 function toggleNotifMenu(): void {
   notifMenuOpen.value = !notifMenuOpen.value
-  if (notifMenuOpen.value) profileMenuOpen.value = false
+  if (notifMenuOpen.value) {
+    profileMenuOpen.value = false
+    profilePinned.value = false
+  }
 }
 
 function goToProfile(): void {
@@ -328,20 +339,31 @@ function onSettingsSoon(): void {
 }
 
 function openColleagues(): void {
-  profileMenuOpen.value = false
+  closeDropdowns()
   if (mobileOpen.value) closeSidebar()
   showColleaguesModal.value = true
 }
 
-function closeMenusOnEscape(event:KeyboardEvent) { if(event.key==='Escape') { atelierOpen.value=false; profileMenuOpen.value=false; notifMenuOpen.value=false; showColleaguesModal.value=false; if(mobileOpen.value) closeSidebar() } }
+function closeDropdowns(): void {
+  atelierOpen.value = false
+  atelierPinned.value = false
+  profileMenuOpen.value = false
+  profilePinned.value = false
+  notifMenuOpen.value = false
+}
+
+function closeMenusOnEscape(event:KeyboardEvent) { if(event.key==='Escape') { closeDropdowns(); showColleaguesModal.value=false; if(mobileOpen.value) closeSidebar() } }
 function onGlobalPointerDown(event: PointerEvent): void {
   const target = event.target as Node | null
   if (!target) return
-  if (!atelierEl.value?.contains(target)) atelierOpen.value = false
+  if (!atelierEl.value?.contains(target)) {
+    atelierOpen.value = false
+    atelierPinned.value = false
+  }
 
-  if (profileMenuOpen.value) {
-    if (accountEl.value?.contains(target)) return
+  if (!accountEl.value?.contains(target)) {
     profileMenuOpen.value = false
+    profilePinned.value = false
   }
   if (notifMenuOpen.value && notifEl.value && !notifEl.value.contains(target)) {
     notifMenuOpen.value = false
@@ -362,8 +384,7 @@ function openSidebar() {
  * Slides the mobile sidebar out using GSAP, then hides it.
  */
 function closeSidebar() {
-  profileMenuOpen.value = false
-  notifMenuOpen.value = false
+  closeDropdowns()
   gsap.to(sidebarEl.value, {
     x: '100%',
     duration: 0.36,

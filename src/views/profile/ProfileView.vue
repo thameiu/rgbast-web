@@ -1,9 +1,5 @@
 <template>
   <main class="profile-view">
-    <span class="regmark regmark-tl" aria-hidden="true"></span>
-    <span class="regmark regmark-tr" aria-hidden="true"></span>
-    <span class="regmark regmark-bl" aria-hidden="true"></span>
-    <span class="regmark regmark-br" aria-hidden="true"></span>
 
     <SiteHeader :user="viewerUser" :brand-meta="t('profilePage.brand')" />
 

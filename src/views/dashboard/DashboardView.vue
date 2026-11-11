@@ -1,9 +1,5 @@
 <template>
   <main class="dash">
-    <span class="regmark regmark-tl" aria-hidden="true"></span>
-    <span class="regmark regmark-tr" aria-hidden="true"></span>
-    <span class="regmark regmark-bl" aria-hidden="true"></span>
-    <span class="regmark regmark-br" aria-hidden="true"></span>
 
     <SiteHeader :user="user" :brand-meta="t('dashboard.atelier')" />
 

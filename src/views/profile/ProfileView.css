@@ -6,43 +6,6 @@
   color: var(--ink);
 }
 
-.regmark {
-  position: fixed;
-  width: 22px;
-  height: 22px;
-  z-index: 10;
-  pointer-events: none;
-}
-
-.regmark::before,
-.regmark::after {
-  content: "";
-  position: absolute;
-  background: var(--ink);
-  opacity: 0.5;
-}
-
-.regmark::before {
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  transform: translateY(-50%);
-}
-
-.regmark::after {
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  transform: translateX(-50%);
-}
-
-.regmark-tl { top: 20px; left: 20px; }
-.regmark-tr { top: 20px; right: 20px; }
-.regmark-bl { bottom: 20px; left: 20px; }
-.regmark-br { bottom: 20px; right: 20px; }
-
 .profile-shell {
   width: 100%;
   box-sizing: border-box;

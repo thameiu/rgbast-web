@@ -501,14 +501,14 @@
 .mob-sidebar {
   position: fixed;
   top: 0; right: 0;
-  width: 280px;
+  width: min(280px, 100vw);
   height: 100dvh;
   background: #f7f7fb;
   border-left: 1px solid rgba(14,14,16,0.12);
   z-index: 281;
   display: flex;
   flex-direction: column;
-  padding: 24px 20px 32px;
+  padding: 24px 0 32px;
 }
 
 .mob-top {
@@ -566,7 +566,7 @@
 .mob-link {
   display: block;
   padding: 12px 14px;
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: rgba(14,14,16,0.74);
   text-decoration: none;
@@ -591,7 +591,7 @@
 
 .mob-signout {
   color: rgba(179,32,50,0.8);
-  font-size: 13px;
+  font-size: 15px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -617,7 +617,7 @@
   align-items: center;
   gap: 10px;
   padding: 8px 4px 12px;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -713,7 +713,7 @@ button.nav-link { background:none; border:0; font:inherit; cursor:pointer; }
 .brand--palette { align-items:baseline; }
 .brand-logo-link { align-self:center; }
 .mob-sidebar { overflow-y:auto; overscroll-behavior:contain; background:rgba(245,245,245,.94); }
-.mob-links { padding-top:28px; }
+.mob-links { padding-top:8px; }
 .mob-link,.mob-cta { border:0; background:none; border-radius:0; }
 .mob-links details > a,.mob-links details > button { margin-left:20px; }
 @media(max-width:900px){ .site-nav { display:none; } }
@@ -734,3 +734,10 @@ button.nav-link { background:none; border:0; font:inherit; cursor:pointer; }
 .mob-submenu-enter-active,.mob-submenu-leave-active{transition:opacity .2s ease-in-out,max-height .2s ease-in-out;max-height:300px;overflow:hidden}
 .mob-submenu-enter-from,.mob-submenu-leave-to{opacity:0;max-height:0}
 .account-slot::after{content:"";position:absolute;top:100%;left:0;right:0;height:10px}
+
+.mob-user--open { background: var(--ink); color: #fff; }
+.mob-user-chevron { margin-left: auto; flex-shrink: 0; transition: transform .2s ease-in-out; }
+.mob-user--open .mob-user-chevron { transform: rotate(180deg); }
+.mob-login { padding: 16px 24px; }
+.mob-login .login-link { display: inline-flex; align-items: center; justify-content: center; font-size: 16px; }
+.mob-requests { margin-inline: 24px; }

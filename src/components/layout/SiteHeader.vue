@@ -124,10 +124,19 @@
           <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar"><AppIcon name="plus" :size="18" />{{ t('common.newPalette') }}</RouterLink>
         </div></Transition></div>
         <template v-if="isLoggedIn">
-          <span class="mob-user font-mono">
+          <button class="mob-link mob-user font-mono" :class="{ 'mob-user--open': mobileProfileOpen }" :aria-expanded="mobileProfileOpen" @click="mobileProfileOpen = !mobileProfileOpen">
             <UserAvatar class="mob-user-avatar" :username="profileName" :color="profileColor" />
             <span class="mob-user-name">{{ profileName }}</span>
-          </span>
+            <AppIcon class="mob-user-chevron" name="chevron-down" :size="12" />
+          </button>
+          <Transition name="mob-submenu">
+            <div v-if="mobileProfileOpen" class="mob-submenu">
+              <button class="mob-link" @click="goToProfile"><AppIcon name="user" :size="16" />{{ t('common.profile') }}</button>
+              <button class="mob-link" @click="onSettingsSoon"><AppIcon name="settings" :size="16" />{{ t('common.settings') }}</button>
+              <button class="mob-link" @click="openColleagues"><AppIcon name="users" :size="16" />{{ t('colleaguesModal.title') }}</button>
+              <button class="mob-link mob-signout" @click="handleLogout"><AppIcon name="logout" :size="16" />{{ t('common.signOut') }}</button>
+            </div>
+          </Transition>
           <div class="mob-requests" v-if="incomingRequests.length">
             <p class="mob-requests-title">{{ t('header.requests') }}</p>
             <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="mob-request-row">
@@ -140,14 +149,9 @@
               </div>
             </div>
           </div>
-          <div><button class="mob-link" :aria-expanded="mobileProfileOpen" @click="mobileProfileOpen=!mobileProfileOpen"><AppIcon name="user" :size="18" />{{ t('common.profile') }} <AppIcon name="chevron-down" :size="12" /></button><Transition name="mob-submenu"><div v-if="mobileProfileOpen" class="mob-submenu"><button class="mob-link" @click="goToProfile"><AppIcon name="users" :size="16" />{{ t('common.profile') }}</button>
-          <button class="mob-link" @click="onSettingsSoon"><AppIcon name="settings" :size="16" />{{ t('common.settings') }}</button>
-          <button class="mob-link" @click="openColleagues"><AppIcon name="users" :size="16" />{{ t('colleaguesModal.title') }}</button>
-          <button class="mob-link mob-signout" @click="handleLogout"><AppIcon name="logout" :size="16" />{{ t('common.signOut') }}</button></div></Transition></div>
         </template>
         <template v-else>
-          <RouterLink to="/login" class="mob-cta" @click="closeSidebar">{{ t('common.login') }}</RouterLink>
-          <RouterLink to="/register" class="mob-link" @click="closeSidebar">{{ t('common.register') }}</RouterLink>
+          <div class="mob-login"><RouterLink to="/login" class="login-link" @click="closeSidebar">{{ t('common.login') }}</RouterLink></div>
         </template>
       </div>
     </nav>

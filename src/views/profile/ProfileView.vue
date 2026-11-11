@@ -111,7 +111,7 @@
                 <div class="profile-folder-body">
                   <h3 class="profile-folder-title font-display">{{ folder.name }}</h3>
                   <p class="profile-folder-meta font-mono">
-                    {{ folderPaletteCount(folder.id) }} {{ t('dashboard.palettes') }} · {{ childFolderCount(folder.id) }} {{ t('dashboard.folders').toLowerCase() }}
+                    <AppIcon name="palette" :size="14" /> {{ folderPaletteCount(folder.id) }} · <AppIcon name="folder" :size="14" /> {{ childFolderCount(folder.id) }}
                   </p>
                 </div>
               </article>

@@ -393,6 +393,9 @@
 }
 
 .profile-folder-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 8px;
   font-size: 10.5px;
   letter-spacing: 0.04em;
@@ -428,7 +431,7 @@
 .profile-view-toggle-btn{border-radius:0;color:var(--ink);font-family:var(--font-display);background:transparent}
 .profile-view-toggle-btn:hover,.profile-view-toggle-btn--active{background:var(--ink);color:#fff}
 
-.profile-folder-card{--folder-fill:#FFFFFF;background:var(--folder-fill)!important;overflow:visible;border:0;border-radius:0 14px 14px 14px;margin-top:24px;justify-content:flex-end;box-shadow:none!important}
+.profile-folder-card{--folder-fill:#eee0b9;background:var(--folder-fill)!important;overflow:visible;border:0;border-radius:0 14px 14px 14px;margin-top:24px;justify-content:flex-end;box-shadow:none!important}
 .profile-folder-card::before{content:"";position:absolute;top:-24px;left:0;width:96px;height:24px;background:var(--folder-fill);border-radius:14px 0 0 0}
 .profile-folder-card::after{content:"";position:absolute;top:-48px;left:72px;border:24px solid transparent;border-bottom-color:var(--folder-fill)}
 

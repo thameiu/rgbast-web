@@ -13,7 +13,7 @@
 
       <template v-else-if="profileUser">
         <header class="profile-head">
-          <div class="profile-avatar">{{ profileUser.username.charAt(0).toUpperCase() }}</div>
+          <UserAvatar class="profile-avatar" :username="profileUser.username" :color="profileUser.profile_color" />
           <div class="profile-main">
             <h1 class="profile-username font-display">{{ profileUser.username }}</h1>
             <p class="profile-fullname">
@@ -223,6 +223,7 @@ import ColorBookmarkDeleteModal from '@/components/bookmarks/ColorBookmarkDelete
 import AuthModal from '@/components/auth/AuthModal.vue'
 import ColorBookmarkModal from '@/views/color/components/ColorBookmarkModal.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import type { ColleagueRelationStatus } from '@/api/types'
 import IconUsers from '@/components/icons/IconUsers.vue'
 import IconClock3 from '@/components/icons/IconClock3.vue'

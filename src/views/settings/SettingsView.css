@@ -143,3 +143,13 @@
 }
 
 .settings-shell button{border-radius:7px}
+.profile-color-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  font-size: 42px;
+  flex-shrink: 0;
+}

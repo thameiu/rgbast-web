@@ -55,7 +55,7 @@
                 <div v-else-if="searchResults.length" class="colleagues-list">
                   <div v-for="user in searchResults" :key="user.id" class="colleagues-item">
                     <button class="colleagues-user" @click="openProfile(user.username)">
-                      <span class="colleagues-avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
+                      <UserAvatar class="colleagues-avatar" :username="user.username" :color="user.profile_color" />
                       <span class="colleagues-meta">
                         <span class="colleagues-username">{{ user.username }}</span>
                         <span class="colleagues-name">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '-' }}</span>
@@ -84,7 +84,7 @@
                 <div v-else class="colleagues-list">
                   <div v-for="user in activeUsers" :key="user.id" class="colleagues-item">
                     <button class="colleagues-user" @click="openProfile(user.username)">
-                      <span class="colleagues-avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
+                      <UserAvatar class="colleagues-avatar" :username="user.username" :color="user.profile_color" />
                       <span class="colleagues-meta">
                         <span class="colleagues-username">{{ user.username }}</span>
                         <span class="colleagues-name">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '-' }}</span>
@@ -151,6 +151,7 @@
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import AppLoader from '@/components/ui/AppLoader.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import IconUsers from '@/components/icons/IconUsers.vue'
 import IconClock3 from '@/components/icons/IconClock3.vue'
 import IconMail from '@/components/icons/IconMail.vue'

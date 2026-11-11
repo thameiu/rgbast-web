@@ -241,6 +241,7 @@
     "metaDescription": "Découvre les palettes récentes sur RGBAST, parcours celles de tes collègues, et recherche par utilisateur, titre ou couleur."
   },
   "settingsPage": {
+    "profileColor": "Couleur du profil",
     "account": "Compte",
     "profile": "Profil",
     "username": "Username",
@@ -393,6 +394,7 @@
     }
   },
   "apiErrors": {
+    "profileColorInvalid": "La couleur du profil doit être un code hexadécimal à six caractères.",
     "unauthorized": "Connexion requise.",
     "forbidden": "Tu n'as pas les droits nécessaires.",
     "notFound": "Élément introuvable.",

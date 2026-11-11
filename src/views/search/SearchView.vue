@@ -155,7 +155,7 @@
             class="user-card"
             @click="router.push(`/users/${encodeURIComponent(user.username)}`)"
           >
-            <span class="user-avatar">{{ user.username.charAt(0).toUpperCase() }}</span>
+            <UserAvatar class="user-avatar" :username="user.username" :color="user.profile_color" />
             <span class="user-name">{{ user.username }}</span>
             <span class="user-full">{{ [user.firstname, user.lastname].filter(Boolean).join(' ') || '-' }}</span>
           </button>
@@ -180,6 +180,7 @@
 </template>
 
 <script setup lang="ts">
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import ContentSkeleton from '@/components/ui/ContentSkeleton.vue'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'

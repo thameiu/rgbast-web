@@ -233,19 +233,14 @@
   align-items: center;
   justify-content: center;
   background: #111114;
-  border: 1px solid #111114;
+  border: 0;
   color: #f3f3f8;
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 18px;
   font-weight: 700;
   line-height: 1;
   padding-top: 2px;
-  transition: background 0.18s, border-color 0.18s;
-}
-
-.profile-link:hover .profile-avatar {
-  background: #000;
-  border-color: #000;
+  transition: background 0.18s;
 }
 
 .login-link {
@@ -640,7 +635,7 @@
   background: #111114;
   color: #f3f3f8;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1;
   padding-top: 2px;

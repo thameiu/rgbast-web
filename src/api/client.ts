@@ -107,6 +107,7 @@ export class ApiClient {
       [/^title is invalid\.?$/i, 'apiErrors.titleInvalid'],
       [/folder name is invalid/i, 'apiErrors.folderNameInvalid'],
       [/username is invalid/i, 'apiErrors.usernameInvalid'],
+      [/profile color must be a six-digit hex code/i, 'apiErrors.profileColorInvalid'],
       [/password is too weak/i, 'apiErrors.passwordWeak'],
       [/permission to modify this palette/i, 'apiErrors.permissionPalette'],
       [/permission to modify this folder/i, 'apiErrors.permissionFolder'],

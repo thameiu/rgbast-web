@@ -8,7 +8,7 @@
         <ContentSkeleton v-if="loading" :message="t('common.loadingPalettes')" />
 
         <template v-else-if="user">
-          <div class="sidebar-profile"><div class="sidebar-identity"><div class="avatar">{{ user.username?.charAt(0)?.toUpperCase() }}</div>
+          <div class="sidebar-profile"><div class="sidebar-identity"><UserAvatar class="avatar" :username="user.username" :color="user.profile_color" />
           <p class="sidebar-name font-display">{{ user.username }}</p>
           <p v-if="user.firstname || user.lastname" class="sidebar-fullname">
             {{ [user.firstname, user.lastname].filter(Boolean).join(' ') }}
@@ -338,6 +338,7 @@
 
 <script setup lang="ts">
 import BookmarksView from '@/views/bookmarks/BookmarksView.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AtelierTabs from '@/components/layout/AtelierTabs.vue'

@@ -61,7 +61,7 @@
           <div v-else class="notif-list">
             <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="notif-item">
               <button class="notif-user" @click="goToUserFromNotif(requestUser.username)">
-                <span class="notif-avatar">{{ requestUser.username.charAt(0).toUpperCase() }}</span>
+                <UserAvatar class="notif-avatar" :username="requestUser.username" :color="requestUser.profile_color" />
                 <span class="notif-username">{{ requestUser.username }}</span>
               </button>
               <div class="notif-actions">
@@ -83,7 +83,7 @@
         :aria-expanded="profileMenuOpen"
         @click="toggleProfileMenu"
       >
-        <span class="profile-avatar">{{ profileInitial }}</span>
+        <UserAvatar class="profile-avatar" :username="profileName" :color="profileColor" />
       </button>
       <RouterLink v-else to="/login" class="login-link">{{ t('common.login') }}</RouterLink>
 
@@ -125,7 +125,7 @@
         </div></Transition></div>
         <template v-if="isLoggedIn">
           <span class="mob-user font-mono">
-            <span class="mob-user-avatar">{{ profileInitial }}</span>
+            <UserAvatar class="mob-user-avatar" :username="profileName" :color="profileColor" />
             <span class="mob-user-name">{{ profileName }}</span>
           </span>
           <div class="mob-requests" v-if="incomingRequests.length">
@@ -171,13 +171,15 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import RgbastLogo from '../ui/RgbastLogo.vue'
 import PaletteRgbastLogo from '../ui/PaletteRgbastLogo.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
+import { authApi } from '@/api/auth'
 import { searchApi } from '@/api/search'
 import { colleaguesApi } from '@/api/colleagues'
 import type { ColleagueUserItem } from '@/api/types'
 import { useI18n } from '@/i18n'
 
 const props = defineProps<{
-  user?: { username: string; firstname?: string | null; lastname?: string | null } | null
+  user?: { username: string; firstname?: string | null; lastname?: string | null; profile_color?: string } | null
   brandMeta?: string
   brandTitle?: string
   brandOwnerUsername?: string | null
@@ -234,7 +236,8 @@ function getTokenUsername(): string | null {
 }
 
 const profileName = computed(() => props.user?.username ?? getTokenUsername() ?? 'User')
-const profileInitial = computed(() => profileName.value.charAt(0).toUpperCase() || 'U')
+const ownProfileColor = ref<string | null>(null)
+const profileColor = computed(() => props.user?.profile_color ?? ownProfileColor.value)
 const newPaletteTo = computed(() => {
   const username = profileName.value && isLoggedIn.value ? profileName.value : 'local'
   return { name: 'palette', params: { username, pathMatch: 'new' } }
@@ -274,6 +277,9 @@ onMounted(() => {
   window.addEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
   if (isLoggedIn.value) {
     void loadIncomingRequests()
+    if (!props.user?.profile_color) {
+      void authApi.checkAuth().then(user => { ownProfileColor.value = user.profile_color }).catch(() => {})
+    }
   }
 })
 

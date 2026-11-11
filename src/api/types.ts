@@ -54,6 +54,7 @@ export interface UserCreateResponse {
 }
 
 export interface UserGetResponse {
+  profile_color: string;
   id: number;
   username: string;
   firstname: string | null;
@@ -67,12 +68,14 @@ export interface UserMeResponse extends UserGetResponse {
 }
 
 export interface UserUpdateMe {
+  profile_color?: string;
   username?: string | null;
   firstname?: string | null;
   lastname?: string | null;
 }
 
 export interface UserUpdateMeResponse {
+  profile_color: string;
   id: number;
   username: string;
   firstname: string | null;
@@ -438,6 +441,7 @@ export interface PaletteCache {
 // ── Search ───────────────────────────────────────────────────────────────────
 
 export interface UserSearchItem {
+  profile_color: string;
   id: number;
   username: string;
   firstname: string | null;
@@ -484,6 +488,7 @@ export type ColleagueRelationStatus =
   | 'accepted'
 
 export interface ColleagueUserItem {
+  profile_color: string;
   id: number
   username: string
   firstname: string | null

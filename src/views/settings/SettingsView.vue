@@ -27,6 +27,12 @@
             </label>
           </div>
 
+          <div class="field">
+            <span class="field-label font-mono">{{ t('settingsPage.profileColor') }}</span>
+            <UserAvatar class="profile-color-preview" :username="form.username || '?'" :color="form.profile_color" />
+            <ClassicColorPicker inline hide-adjustments :model-value="form.profile_color" @update:model-value="form.profile_color = $event" />
+          </div>
+
           <p v-if="saveError" class="msg msg--error">{{ saveError }}</p>
           <p v-if="saveSuccess" class="msg msg--ok">{{ saveSuccess }}</p>
 
@@ -59,6 +65,8 @@ import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import { usersApi } from '@/api/users'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import ClassicColorPicker from '@/components/palette/ColorPicker.vue'
+import UserAvatar from '@/components/ui/UserAvatar.vue'
 import { searchApi } from '@/api/search'
 import { setPageSeo } from '@/utils/seo'
 import { useI18n } from '@/i18n'
@@ -66,8 +74,8 @@ import { useI18n } from '@/i18n'
 const router = useRouter()
 const { t } = useI18n()
 
-const viewer = ref<{ username: string; firstname?: string | null; lastname?: string | null } | null>(null)
-const form = ref({ username: '', firstname: '', lastname: '' })
+const viewer = ref<{ username: string; firstname?: string | null; lastname?: string | null; profile_color: string } | null>(null)
+const form = ref({ username: '', firstname: '', lastname: '', profile_color: 'B410CC' })
 
 const saving = ref(false)
 const saveError = ref('')
@@ -89,6 +97,7 @@ onMounted(async () => {
     form.value.username = me.username ?? ''
     form.value.firstname = me.firstname ?? ''
     form.value.lastname = me.lastname ?? ''
+    form.value.profile_color = me.profile_color
   } catch {
     localStorage.removeItem('access_token')
     await router.replace('/login')
@@ -104,6 +113,7 @@ async function saveProfile(): Promise<void> {
       username: form.value.username,
       firstname: form.value.firstname || null,
       lastname: form.value.lastname || null,
+      profile_color: form.value.profile_color,
     })
     if (response.access_token) {
       localStorage.setItem('access_token', response.access_token)
@@ -112,10 +122,12 @@ async function saveProfile(): Promise<void> {
       username: response.username,
       firstname: response.firstname,
       lastname: response.lastname,
+      profile_color: response.profile_color,
     }
     form.value.username = response.username
     form.value.firstname = response.firstname ?? ''
     form.value.lastname = response.lastname ?? ''
+    form.value.profile_color = response.profile_color
     saveSuccess.value = t('settingsPage.profileUpdated')
   } catch (error: unknown) {
     saveError.value = error instanceof Error ? error.message : t('settingsPage.couldNotSave')

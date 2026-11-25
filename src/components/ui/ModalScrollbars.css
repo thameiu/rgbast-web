@@ -1,0 +1,36 @@
+/* Keep every dialog reachable on short screens, including confirmation forms. */
+:where(.modal, .project-modal, .bookmark-modal, .bookmark-delete-modal, .help-modal, .audit-modal, .auth-modal, .profile-confirm-modal, .colleagues-confirm-modal, .palette-info-modal) {
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(128, 128, 128, .45) transparent;
+}
+
+/* Colleagues already scrolls inside a rounded frame; include its inner body. */
+@supports selector(::-webkit-scrollbar) {
+  :is(.modal, .project-modal, .bookmark-modal, .bookmark-delete-modal, .help-modal, .audit-modal, .auth-modal, .profile-confirm-modal, .colleagues-confirm-modal, .palette-info-modal, .colleagues-body) {
+    /* Non-auto standard values disable the inset WebKit scrollbar styling. */
+    scrollbar-width: auto !important;
+    scrollbar-color: auto !important;
+  }
+
+  :is(.modal, .project-modal, .bookmark-modal, .bookmark-delete-modal, .help-modal, .audit-modal, .auth-modal, .profile-confirm-modal, .colleagues-confirm-modal, .palette-info-modal, .colleagues-body)::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+    background: transparent;
+  }
+
+  :is(.modal, .project-modal, .bookmark-modal, .bookmark-delete-modal, .help-modal, .audit-modal, .auth-modal, .profile-confirm-modal, .colleagues-confirm-modal, .palette-info-modal, .colleagues-body)::-webkit-scrollbar-track {
+    margin: 18px;
+    background: transparent;
+  }
+
+  :is(.modal, .project-modal, .bookmark-modal, .bookmark-delete-modal, .help-modal, .audit-modal, .auth-modal, .profile-confirm-modal, .colleagues-confirm-modal, .palette-info-modal, .colleagues-body)::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, .45);
+    border-radius: 999px;
+  }
+
+  :is(.modal, .project-modal, .bookmark-modal, .bookmark-delete-modal, .help-modal, .audit-modal, .auth-modal, .profile-confirm-modal, .colleagues-confirm-modal, .palette-info-modal, .colleagues-body)::-webkit-scrollbar-button {
+    display: none;
+  }
+}

@@ -120,6 +120,7 @@
               v-for="palette in colleaguePalettes"
               :key="`colleague-${palette.owner_username}-${palette.id}`"
               :palette="paletteToCard(palette)"
+              :is-own="palette.owner_username === viewerUser?.username"
               :show-actions="false"
               @open="openPaletteResult(palette)"
             />
@@ -138,6 +139,7 @@
               v-for="palette in recentPalettes"
               :key="`recent-${palette.owner_username}-${palette.id}`"
               :palette="paletteToCard(palette)"
+              :is-own="palette.owner_username === viewerUser?.username"
               :show-actions="false"
               @open="openPaletteResult(palette)"
             />
@@ -170,6 +172,7 @@
             v-for="palette in paletteResults"
             :key="`${palette.owner_username}-${palette.id}`"
             :palette="paletteToCard(palette)"
+            :is-own="palette.owner_username === viewerUser?.username"
             :show-actions="false"
             @open="openPaletteResult(palette)"
           />

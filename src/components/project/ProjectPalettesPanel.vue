@@ -69,8 +69,8 @@
             </div>
           </article>
           <div v-for="palette in visiblePalettes" :key="`p${palette.id}`">
-            <PaletteCard :palette="palette" :showActions="false" :draggableEnabled="can('edit_palettes')" @open="openPalette(palette)" @dragstart="draggedId = palette.id" @dragend="draggedId = null">
-              <template #actions><div class="project-palette-actions">
+            <PaletteCard :palette="palette" :is-own="palette.owner_username === viewerUsername" :showActions="false" :draggableEnabled="can('edit_palettes')" @open="openPalette(palette)" @dragstart="draggedId = palette.id" @dragend="draggedId = null">
+              <template #actions><div class="project-palette-actions" :class="{ 'project-palette-actions--clone': palette.owner_username !== viewerUsername }">
                 <button v-if="can('edit_palettes')" :title="t('dashboard.editPalette')" :aria-label="t('dashboard.editPalette')" @click.stop="open('edit', palette)"><AppIcon name="edit" :size="14" /></button>
                 <button v-if="can('remove_palettes')" :title="t('projects.removePalette')" @click.stop="open('remove', palette)"><AppIcon name="x" :size="14" /></button>
               </div></template>
@@ -379,6 +379,7 @@ onBeforeUnmount(() => window.removeEventListener('rgbast:project-content-updated
 
 <style scoped>
 .project-content-grid{gap:16px;align-items:end}.project-palette-actions{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:5;margin:0;opacity:0;transition:opacity .15s}.project-content-grid>div:hover .project-palette-actions,.project-content-grid>div:focus-within .project-palette-actions{opacity:1}.project-palette-actions button{width:28px;height:28px;display:flex;align-items:center;justify-content:center;padding:0;border-radius:8px;border:1px solid rgba(255,255,255,.18);background:rgba(14,14,16,.55);color:#fff;cursor:pointer}
+.project-palette-actions--clone{right:42px}
 @media(hover:none){.project-palette-actions{opacity:1}}
 </style>
 <style scoped>@media(max-width:768px){.project-palette-actions{opacity:1}}</style>

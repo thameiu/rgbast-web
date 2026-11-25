@@ -59,7 +59,7 @@
       <button v-if="showDeleteAction" class="card-del-btn" title="Delete palette" @click.stop="emit('delete')">
         <AppIcon name="trash" :size="13" />
       </button>
-      <button class="card-project-btn" :title="t('projects.addToProject')" @click.stop="addToProject"><AppIcon name="project" :size="14" /></button>
+      <button class="card-project-btn" :class="{ 'card-project-btn--clone': !isOwn }" :title="t(isOwn ? 'projects.addToProject' : 'projects.clonePalette')" :aria-label="t(isOwn ? 'projects.addToProject' : 'projects.clonePalette')" @click.stop="addToProject"><AppIcon :name="isOwn ? 'project' : 'plus'" :size="14" /></button>
       <slot name="actions" />
     </div>
   </article>
@@ -82,6 +82,7 @@ type PaletteCardData = PaletteCache & {
 
 const props = withDefaults(defineProps<{
   palette: PaletteCardData
+  isOwn?: boolean
   showActions?: boolean
   showEdit?: boolean
   showDelete?: boolean
@@ -89,6 +90,7 @@ const props = withDefaults(defineProps<{
   isDragging?: boolean
 }>(), {
   showActions: true,
+  isOwn: true,
   showEdit: undefined,
   showDelete: undefined,
   draggableEnabled: false,
@@ -98,7 +100,7 @@ const props = withDefaults(defineProps<{
 const router = useRouter()
 const { t, locale } = useI18n()
 function addToProject() {
-  openProjectTransfer({ kind: 'palette', id: props.palette.isLocalDraftOnly ? undefined : props.palette.id, title: props.palette.title, description: props.palette.description, colors: props.palette.palette_colors })
+  openProjectTransfer({ kind: 'palette', id: props.palette.isLocalDraftOnly ? undefined : props.palette.id, title: props.palette.title, description: props.palette.description, colors: props.palette.palette_colors, clone: !props.isOwn })
 }
 
 const emit = defineEmits<{

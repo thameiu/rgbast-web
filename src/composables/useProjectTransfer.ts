@@ -9,6 +9,7 @@ export interface ProjectTransferItem {
   colors?: PaletteColorSave[]
   hex?: string
   canMove?: boolean
+  clone?: boolean
   onMoved?: (path: string) => void
 }
 export const projectTransfer = shallowRef<ProjectTransferItem | null>(null)

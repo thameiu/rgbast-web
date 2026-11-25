@@ -110,6 +110,7 @@
                 v-for="palette in filteredPalettes"
                 :key="palette.id"
                 :palette="palette"
+                :is-own="isOwnProfile"
                 :show-actions="false"
                 @open="openPalette(palette)"
               />

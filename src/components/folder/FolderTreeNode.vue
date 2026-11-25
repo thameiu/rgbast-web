@@ -15,6 +15,7 @@ export default { name: 'FolderTreeNode' }
       @drop.prevent="state.onDrop($event, folder.id)"
     >
       <button
+        type="button"
         v-if="hasContent"
         class="ftn-toggle"
         tabindex="-1"
@@ -42,7 +43,7 @@ export default { name: 'FolderTreeNode' }
             :class="{ 'ftn-input--error': !!renameError }"
             :value="state.inlineValue"
             @input="state.updateInlineValue(($event.target as HTMLInputElement).value)"
-            @keydown.enter="!renameError && state.commitInlineRename(folder.id)"
+            @keydown.enter.prevent="!renameError && state.commitInlineRename(folder.id)"
             @keydown.escape="state.cancelInline()"
             @click.stop
           />
@@ -53,10 +54,7 @@ export default { name: 'FolderTreeNode' }
 
       <span v-if="state.mode === 'navigation'" class="ftn-count-icons">
         <span class="ftn-count-item" :title="t('folderTree.palettes')">
-          <svg class="ftn-count-icon" width="12" height="10" viewBox="0 0 12 10" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="1" y="1" width="10" height="8" rx="1.3" />
-            <path d="M4.33 1.4v7.2M7.67 1.4v7.2" />
-          </svg>
+          <AppIcon class="ftn-count-icon" name="palette" :size="12" />
           <span>{{ state.paletteCounts[folder.id] ?? 0 }}</span>
         </span>
         <span class="ftn-count-item" :title="t('folderTree.subfolders')">
@@ -67,10 +65,10 @@ export default { name: 'FolderTreeNode' }
         </span>
       </span>
       <span v-if="state.allowFolderEditing && (state.mode === 'navigation' || state.mode === 'picker')" class="ftn-btns">
-        <button class="ftn-btn" :title="t('folderTree.newSubfolder')" @click.stop="state.startInlineCreate(folder.id)">
+        <button type="button" class="ftn-btn" :title="t('folderTree.newSubfolder')" @click.stop="state.startInlineCreate(folder.id)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 1v6M1 4h6" /></svg>
         </button>
-        <button v-if="state.mode === 'navigation'" class="ftn-btn ftn-btn--del" :title="t('folderTree.delete')" @click.stop="state.onDeleteFolder(folder)">
+        <button v-if="state.mode === 'navigation'" type="button" class="ftn-btn ftn-btn--del" :title="t('folderTree.delete')" @click.stop="state.onDeleteFolder(folder)">
           <svg width="8" height="8" viewBox="0 0 8 8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M1 1l6 6M7 1L1 7" /></svg>
         </button>
       </span>
@@ -88,9 +86,9 @@ export default { name: 'FolderTreeNode' }
           class="ftn-palette"
           :class="[`ftn-palette--${state.theme}`, state.draggingPaletteId === p.id && 'ftn-palette--dragging']"
           :style="{ paddingLeft: `${8 + (depth + 1) * 20}px` }"
-          :draggable="state.allowFolderEditing"
+          :draggable="state.allowPaletteMoving"
           @dblclick.stop="state.selectPalette(p)"
-          @dragstart="state.allowFolderEditing && state.startPaletteDrag(p.id, $event)"
+          @dragstart="state.allowPaletteMoving && state.startPaletteDrag(p.id, $event)"
           @dragend="state.endPaletteDrag()"
           @dragover.prevent
         >
@@ -127,7 +125,7 @@ export default { name: 'FolderTreeNode' }
             :value="state.inlineValue"
             :placeholder="t('folderTree.folderNamePlaceholder')"
             @input="state.updateInlineValue(($event.target as HTMLInputElement).value)"
-            @keydown.enter="!createError && state.commitInlineCreate(folder.id)"
+            @keydown.enter.prevent="!createError && state.commitInlineCreate(folder.id)"
             @keydown.escape="state.cancelInline()"
             @click.stop
           />
@@ -140,6 +138,7 @@ export default { name: 'FolderTreeNode' }
 
 <script setup lang="ts">
 import { computed, inject, nextTick, ref, watch } from 'vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import type { FolderResponse } from '@/api/types'
 import type { FolderTreeState } from './folderTreeTypes'
 import { useI18n } from '@/i18n'

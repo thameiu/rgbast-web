@@ -31,6 +31,7 @@
         <label class="field-label">Folder</label>
         <FolderPicker
           :folders="folders"
+          :allowFolderEditing="allowFolderEditing"
           :modelValue="folderId"
           @update:modelValue="$emit('update:folderId', $event)"
           @createFolder="$emit('createFolder', $event)"
@@ -60,6 +61,7 @@ defineProps<{
   description: string
   folderId: number | null
   folders: FolderResponse[]
+  allowFolderEditing?: boolean
   isSaving: boolean
   error: string
   titleErrorMessage?: string | null

@@ -7,6 +7,7 @@ export interface FolderTreeState {
   theme: 'light' | 'dark'
   mode: 'navigation' | 'picker'
   allowFolderEditing: boolean
+  allowPaletteMoving: boolean
   activeFolderKey: 'all' | 'root' | number | null
   paletteCounts: Record<number, number>
   childFolderCounts: Record<number, number>

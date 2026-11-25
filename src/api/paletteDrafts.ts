@@ -10,6 +10,7 @@ export interface PaletteDraftHistorySnapshot {
 }
 
 export interface PaletteDraftEntry {
+  baseSnapshotId?: number | null
   key: string
   mode: 'existing' | 'new'
   paletteId: number | null

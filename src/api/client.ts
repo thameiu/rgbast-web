@@ -8,6 +8,10 @@ const API_BASE_URL =
   import.meta.env.BACKEND_URL ||
   'http://localhost:8000';
 
+export class ApiError extends Error {
+  constructor(message: string, public readonly status: number, public readonly detail: unknown) { super(message) }
+}
+
 /** Thin fetch wrapper that attaches the JWT bearer token and handles error responses. */
 export class ApiClient {
   /** Builds Authorization header if a token is stored. */
@@ -78,9 +82,9 @@ export class ApiClient {
           .map((e: any) => (e.msg ?? 'Validation error').replace(/^Value error,\s*/i, ''))
           .join('\n');
       } else {
-        message = error.detail || `HTTP error ${response.status}`;
+        message = typeof error.detail === 'string' ? error.detail : `HTTP error ${response.status}`;
       }
-      throw new Error(this.translateError(message, response.status));
+      throw new ApiError(this.translateError(message, response.status), response.status, error.detail);
     }
     if (response.status === 204) {
       return undefined as T;

@@ -6,6 +6,9 @@
   position: relative;
 }
 .palette-card:hover { transform: translateY(-3px); }
+/* Raise the entire transformed card above neighboring folder content. */
+.palette-card:hover,
+.palette-card:focus-within { z-index: 4; }
 .card--dragging { opacity: 0.4; }
 
 .card-clip {
@@ -204,3 +207,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.card-project-btn{position:absolute;top:8px;left:8px;width:28px;height:28px;border-radius:8px;background:rgba(14,14,16,.55);border:1px solid rgba(255,255,255,.18);color:rgba(255,255,255,.75);display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s,background .15s;z-index:5}
+.palette-card:hover .card-project-btn,.palette-card:focus-within .card-project-btn{opacity:1}.card-project-btn:hover{background:rgba(14,14,16,.75);color:#fff}
+@media(max-width:768px),(hover:none){.card-project-btn{opacity:1}}

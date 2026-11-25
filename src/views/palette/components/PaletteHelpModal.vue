@@ -52,13 +52,24 @@
               </div>
             </article>
             <article class="help-ill-card">
-              <div class="help-ill-title">{{ t('paletteHelp.tetradicShades') }}</div>
+              <div class="help-ill-title">{{ t('palette.harmonies.tetradic') }}</div>
               <div class="help-swatches">
-                <span style="--c:#5EE4DA"></span>
-                <span style="--c:#F6C343"></span>
-                <span style="--c:#B061FF"></span>
-                <span style="--c:#F47B8D"></span>
+                <span style="--c:#CC1030"></span>
+                <span style="--c:#CC8D10"></span>
+                <span style="--c:#10CCAC"></span>
+                <span style="--c:#104FCC"></span>
               </div>
+              <p class="help-ill-description">{{ t('paletteHelp.tetradicDescription') }}</p>
+            </article>
+            <article class="help-ill-card">
+              <div class="help-ill-title">{{ t('palette.harmonies.shades') }}</div>
+              <div class="help-swatches">
+                <span style="--c:#3C1543"></span>
+                <span style="--c:#762A86"></span>
+                <span style="--c:#B440CC"></span>
+                <span style="--c:#DA9AE6"></span>
+              </div>
+              <p class="help-ill-description">{{ t('paletteHelp.shadesDescription') }}</p>
             </article>
           </div>
 

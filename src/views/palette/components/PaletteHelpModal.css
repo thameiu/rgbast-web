@@ -111,6 +111,7 @@
   border: 1px solid rgba(255,255,255,0.12);
   background: var(--c);
 }
+.help-ill-description{margin:10px 0 0;color:rgba(255,255,255,.65);font-size:12px;line-height:1.5}
 
 .help-bullets {
   margin: 0;

@@ -1,5 +1,7 @@
 /**
- * Legacy Illustrator 3 vector syntax (Adobe's public 1998 AI specification).
+ * Legacy Illustrator vector syntax, with AI5 layers and editable AI3 paths/text.
+ * Group/layer operators: Adobe's 1998 specification, sections 5.6 and 9:
+ * https://13thmonkey.org/documentation/fonts/AI7FileFormat.pdf
  * Rectangles remain paths and text remains editable. No modern private AI data
  * or embedded fonts are generated; the target machine must have the fonts.
  */
@@ -16,12 +18,14 @@ export function svgToLegacyIllustrator(svg: string): string {
     '%!PS-Adobe-3.0 EPSF-3.0', '%%Creator: RGBAST',
     '%%BoundingBox: 0 0 ' + Math.ceil(pageWidth) + ' ' + Math.ceil(pageHeight),
     '%%HiResBoundingBox: 0 0 ' + n(pageWidth) + ' ' + n(pageHeight),
-    '%%DocumentNeededResources: procset Adobe_Illustrator_AI3 1.0 0',
-    '%%DocumentSuppliedResources: procset Adobe_Illustrator_AI3 1.0 0',
+    '%%DocumentSuppliedResources: procset Adobe_Illustrator_AI5 1.0 0',
+    '%AI5_FileFormat 3', '%AI5_NumLayers: 1',
     '%AI3_ColorUsage: Color', '%AI3_DocumentPreview: None', '%%EndComments',
-    '%%BeginProlog', '%%BeginResource: procset Adobe_Illustrator_AI3 1.0 0',
+    '%%BeginProlog', '%%BeginResource: procset Adobe_Illustrator_AI5 1.0 0',
     '/m {moveto} bind def /l {lineto} bind def /c {curveto} bind def',
     '/f {closepath fill} bind def /k {setcmykcolor} bind def',
+    '/u {gsave} bind def /U {grestore} bind def',
+    '/Lb {10 {pop} repeat} bind def /LB {} bind def /Ln {pop} bind def',
     '/To {pop gsave} bind def /TO {grestore} bind def',
     '/Tp {pop 6 array astore concat 0 0 moveto} bind def /TP {} bind def',
     '/Tf {exch findfont exch scalefont setfont} bind def /Tx {show} bind def',
@@ -33,7 +37,19 @@ export function svgToLegacyIllustrator(svg: string): string {
     if (code >= 32 && code <= 126) return char
     return code <= 255 ? '\\' + code.toString(8).padStart(3, '0') : '?'
   }).join('') + ')'
-  for (const element of Array.from(root.children)) {
+  const layer = Array.from(root.children).find(element => element.hasAttribute('data-export-layer'))
+  const layerName = layer?.getAttribute('data-export-layer') || 'Palette'
+  lines.push('%AI5_BeginLayer', '1 1 1 1 0 0 0 79 128 255 Lb', literal(layerName) + ' Ln')
+
+  function writeElement(element: Element): void {
+    if (element.localName === 'g') {
+      const group = !element.hasAttribute('data-export-layer')
+      if (group) lines.push('u')
+      for (const child of Array.from(element.children)) writeElement(child)
+      if (group) lines.push('U')
+      return
+    }
+    if (element.localName !== 'rect' && element.localName !== 'text') return
     const read = (name: string, fallback = 0) => Number(element.getAttribute(name) ?? fallback)
     const fill = element.getAttribute('fill') ?? '#000000'
     const rgb = fill.startsWith('#')
@@ -68,6 +84,7 @@ export function svgToLegacyIllustrator(svg: string): string {
       lines.push('0 To','1 0 0 1 '+x(left)+' '+y(read('y'))+' 0 Tp','TP','/'+font+' '+x(size)+' Tf',literal(text)+' Tx','TO')
     }
   }
-  lines.push('%%Trailer','showpage','%%EOF')
+  for (const element of Array.from(root.children)) writeElement(element)
+  lines.push('LB', '%AI5_EndLayer--', '%%Trailer','showpage','%%EOF')
   return lines.join('\n')+'\n'
 }

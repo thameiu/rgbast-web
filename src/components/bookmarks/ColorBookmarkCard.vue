@@ -3,6 +3,7 @@
     <div class="bookmark-card-clip">
       <div class="bookmark-card-surface" :style="{ background: '#' + bookmark.hex }">
         <div class="bookmark-card-actions">
+          <button class="bookmark-card-action" :title="t('projects.addToProject')" @click.stop="openProjectTransfer({ kind: 'bookmark', title: bookmark.label, hex: bookmark.hex })"><AppIcon name="project" :size="14" /></button>
           <button
             class="bookmark-card-action"
             :class="{ 'bookmark-card-action--copied': copied }"
@@ -19,7 +20,7 @@
             <AppIcon name="external-link" :size="14" />
           </button>
           <button
-            v-if="editable"
+            v-if="canEdit ?? editable"
             class="bookmark-card-action"
             title="Edit bookmark"
             @click.stop="$emit('edit', bookmark)"
@@ -27,7 +28,7 @@
             <AppIcon name="edit" :size="14" />
           </button>
           <button
-            v-if="editable"
+            v-if="canDelete ?? editable"
             class="bookmark-card-action bookmark-card-action--danger"
             title="Delete bookmark"
             @click.stop="$emit('delete', bookmark)"
@@ -51,11 +52,16 @@ import { useRouter } from 'vue-router'
 
 import AppIcon from '@/components/icons/AppIcon.vue'
 import type { ColorBookmarkResponse } from '@/api/types'
+import { openProjectTransfer } from '@/composables/useProjectTransfer'
+import { useI18n } from '@/i18n'
+const { t } = useI18n()
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   bookmark: ColorBookmarkResponse
   editable?: boolean
-}>()
+  canEdit?: boolean
+  canDelete?: boolean
+}>(), { canEdit: undefined, canDelete: undefined })
 
 defineEmits<{
   (e: 'edit', bookmark: ColorBookmarkResponse): void

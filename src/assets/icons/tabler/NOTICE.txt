@@ -1,0 +1,5 @@
+Tabler Icons - https://github.com/tabler/tabler-icons
+Source: https://github.com/tabler/tabler-icons/tree/main/icons/outline
+Vendored icons: file-type-pdf, file-type-svg, file-type-png, file-ai, code.
+Additional icons: file-description, photo, brand-adobe-illustrator.
+Licensed under the MIT License; see LICENSE.txt in this directory.

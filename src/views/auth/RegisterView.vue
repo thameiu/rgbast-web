@@ -90,15 +90,9 @@
     <!-- Right: form -->
     <section class="form-col">
       <div class="form-inner">
-        <RouterLink to="/" class="brand brand-mobile">
-          <RgbastLogo size="28px" />
-          <span class="brand-name">RGBAST</span>
-        </RouterLink>
 
         <header class="form-head">
-          <p class="step font-mono">{{ t('auth.registerStep') }}</p>
           <h2 class="form-title font-display">{{ t('auth.createAccount') }}</h2>
-          <p class="form-copy">{{ t('auth.registerHint') }}</p>
         </header>
 
         <form class="form" @submit.prevent="handleRegister">
@@ -227,7 +221,6 @@
 import { computed, ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { usersApi } from '@/api'
-import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import { setPageSeo } from '@/utils/seo'
 import { useI18n } from '@/i18n'

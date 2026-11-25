@@ -57,10 +57,10 @@
         </svg>
       </button>
       <button v-if="showDeleteAction" class="card-del-btn" title="Delete palette" @click.stop="emit('delete')">
-        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-          <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+        <AppIcon name="trash" :size="13" />
       </button>
+      <button class="card-project-btn" :title="t('projects.addToProject')" @click.stop="addToProject"><AppIcon name="project" :size="14" /></button>
+      <slot name="actions" />
     </div>
   </article>
 </template>
@@ -70,6 +70,8 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PaletteCache } from '@/api/types'
 import { useI18n } from '@/i18n'
+import AppIcon from '@/components/icons/AppIcon.vue'
+import { openProjectTransfer } from '@/composables/useProjectTransfer'
 
 type PaletteCardData = PaletteCache & {
   isLocalDraftOnly?: boolean
@@ -95,6 +97,9 @@ const props = withDefaults(defineProps<{
 
 const router = useRouter()
 const { t, locale } = useI18n()
+function addToProject() {
+  openProjectTransfer({ kind: 'palette', id: props.palette.isLocalDraftOnly ? undefined : props.palette.id, title: props.palette.title, description: props.palette.description, colors: props.palette.palette_colors })
+}
 
 const emit = defineEmits<{
   (e: 'open'): void

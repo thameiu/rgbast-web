@@ -11,10 +11,18 @@
       <section class="settings-card">
         <h2 class="card-title font-display">{{ t('settingsPage.profile') }}</h2>
         <form class="form" @submit.prevent="saveProfile">
+          <button type="button" class="profile-color-button" :aria-label="t('settingsPage.profileColor')" @click="colorModalOpen = true">
+            <UserAvatar class="profile-color-preview" :username="form.username || '?'" :color="form.profile_color" />
+            <span class="profile-color-badge"><AppIcon name="pipette" :size="17" /></span>
+          </button>
           <label class="field">
             <span class="field-label font-mono">{{ t('settingsPage.username') }}</span>
             <input v-model="form.username" class="field-input" type="text" required />
           </label>
+          <div class="field">
+            <span class="field-label font-mono">{{ t('auth.email') }}</span>
+            <p class="field-value">{{ email }}</p>
+          </div>
 
           <div class="field-row">
             <label class="field">
@@ -27,11 +35,6 @@
             </label>
           </div>
 
-          <div class="field">
-            <span class="field-label font-mono">{{ t('settingsPage.profileColor') }}</span>
-            <UserAvatar class="profile-color-preview" :username="form.username || '?'" :color="form.profile_color" />
-            <ClassicColorPicker inline hide-adjustments :model-value="form.profile_color" @update:model-value="form.profile_color = $event" />
-          </div>
 
           <p v-if="saveError" class="msg msg--error">{{ saveError }}</p>
           <p v-if="saveSuccess" class="msg msg--ok">{{ saveSuccess }}</p>
@@ -56,6 +59,7 @@
         </button>
       </section>
     </section>
+    <ProfileColorModal :open="colorModalOpen" :color="form.profile_color" :username="form.username || '?'" @close="colorModalOpen = false" @apply="form.profile_color = $event; colorModalOpen = false" />
   </main>
 </template>
 
@@ -65,7 +69,8 @@ import { useRouter } from 'vue-router'
 import { authApi } from '@/api'
 import { usersApi } from '@/api/users'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
-import ClassicColorPicker from '@/components/palette/ColorPicker.vue'
+import ProfileColorModal from '@/components/color/ProfileColorModal.vue'
+import AppIcon from '@/components/icons/AppIcon.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import { searchApi } from '@/api/search'
 import { setPageSeo } from '@/utils/seo'
@@ -76,6 +81,7 @@ const { t } = useI18n()
 
 const viewer = ref<{ username: string; firstname?: string | null; lastname?: string | null; profile_color: string } | null>(null)
 const form = ref({ username: '', firstname: '', lastname: '', profile_color: 'B410CC' })
+const email = ref(''), colorModalOpen = ref(false)
 
 const saving = ref(false)
 const saveError = ref('')
@@ -94,6 +100,7 @@ onMounted(async () => {
   try {
     const me = await authApi.checkAuth()
     viewer.value = me
+    email.value = me.email
     form.value.username = me.username ?? ''
     form.value.firstname = me.firstname ?? ''
     form.value.lastname = me.lastname ?? ''

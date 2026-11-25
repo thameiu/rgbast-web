@@ -1,0 +1,8 @@
+Simple Icons - https://github.com/simple-icons/simple-icons
+Source: https://github.com/simple-icons/simple-icons/blob/develop/icons/svg.svg
+Library license: CC0 1.0; see LICENSE.txt in this directory.
+
+W3C SVG Logo, designed by Harvey Rayner.
+Logo source and usage terms: https://www.w3.org/2009/08/svg-logos
+SVG: https://www.w3.org/Graphics/SVG/
+The logo is displayed in monochrome.

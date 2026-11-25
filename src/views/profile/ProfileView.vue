@@ -13,7 +13,11 @@
 
       <template v-else-if="profileUser">
         <header class="profile-head">
-          <UserAvatar class="profile-avatar" :username="profileUser.username" :color="profileUser.profile_color" />
+          <button v-if="isOwnProfile" type="button" class="profile-avatar-button" :aria-label="t('settingsPage.profileColor')" @click="profileColorError = ''; profileColorOpen = true">
+            <UserAvatar class="profile-avatar" :username="profileUser.username" :color="profileUser.profile_color" />
+            <span class="profile-color-badge"><AppIcon name="pipette" :size="18" /></span>
+          </button>
+          <UserAvatar v-else class="profile-avatar" :username="profileUser.username" :color="profileUser.profile_color" />
           <div class="profile-main">
             <h1 class="profile-username font-display">{{ profileUser.username }}</h1>
             <p class="profile-fullname">
@@ -59,26 +63,11 @@
         </header>
 
         <div class="section-bar">
-          <div class="profile-view-toggle">
-            <button
-              class="profile-view-toggle-btn font-display"
-              :class="{ 'profile-view-toggle-btn--active': contentMode === 'palettes' }"
-              @click="contentMode = 'palettes'"
-            >
-              <span class="profile-view-toggle-label">{{ t('profilePage.palettes') }}</span>
-            </button>
-            <button
-              class="profile-view-toggle-btn font-display"
-              :class="{ 'profile-view-toggle-btn--active': contentMode === 'bookmarks' }"
-              @click="contentMode = 'bookmarks'"
-            >
-              <span class="profile-view-toggle-label">{{ t('profilePage.bookmarks') }}</span>
-            </button>
-          </div>
-          <p class="breadcrumb-all font-mono"><button v-if="contentMode==='palettes'" class="root-button" :aria-label="typeof activeFolderKey === 'number' ? t('palette.back') : t('folderTree.root')" @click="activeFolderKey=typeof activeFolderKey === 'number' ? (folders.find(f => f.id === activeFolderKey)?.parent_folder_id ?? 'root') : 'root'"><AppIcon :name="typeof activeFolderKey === 'number' ? 'arrow-left' : 'home'" :size="18" /></button>{{ contentMode === 'palettes' ? palettesSubtitle : bookmarksSubtitle }}</p>
+          <AtelierTabs v-model="contentMode" />
+          <p v-if="contentMode !== 'projects'" class="breadcrumb-all font-mono"><button v-if="contentMode==='palettes'" class="root-button" :aria-label="typeof activeFolderKey === 'number' ? t('palette.back') : t('folderTree.root')" @click="activeFolderKey=typeof activeFolderKey === 'number' ? (folders.find(f => f.id === activeFolderKey)?.parent_folder_id ?? 'root') : 'root'"><AppIcon :name="typeof activeFolderKey === 'number' ? 'arrow-left' : 'home'" :size="18" /></button>{{ contentMode === 'palettes' ? palettesSubtitle : bookmarksSubtitle }}</p>
         </div>
 
-        <div class="profile-content" :class="{ 'profile-content--bookmarks': contentMode === 'bookmarks' }">
+        <div class="profile-content" :class="{ 'profile-content--bookmarks': contentMode !== 'palettes' }">
           <aside v-if="contentMode === 'palettes'" class="profile-folders">
             <p class="profile-folders-label font-mono">{{ t('profilePage.folders') }}</p>
             <FolderTree
@@ -96,7 +85,8 @@
           </aside>
 
           <section class="profile-palettes">
-            <p v-if="contentMode === 'palettes' && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="profile-empty">
+            <ProjectsPanel v-if="contentMode === 'projects'" :username="profileUser.username" />
+            <p v-else-if="contentMode === 'palettes' && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="profile-empty">
               <AppIcon name="palette" :size="36" />{{ t('dashboard.noPalettes') }}
             </p>
 
@@ -156,6 +146,7 @@
       :hex="editingBookmark?.hex ?? ''"
       :label="bookmarkEditLabel"
       :existing="true"
+      :bookmarkId="editingBookmark?.id"
       :isSaving="bookmarkEditSaving"
       :error="bookmarkEditError"
       :createdAt="editingBookmark?.created_at ?? null"
@@ -183,6 +174,7 @@
       @close="showColleaguesModal = false"
       @updated="onColleaguesUpdated"
     />
+    <ProfileColorModal :open="profileColorOpen && isOwnProfile" :color="profileUser?.profile_color ?? 'B410CC'" :username="profileUser?.username ?? ''" :saving="profileColorSaving" :error="profileColorError" @close="profileColorOpen = false" @apply="saveProfileColor" />
 
     <Teleport to="body">
       <Transition name="profile-confirm-fade">
@@ -215,6 +207,7 @@ import { colleaguesApi } from '@/api/colleagues'
 import { palettesApi } from '@/api/palettes'
 import { foldersApi } from '@/api/folders'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
+import AtelierTabs from '@/components/layout/AtelierTabs.vue'
 import ContentSkeleton from '@/components/ui/ContentSkeleton.vue'
 import FolderTree from '@/components/folder/FolderTree.vue'
 import PaletteCard from '@/components/palette/PaletteCard.vue'
@@ -223,7 +216,9 @@ import ColorBookmarkDeleteModal from '@/components/bookmarks/ColorBookmarkDelete
 import AuthModal from '@/components/auth/AuthModal.vue'
 import ColorBookmarkModal from '@/views/color/components/ColorBookmarkModal.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
+import ProjectsPanel from '@/components/project/ProjectsPanel.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
+import ProfileColorModal from '@/components/color/ProfileColorModal.vue'
 import type { ColleagueRelationStatus } from '@/api/types'
 import IconUsers from '@/components/icons/IconUsers.vue'
 import IconClock3 from '@/components/icons/IconClock3.vue'
@@ -239,11 +234,23 @@ const loading = ref(true)
 const errorMessage = ref('')
 const viewerUser = ref<any>(null)
 const profileUser = ref<UserGetResponse | null>(null)
+const profileColorOpen = ref(false), profileColorSaving = ref(false), profileColorError = ref('')
+async function saveProfileColor(color: string) {
+  if (!isOwnProfile.value || !profileUser.value || profileColorSaving.value) return
+  profileColorSaving.value = true; profileColorError.value = ''
+  try {
+    const updated = await usersApi.updateMe({ profile_color: color })
+    profileUser.value.profile_color = updated.profile_color
+    if (viewerUser.value) viewerUser.value.profile_color = updated.profile_color
+    profileColorOpen.value = false
+  } catch(e) { profileColorError.value = e instanceof Error ? e.message : String(e) }
+  finally { profileColorSaving.value = false }
+}
 const palettes = ref<PaletteCache[]>([])
 const folders = ref<FolderResponse[]>([])
 const bookmarks = ref<ColorBookmarkResponse[]>([])
 const activeFolderKey = ref<'all' | 'root' | number>('all')
-const contentMode = ref<'palettes' | 'bookmarks'>('palettes')
+const contentMode = ref<'palettes' | 'bookmarks' | 'projects'>('palettes')
 const editingBookmark = ref<ColorBookmarkResponse | null>(null)
 const bookmarkEditModalOpen = ref(false)
 const bookmarkEditLabel = ref('')
@@ -262,6 +269,7 @@ const showProfileRemoveConfirm = ref(false)
 
 const profileUsername = computed(() => String(route.params.username ?? '').trim())
 const isOwnProfile = computed(() => !!viewerUser.value?.username && viewerUser.value.username === profileUsername.value)
+watch(isOwnProfile, own => { if (!own) profileColorOpen.value = false })
 
 const fullName = computed(() => {
   const name = [profileUser.value?.firstname, profileUser.value?.lastname].filter(Boolean).join(' ')
@@ -502,7 +510,7 @@ async function saveBookmarkEdit(): Promise<void> {
   bookmarkEditSaving.value = true
   bookmarkEditError.value = ''
   try {
-    const updated = await colorBookmarksApi.upsert(editingBookmark.value.hex, { label: bookmarkEditLabel.value.trim() })
+    const updated = await colorBookmarksApi.update(editingBookmark.value.id, { label: bookmarkEditLabel.value.trim() })
     const index = bookmarks.value.findIndex(bookmark => bookmark.id === updated.id)
     if (index !== -1) {
       bookmarks.value[index] = updated
@@ -535,7 +543,7 @@ async function confirmDeleteBookmark(): Promise<void> {
   bookmarkDeleteSaving.value = true
   bookmarkDeleteError.value = ''
   try {
-    await colorBookmarksApi.delete(deletingBookmark.value.hex)
+    await colorBookmarksApi.delete(deletingBookmark.value.id)
     bookmarks.value = bookmarks.value.filter(entry => entry.id !== deletingBookmark.value?.id)
     if (editingBookmark.value?.id === deletingBookmark.value.id) {
       closeBookmarkEditModal()

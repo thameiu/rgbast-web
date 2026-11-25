@@ -22,7 +22,9 @@
 }
 
 .tutorial-card {
-  position: absolute;
+  /* Keep the popup above spotlights without lifting the dimmer over them. */
+  position: fixed;
+  z-index: 350;
   right: 22px;
   top: 76px;
   width: min(420px, calc(100vw - 28px));

@@ -1,4 +1,5 @@
 import { ApiClient } from './client';
+import { cacheProfileColor } from '@/utils/profileColorCache';
 import type {
   Login,
   LoginResponse,
@@ -18,8 +19,10 @@ export const authApi = {
   },
 
   /** Verify the stored token and return the current user's profile. */
-  checkAuth: (): Promise<UserMeResponse> => {
-    return ApiClient.request<UserMeResponse>('/check-auth', 'POST');
+  checkAuth: async (): Promise<UserMeResponse> => {
+    const user = await ApiClient.request<UserMeResponse>('/check-auth', 'POST');
+    cacheProfileColor(user);
+    return user;
   },
 
   requestPasswordReset: (data: PasswordResetRequest): Promise<MessageResponse> => {

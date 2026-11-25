@@ -60,7 +60,7 @@
               :disabled="isSaving || !hasUnsavedChanges"
               @click="$emit('requestSave'); $emit('close')"
             >
-              <AppIcon name="download" :size="16" />
+              <AppIcon name="save" :size="16" />
               {{ t('common.save') }}
             </button>
             <button v-if="isOwned" class="msb-action" @click="$emit('edit'); $emit('close')">
@@ -68,7 +68,7 @@
               {{ t('palette.editPalette') }}
             </button>
             <button
-              v-if="isOwned && !isNewPalette"
+              v-if="canDelete && !isNewPalette"
               class="msb-action msb-action-danger"
               @click="$emit('deletePalette'); $emit('close')"
             >
@@ -163,6 +163,7 @@ const props = defineProps<{
   branchColor: (idx: number) => string
   snapshotCommitHint: string | null
   isOwned: boolean
+  canDelete?: boolean
   isSaving: boolean
   hasUnsavedChanges: boolean
   isNewPalette: boolean

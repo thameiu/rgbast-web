@@ -2,6 +2,8 @@ import { ref, computed, watch } from 'vue'
 import type { Ref, ComputedRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { palettesApi } from '@/api/palettes'
+import { ApiClient, ApiError } from '@/api/client'
+import { projectsApi, type Project } from '@/api/projects'
 import { foldersApi } from '@/api/folders'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { FolderResponse, PaletteHistoryGraphResponse, PaletteColorSave } from '@/api/types'
@@ -31,10 +33,12 @@ export interface PaletteContext {
   palettePath: ComputedRef<string>
   draftKey: ComputedRef<string>
   isOwned: ComputedRef<boolean>
+  isPaletteCreator: ComputedRef<boolean>
   pendingTitle: Ref<string>
   pendingDescription: Ref<string>
   pendingFolderId: Ref<number | null>
   history: Ref<PaletteHistoryGraphResponse | null>
+  project: Ref<Project | null>
   folders: Ref<FolderResponse[]>
   folderOptions: ComputedRef<Array<{ id: number; label: string }>>
   historyFolderId: ComputedRef<number | null>
@@ -71,7 +75,7 @@ export interface PaletteContext {
   findSnapshot: (id: number) => PaletteHistoryGraphResponse['main'][number] | PaletteHistoryGraphResponse['branches'][number]['snapshots'][number] | null
   onSelectSnapshot: (id: number) => void
   clearSnapshotSelection: () => void
-  initNewPaletteDraft: () => void
+  initNewPaletteDraft: () => Promise<void>
   clonePalette: () => void
   startRouteWatch: (onBeforeLoad?: () => void) => void
 }
@@ -136,12 +140,13 @@ export function usePaletteContext(): PaletteContext {
     const segments = [...folderPath.value, paletteName.value].filter(Boolean)
     return segments.join('/')
   })
-  const draftKey = computed(() => paletteDraftsApi.makeDraftKey(username.value, palettePath.value))
+  const draftKey = computed(() => paletteDraftsApi.makeDraftKey(username.value, (route.params.projectSlug ? `projects/${route.params.projectSlug}/` : '') + palettePath.value))
 
   const isNewPalette = computed(() => paletteName.value === 'new')
   const paletteId = ref<number | null>(null)
 
   const history = ref<PaletteHistoryGraphResponse | null>(null)
+  const project = ref<Project | null>(null)
   const loading = ref(true)
   const preserveNextRouteLoad = ref(false)
   const error = ref<string | null>(null)
@@ -190,11 +195,13 @@ export function usePaletteContext(): PaletteContext {
   })
 
   const isOwned = computed(() => {
-    if (isNewPalette.value) return true
+    if (isNewPalette.value) return route.params.projectSlug ? !!project.value?.permissions.includes('add_palettes') : true
     if (!history.value) return false
+    if (history.value.project) return history.value.project.permissions.includes('edit_palettes')
     const me = getTokenUsername()
     return me !== null && me === history.value.owner_username
   })
+  const isPaletteCreator = computed(() => !isNewPalette.value && getTokenUsername() === history.value?.owner_username)
 
   const paletteTitle = computed(() => {
     if (isNewPalette.value) return pendingTitle.value || 'Untitled palette'
@@ -293,10 +300,12 @@ export function usePaletteContext(): PaletteContext {
       if (!username.value || !palettePath.value) {
         throw new Error('Palette path is invalid')
       }
-      history.value = await palettesApi.getHistoryByPath(username.value, palettePath.value)
+      history.value = route.params.projectSlug
+        ? await ApiClient.get<PaletteHistoryGraphResponse>(`/projects/by-path/${encodeURIComponent(username.value)}/${encodeURIComponent(String(route.params.projectSlug))}/palette-history?path=${encodeURIComponent(palettePath.value)}`)
+        : await palettesApi.getHistoryByPath(username.value, palettePath.value)
       paletteId.value = history.value.palette_id
       const latestMainColors = history.value.main[0]?.palette_colors ?? []
-      palettesApi.cachePalette({
+      if (!history.value.project) palettesApi.cachePalette({
         id: history.value.palette_id,
         title: history.value.title,
         description: history.value.description ?? '',
@@ -308,6 +317,10 @@ export function usePaletteContext(): PaletteContext {
       })
       applyBranchState()
     } catch (e: any) {
+      if (route.params.projectSlug && e instanceof ApiError && [403, 404].includes(e.status)) {
+        colors.value = []; history.value = null
+        paletteDraftsApi.removeDraft(draftKey.value)
+      }
       error.value = e.message ?? 'Failed to load palette'
     } finally {
       loading.value = false
@@ -315,6 +328,12 @@ export function usePaletteContext(): PaletteContext {
   }
 
   async function loadFolders(forUsername?: string | null): Promise<void> {
+    if (route.params.projectSlug) {
+      project.value = await projectsApi.byPath(username.value, String(route.params.projectSlug))
+      folders.value = await projectsApi.folders(project.value.id)
+      return
+    }
+    project.value = null
     const targetUsername = (forUsername?.trim() || '') || (
       isNewPalette.value ? (getTokenUsername() ?? username.value) : username.value
     )
@@ -421,8 +440,10 @@ export function usePaletteContext(): PaletteContext {
   }
 
   // Initialize a draft palette in PaletteView when the route id is "new".
-  function initNewPaletteDraft(): void {
+  async function initNewPaletteDraft(): Promise<void> {
     const navigationState = getNavigationState()
+    loading.value = true
+    project.value = null
     history.value = null
     paletteId.value = null
     latestSnapshotId.value = null
@@ -430,7 +451,7 @@ export function usePaletteContext(): PaletteContext {
     currentBranchId.value = null
     historyOpen.value = false
     error.value = null
-    void loadFolders()
+    pendingTitle.value = ''
     pendingDescription.value = ''
     pendingFolderId.value = typeof navigationState.folderId === 'number' ? navigationState.folderId : null
 
@@ -442,7 +463,13 @@ export function usePaletteContext(): PaletteContext {
     }
 
     savedColorsSig.value = '__draft__'
-    loading.value = false
+    try {
+      await loadFolders()
+    } catch (e: unknown) {
+      error.value = e instanceof Error ? e.message : String(e)
+    } finally {
+      loading.value = false
+    }
   }
 
   // Clone the current palette colors into a new draft palette route.
@@ -455,11 +482,11 @@ export function usePaletteContext(): PaletteContext {
   // Watch the palette route param and reload state for PaletteView.
   function startRouteWatch(onBeforeLoad?: () => void): void {
     watch(
-      () => [route.params.username, route.params.pathMatch, route.query.palette],
+      () => [route.params.username, route.params.projectSlug, route.params.pathMatch, route.query.palette],
       () => {
         if (onBeforeLoad) onBeforeLoad()
         if (isNewPalette.value) {
-          initNewPaletteDraft()
+          void initNewPaletteDraft()
         } else {
           void loadHistory(!preserveNextRouteLoad.value)
           preserveNextRouteLoad.value = false
@@ -475,6 +502,7 @@ export function usePaletteContext(): PaletteContext {
   }
 
   return {
+    isPaletteCreator,
     route,
     router,
     isNewPalette,
@@ -489,6 +517,7 @@ export function usePaletteContext(): PaletteContext {
     pendingDescription,
     pendingFolderId,
     history,
+    project,
     folders,
     folderOptions,
     historyFolderId,

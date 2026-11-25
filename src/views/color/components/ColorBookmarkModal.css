@@ -151,3 +151,6 @@
 }
 
 .bookmark-modal{max-height:90dvh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#aaa transparent}
+.bookmark-targets { display: block; margin: 0; }
+.bookmark-targets button { padding: 10px 12px; border: 1px solid var(--rule); border-radius: 7px; background: #fff; color: var(--ink); cursor: pointer; text-align: left; font: inherit; overflow-wrap: anywhere; }
+.bookmark-targets button.active { background: var(--ink); color: #fff; }

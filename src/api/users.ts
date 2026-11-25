@@ -1,4 +1,5 @@
 import { ApiClient } from './client';
+import { cacheProfileColor } from '@/utils/profileColorCache';
 import type {
   MessageResponse,
   UserCreate,
@@ -17,8 +18,10 @@ export const usersApi = {
     return ApiClient.request<UserGetResponse>(`/users/${encodeURIComponent(username)}`, 'GET');
   },
 
-  updateMe: (data: UserUpdateMe): Promise<UserUpdateMeResponse> => {
-    return ApiClient.request<UserUpdateMeResponse>('/users/me', 'PATCH', data);
+  updateMe: async (data: UserUpdateMe): Promise<UserUpdateMeResponse> => {
+    const user = await ApiClient.request<UserUpdateMeResponse>('/users/me', 'PATCH', data);
+    cacheProfileColor(user);
+    return user;
   },
 
   deleteMe: (): Promise<MessageResponse> => {

@@ -8,20 +8,23 @@ import type {
 } from './types'
 
 export const colorBookmarksApi = {
-  async listMine(): Promise<ColorBookmarkListResponse> {
-    return ApiClient.get<ColorBookmarkListResponse>('/color-bookmarks')
+  async listMine(hex?: string, projectId?: number | null): Promise<ColorBookmarkListResponse> {
+    const query = new URLSearchParams()
+    if (hex) query.set('hex', hex.replace('#', ''))
+    if (projectId != null) query.set('project_id', String(projectId))
+    return ApiClient.get<ColorBookmarkListResponse>(`/color-bookmarks?${query}`)
   },
 
-  async getMineByHex(hex: string): Promise<ColorBookmarkResponse> {
-    return ApiClient.get<ColorBookmarkResponse>(`/color-bookmarks/${hex.replace('#', '')}`)
+  async create(hex: string, payload: ColorBookmarkUpsert, projectId?: number | null): Promise<ColorBookmarkResponse> {
+    return ApiClient.post<ColorBookmarkResponse>('/color-bookmarks', { ...payload, hex, project_id: projectId ?? null })
   },
 
-  async upsert(hex: string, payload: ColorBookmarkUpsert): Promise<ColorBookmarkResponse> {
-    return ApiClient.put<ColorBookmarkResponse>(`/color-bookmarks/${hex.replace('#', '')}`, payload)
+  async update(id: number, payload: ColorBookmarkUpsert): Promise<ColorBookmarkResponse> {
+    return ApiClient.request<ColorBookmarkResponse>(`/color-bookmarks/by-id/${id}`, 'PATCH', payload)
   },
 
-  async delete(hex: string): Promise<ColorBookmarkDeleteResponse> {
-    return ApiClient.delete<ColorBookmarkDeleteResponse>(`/color-bookmarks/${hex.replace('#', '')}`)
+  async delete(id: number): Promise<ColorBookmarkDeleteResponse> {
+    return ApiClient.delete<ColorBookmarkDeleteResponse>(`/color-bookmarks/by-id/${id}`)
   },
 
   async getByUsername(username: string): Promise<ColorBookmarkByUsernameResponse> {

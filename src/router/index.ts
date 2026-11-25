@@ -20,6 +20,10 @@ const router = createRouter({
     return { ...(savedPosition ?? { top: 0, left: 0 }), behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' }
   },
   routes: [
+    { path: '/3Doklab', name: 'oklab-easter-egg', component: () => import('@/views/color/OklabEasterEggView.vue'), meta: { hideFooter: true } },
+    { path: '/projects/:username/:projectSlug/:pathMatch(.*)+', name: 'project-palette', component: PaletteView, meta: { paletteView: true } },
+    { path: '/atelier/projects', name: 'projects', component: DashboardView, meta: { requiresAuth: true } },
+    { path: '/projects/:username/:projectSlug', name: 'project', component: () => import('@/views/projects/ProjectView.vue') },
     { path: '/about', component: () => import('@/views/AboutView.vue') },
     { path: '/atelier', redirect: '/atelier/palettes' },
     { path: '/dashboard', redirect: '/atelier/palettes' },

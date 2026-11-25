@@ -1,0 +1,14 @@
+/* Shared folder geometry for Atelier, profiles and projects. */
+:is(.dashboard-folder-card,.profile-folder-card,.project-folder-card){--folder-fill:#eee0b9;position:relative;display:flex;flex-direction:column;justify-content:flex-end;height:166px;margin-top:24px;padding:20px;border:0;border-radius:0 14px 14px 14px;background:var(--folder-fill)!important;box-shadow:none!important;overflow:visible;color:var(--ink);cursor:pointer;transition:transform .2s ease}
+:is(.dashboard-folder-card,.profile-folder-card,.project-folder-card):hover{transform:translateY(-3px)}
+:is(.dashboard-folder-card,.profile-folder-card,.project-folder-card)::before{content:'';position:absolute;top:-24px;left:0;width:96px;height:24px;background:var(--folder-fill);border-radius:14px 0 0 0}
+:is(.dashboard-folder-card,.profile-folder-card,.project-folder-card)::after{content:'';position:absolute;top:-48px;left:72px;border:24px solid transparent;border-bottom-color:var(--folder-fill)}
+:is(.dashboard-folder-title,.profile-folder-title,.project-folder-card>h3){font:700 28px/1 var(--font-display);text-transform:none;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+:is(.dashboard-folder-meta,.profile-folder-meta,.project-folder-card>p){display:flex;align-items:center;gap:6px;margin-top:8px;font-size:10.5px;letter-spacing:.04em;color:var(--ink-3)}
+.project-folder-actions{position:absolute;top:8px;right:8px;display:flex;gap:6px;z-index:3;opacity:0;transform:translateY(-2px);transition:opacity .15s ease,transform .15s ease}
+.project-folder-card:hover .project-folder-actions,.project-folder-card:focus-within .project-folder-actions{opacity:1;transform:translateY(0)}
+.project-folder-actions button{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:1px solid rgba(255,255,255,.18);border-radius:8px;background:rgba(14,14,16,.55);color:rgba(255,255,255,.75);cursor:pointer;transition:background .15s,color .15s,border-color .15s,opacity .15s}
+.project-folder-actions button:hover{color:#fff;border-color:rgba(255,255,255,.26);background:rgba(14,14,16,.75)}
+.project-folder-actions .project-folder-action--danger:hover{color:#fff;border-color:rgba(255,80,80,.4);background:rgba(180,20,20,.85)}
+@media(hover:none){.project-folder-actions{opacity:1;transform:none}}
+@media(max-width:768px){.project-folder-actions{opacity:1;transform:none}}

@@ -16,7 +16,7 @@
             class="hero-bookmark-btn"
             :class="{ 'hero-bookmark-btn--active': !!currentBookmark }"
             :style="{ color: swatchTextColor }"
-            :title="currentBookmark ? t('colorPage.updateSavedColor') : t('colorPage.saveColor')"
+            :title="t('colorPage.saveColor')"
             @click="onBookmarkClick"
           >
             <AppIcon name="bookmark" :size="18" />
@@ -49,19 +49,17 @@
             <button class="picker-mode-btn" :class="{ active: pickerMode === '3d' }" @click="pickerMode = '3d'">
               RGB 3D
             </button>
-            <button class="picker-mode-btn" :class="{ active: pickerMode === 'oklab' }" @click="pickerMode = 'oklab'">OKLab 3D</button>
           </div>
 
           <!-- 2D sat/val area -->
           <ClassicColorPicker v-if="pickerMode === '2d'" inline hide-color-blindness :model-value="displayHex" @update:model-value="applyHex" />
 
           <RgbCube3DPicker
-            v-else-if="pickerMode === '3d'"
+            v-else
             :hex="displayHex"
             @pick="applyHex"
           />
 
-          <Oklab3DPicker v-else :hex="displayHex" @pick="applyHex" />
 
           <!-- Inputs -->
           <div v-if="pickerMode !== '2d'" class="cp-inputs">
@@ -385,6 +383,7 @@
       :hex="displayHex"
       :label="bookmarkLabel"
       :existing="!!currentBookmark"
+      allowCreate
       :isSaving="bookmarkSaving"
       :error="bookmarkError"
       :createdAt="currentBookmark?.created_at ?? null"
@@ -415,7 +414,6 @@ import SiteHeader from '@/components/layout/SiteHeader.vue'
 import ColorPicker from '@/components/palette/ColorPicker.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
-import Oklab3DPicker from '@/components/color/Oklab3DPicker.vue'
 import RgbCube3DPicker from '@/components/color/RgbCube3DPicker.vue'
 import ColorBookmarkModal from '@/views/color/components/ColorBookmarkModal.vue'
 import { useColorView } from './composables/useColorView'
@@ -472,7 +470,7 @@ const {
   goToNextColor,
 } = view
 
-const pickerMode = ref<'2d' | '3d' | 'oklab'>('2d')
+const pickerMode = ref<'2d' | '3d'>('2d')
 const viewerUser = ref<UserMeResponse | null>(null)
 const currentBookmark = ref<ColorBookmarkResponse | null>(null)
 const bookmarkModalOpen = ref(false)
@@ -514,11 +512,8 @@ async function refreshCurrentBookmark(hex: string): Promise<void> {
     return
   }
   try {
-    const bookmark = await colorBookmarksApi.getMineByHex(hex)
-    currentBookmark.value = bookmark
-    if (bookmarkModalOpen.value) {
-      bookmarkLabel.value = bookmark.label
-    }
+    const response = await colorBookmarksApi.listMine(hex)
+    currentBookmark.value = response.bookmarks[0] ?? null
   } catch (error) {
     if (isBookmarkNotFound(error)) {
       currentBookmark.value = null
@@ -535,7 +530,7 @@ async function openBookmarkModal(): Promise<void> {
   bookmarkError.value = ''
   bookmarkLabel.value = buildDefaultBookmarkLabel()
   await refreshCurrentBookmark(displayHex.value)
-  bookmarkLabel.value = currentBookmark.value?.label ?? buildDefaultBookmarkLabel()
+  bookmarkLabel.value = buildDefaultBookmarkLabel()
   bookmarkModalOpen.value = true
 }
 
@@ -553,13 +548,15 @@ function onBookmarkClick(): void {
   void openBookmarkModal()
 }
 
-async function saveBookmark(): Promise<void> {
+async function saveBookmark(selection: { id: number | null; project_id: number | null }): Promise<void> {
   const label = bookmarkLabel.value.trim()
   if (!label) return
   bookmarkSaving.value = true
   bookmarkError.value = ''
   try {
-    const saved = await colorBookmarksApi.upsert(displayHex.value, { label })
+    const saved = selection.id !== null
+      ? await colorBookmarksApi.update(selection.id, { label })
+      : await colorBookmarksApi.create(displayHex.value, { label }, selection.project_id)
     currentBookmark.value = saved
     bookmarkLabel.value = saved.label
     bookmarkModalOpen.value = false

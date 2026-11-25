@@ -121,6 +121,7 @@ export interface PaletteColorSave {
 }
 
 export interface PaletteCreate {
+  project_id?: number | null;
   title: string;
   description: string;
   folder_id?: number | null;
@@ -169,6 +170,7 @@ export interface PaletteSnapshotSaveResponse {
 
 /** A single commit node as returned by the history graph endpoint. */
 export interface PaletteCommitResponse {
+  author?: string | null;
   id: number;
   palette_id: number;
   parent_snapshot_id: number | null;
@@ -192,6 +194,7 @@ export interface PaletteBranchHistoryResponse {
 
 /** Full history graph: main-branch commits + per-branch commit lists. */
 export interface PaletteHistoryGraphResponse {
+  project?: import('./projects').Project | null;
   palette_id: number;
   owner_username: string;
   title: string;
@@ -402,6 +405,7 @@ export interface ColorBookmarkUpsert {
 }
 
 export interface ColorBookmarkResponse {
+  project_id: number | null;
   id: number;
   user_id: number;
   hex: string;
@@ -420,6 +424,7 @@ export interface ColorBookmarkByUsernameResponse {
 }
 
 export interface ColorBookmarkDeleteResponse {
+  id: number;
   hex: string;
   deleted: boolean;
 }

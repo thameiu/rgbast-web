@@ -329,7 +329,7 @@
         :class="{ 'focus-ring': tutorialFocus === 'save' }"
         @click="$emit('save')"
       >
-        <AppIcon name="download" :size="14" />
+        <AppIcon name="save" :size="14" />
         {{ t('common.save') }}
       </button>
       <button

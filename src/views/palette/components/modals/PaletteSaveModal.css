@@ -8,6 +8,9 @@
   z-index: 360;
   backdrop-filter: blur(4px);
 }
+.save-destination-folders{border:0;padding:0;margin:0;min-width:0}
+.save-destination-folders:disabled{opacity:.5;pointer-events:none}
+.project-destination-modal :deep(.project-select){margin-bottom:16px}
 
 .modal {
   background: #13131a;

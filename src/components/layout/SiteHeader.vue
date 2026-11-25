@@ -33,6 +33,7 @@
         <Transition name="profile-menu-fade"><div v-if="atelierOpen" class="profile-menu">
           <RouterLink to="/atelier/palettes" class="profile-menu-item"><AppIcon name="palette" :size="16" />{{ t('searchPage.palettes') }}</RouterLink>
           <RouterLink to="/atelier/bookmarks" class="profile-menu-item"><AppIcon name="bookmark" :size="16" />{{ t('common.bookmarks') }}</RouterLink>
+          <RouterLink to="/atelier/projects" class="profile-menu-item"><AppIcon name="project" :size="16" />{{ t('projects.titlePlural') }}</RouterLink>
           <RouterLink :to="newPaletteTo" class="profile-menu-item"><AppIcon name="plus" :size="16" />{{ t('common.newPalette') }}</RouterLink>
         </div></Transition>
       </div>
@@ -41,8 +42,8 @@
     <div v-if="isLoggedIn" class="notif-slot" ref="notifEl">
       <button
         class="notif-btn"
-        :title="t('header.colleagueRequests')"
-        :aria-label="t('header.openRequests')"
+        :title="t('header.notifications')"
+        :aria-label="t('header.notifications')"
         :aria-expanded="notifMenuOpen"
         @click="toggleNotifMenu"
       >
@@ -50,15 +51,15 @@
           <path d="M3.2 9.8h7.6l-.9-1.5V6.2a2.9 2.9 0 10-5.8 0v2.1l-.9 1.5z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
           <path d="M5.6 10.4a1.5 1.5 0 002.8 0" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg>
-        <span v-if="incomingRequests.length" class="notif-badge">{{ incomingRequests.length }}</span>
+        <span v-if="notificationCount" class="notif-badge">{{ notificationCount }}</span>
       </button>
 
       <Transition name="profile-menu-fade">
         <div v-if="notifMenuOpen" class="notif-menu">
-          <p class="notif-title font-mono">{{ t('header.colleagueRequests') }}</p>
+          <p class="notif-title font-mono">{{ t('header.notifications') }}</p>
           <p v-if="notifError" class="notif-error">{{ notifError }}</p>
-          <div v-else-if="incomingRequests.length === 0" class="notif-empty">{{ t('header.noPendingRequest') }}</div>
-          <div v-else class="notif-list">
+          <div v-if="notificationCount === 0 && !notifError" class="notif-empty">{{ t('header.noPendingRequest') }}</div>
+          <div v-if="notificationCount" class="notif-list">
             <div v-for="requestUser in incomingRequests" :key="requestUser.id" class="notif-item">
               <button class="notif-user" @click="goToUserFromNotif(requestUser.username)">
                 <UserAvatar class="notif-avatar" :username="requestUser.username" :color="requestUser.profile_color" />
@@ -69,6 +70,7 @@
                 <button class="notif-action" :disabled="notifPendingUser === requestUser.username" @click="denyRequestFromNotif(requestUser.username)">{{ t('header.deny') }}</button>
               </div>
             </div>
+            <ProjectInvitationNotifications :invitations="projectInvitations" :pendingId="notifPendingInvitation" @openUser="goToUserFromNotif" @respond="respondToProjectInvitation" />
           </div>
         </div>
       </Transition>
@@ -121,6 +123,7 @@
         <div><button class="mob-link" :aria-expanded="mobileAtelierOpen" @click="mobileAtelierOpen=!mobileAtelierOpen"><AppIcon name="desk" :size="18" />Atelier <AppIcon name="chevron-down" :size="12" /></button><Transition name="mob-submenu"><div v-if="mobileAtelierOpen" class="mob-submenu">
           <RouterLink to="/atelier/palettes" class="mob-link" @click="closeSidebar"><AppIcon name="palette" :size="18" />{{ t('searchPage.palettes') }}</RouterLink>
           <RouterLink to="/atelier/bookmarks" class="mob-link" @click="closeSidebar"><AppIcon name="bookmark" :size="18" />{{ t('common.bookmarks') }}</RouterLink>
+          <RouterLink to="/atelier/projects" class="mob-link" @click="closeSidebar"><AppIcon name="project" :size="18" />{{ t('projects.titlePlural') }}</RouterLink>
           <RouterLink :to="newPaletteTo" class="mob-link" @click="closeSidebar"><AppIcon name="plus" :size="18" />{{ t('common.newPalette') }}</RouterLink>
         </div></Transition></div>
         <template v-if="isLoggedIn">
@@ -149,6 +152,10 @@
               </div>
             </div>
           </div>
+          <div v-if="projectInvitations.length" class="mob-requests">
+            <ProjectInvitationNotifications :invitations="projectInvitations" :pendingId="notifPendingInvitation" @openUser="goToUserFromNotif" @respond="respondToProjectInvitation" />
+          </div>
+          <p v-if="notifError" class="notif-error">{{ notifError }}</p>
         </template>
         <template v-else>
           <div class="mob-login"><RouterLink to="/login" class="login-link" @click="closeSidebar">{{ t('common.login') }}</RouterLink></div>
@@ -175,12 +182,15 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import RgbastLogo from '../ui/RgbastLogo.vue'
 import PaletteRgbastLogo from '../ui/PaletteRgbastLogo.vue'
 import ColleaguesModal from '@/components/colleagues/ColleaguesModal.vue'
+import ProjectInvitationNotifications from '@/components/project/ProjectInvitationNotifications.vue'
+import { projectsApi, type ProjectInvitation } from '@/api/projects'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import { authApi } from '@/api/auth'
 import { searchApi } from '@/api/search'
 import { colleaguesApi } from '@/api/colleagues'
 import type { ColleagueUserItem } from '@/api/types'
 import { useI18n } from '@/i18n'
+import { cacheProfileColor, getCachedProfileColor } from '@/utils/profileColorCache'
 
 const props = defineProps<{
   user?: { username: string; firstname?: string | null; lastname?: string | null; profile_color?: string } | null
@@ -206,7 +216,7 @@ const isOnLanding   = computed(() => route.path === '/')
 /** True when the current route is the dashboard. */
 const mobileAtelierOpen = ref(false)
 const mobileProfileOpen = ref(false)
-const isOnDashboard = computed(() => route.path.startsWith('/atelier/palettes'))
+const isOnDashboard = computed(() => route.path.startsWith('/atelier/palettes') || route.name === 'projects')
 const isOnBookmarks = computed(() => route.path === '/atelier/bookmarks')
 
 /** True when the current route starts with /color. */
@@ -240,8 +250,10 @@ function getTokenUsername(): string | null {
 }
 
 const profileName = computed(() => props.user?.username ?? getTokenUsername() ?? 'User')
-const ownProfileColor = ref<string | null>(null)
-const profileColor = computed(() => props.user?.profile_color ?? ownProfileColor.value)
+const profileColor = computed(() => props.user?.profile_color ?? getCachedProfileColor(profileName.value))
+watch(() => [props.user?.username, props.user?.profile_color], () => {
+  if (props.user) cacheProfileColor(props.user)
+}, { immediate: true })
 const newPaletteTo = computed(() => {
   const username = profileName.value && isLoggedIn.value ? profileName.value : 'local'
   return { name: 'palette', params: { username, pathMatch: 'new' } }
@@ -264,8 +276,13 @@ const profileMenuOpen = ref(false)
 const showColleaguesModal = ref(false)
 const notifMenuOpen = ref(false)
 const incomingRequests = ref<ColleagueUserItem[]>([])
+const projectInvitations = ref<ProjectInvitation[]>([])
+const notifPendingInvitation = ref<number | null>(null)
+const notificationCount = computed(() => incomingRequests.value.length + projectInvitations.value.length)
+let notificationLoad = 0
 const notifError = ref('')
 const notifPendingUser = ref<string | null>(null)
+watch(isLoggedIn, loggedIn => { if (loggedIn) void loadIncomingRequests() })
 
 /** Reference to the sidebar element for GSAP animations. */
 const sidebarEl  = ref<HTMLElement | null>(null)
@@ -278,20 +295,23 @@ onMounted(() => {
   document.addEventListener('pointerdown', onGlobalPointerDown)
   document.addEventListener('keydown', closeMenusOnEscape)
   window.addEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
+  window.addEventListener('rgbast:project-invitations-updated', onColleaguesUpdated)
   window.addEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
   if (isLoggedIn.value) {
     void loadIncomingRequests()
     if (!props.user?.profile_color) {
-      void authApi.checkAuth().then(user => { ownProfileColor.value = user.profile_color }).catch(() => {})
+      void authApi.checkAuth().catch(() => {})
     }
   }
 })
 
 onBeforeUnmount(() => {
+  notificationLoad++
   if (mobileOpen.value) document.body.style.overflow = previousOverflow
   document.removeEventListener('pointerdown', onGlobalPointerDown)
   document.removeEventListener('keydown', closeMenusOnEscape)
   window.removeEventListener('rgbast:colleagues-updated', onColleaguesUpdated)
+  window.removeEventListener('rgbast:project-invitations-updated', onColleaguesUpdated)
   window.removeEventListener('rgbast:last-watched-color-changed', onLastWatchedColorChanged as EventListener)
 })
 
@@ -324,6 +344,7 @@ function toggleProfileMenu(): void {
 
 function toggleNotifMenu(): void {
   notifMenuOpen.value = !notifMenuOpen.value
+  if (notifMenuOpen.value) void loadIncomingRequests()
   if (notifMenuOpen.value) {
     profileMenuOpen.value = false
     profilePinned.value = false
@@ -384,6 +405,7 @@ function onGlobalPointerDown(event: PointerEvent): void {
  * Slides the mobile sidebar in from the right using GSAP.
  */
 function openSidebar() {
+  if (isLoggedIn.value) void loadIncomingRequests()
   mobileAtelierOpen.value = false
   mobileProfileOpen.value = false
   mobileOpen.value = true
@@ -412,20 +434,32 @@ function handleLogout() {
   profileMenuOpen.value = false
   notifMenuOpen.value = false
   incomingRequests.value = []
+  projectInvitations.value = []
+  notificationLoad++
   notifError.value = ''
   closeSidebar()
   router.push('/login')
 }
 
 async function loadIncomingRequests(): Promise<void> {
+  const current = ++notificationLoad
   notifError.value = ''
+  const [colleagues, invitations] = await Promise.allSettled([colleaguesApi.listMine(), projectsApi.invitations()])
+  if (current !== notificationLoad) return
+  incomingRequests.value = colleagues.status === 'fulfilled' ? colleagues.value.incoming_pending : []
+  projectInvitations.value = invitations.status === 'fulfilled' ? invitations.value : []
+  if (colleagues.status === 'rejected' || invitations.status === 'rejected') notifError.value = t('header.couldNotLoadRequests')
+}
+
+async function respondToProjectInvitation(id: number, accept: boolean): Promise<void> {
+  notifPendingInvitation.value = id; notifError.value = ''
   try {
-    const payload = await colleaguesApi.listMine()
-    incomingRequests.value = payload.incoming_pending
-  } catch (e: any) {
-    incomingRequests.value = []
-    notifError.value = e?.message ?? t('header.couldNotLoadRequests')
-  }
+    if (accept) await projectsApi.accept(id)
+    else await projectsApi.decline(id)
+    projectInvitations.value = projectInvitations.value.filter(invitation => invitation.id !== id)
+    window.dispatchEvent(new Event('rgbast:project-invitations-updated'))
+  } catch(e) { notifError.value = e instanceof Error ? e.message : t('header.couldNotLoadRequests') }
+  finally { notifPendingInvitation.value = null }
 }
 
 function onColleaguesUpdated(): void {
@@ -439,6 +473,8 @@ async function acceptRequestFromNotif(username: string): Promise<void> {
     await colleaguesApi.accept(username)
     window.dispatchEvent(new Event('rgbast:colleagues-updated'))
     await loadIncomingRequests()
+  } catch(e) {
+    notifError.value = e instanceof Error ? e.message : t('header.couldNotLoadRequests')
   } finally {
     notifPendingUser.value = null
   }
@@ -450,6 +486,8 @@ async function denyRequestFromNotif(username: string): Promise<void> {
     await colleaguesApi.remove(username)
     window.dispatchEvent(new Event('rgbast:colleagues-updated'))
     await loadIncomingRequests()
+  } catch(e) {
+    notifError.value = e instanceof Error ? e.message : t('header.couldNotLoadRequests')
   } finally {
     notifPendingUser.value = null
   }

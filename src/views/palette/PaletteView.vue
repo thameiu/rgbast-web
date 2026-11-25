@@ -18,7 +18,7 @@
       :historyOpen="ctx.historyOpen.value"
       :isOwned="ctx.isOwned.value"
       :isNewPalette="ctx.isNewPalette.value"
-      :canDelete="ctx.isOwned.value && !ctx.isNewPalette.value"
+      :canDelete="ctx.isPaletteCreator.value"
       :tutorialFocus="tutorial.headerTutorialFocus.value"
       :mobileMenuOpen="ctx.mobileSidebarOpen.value"
       :canUndo="undo.canUndo.value"
@@ -122,6 +122,7 @@
       />
     </div>
 
+    <PaletteConflictModal :conflict="save.conflict.value" @close="save.conflict.value = null" @resolve="save.resolveConflict" />
     <PaletteSaveModal
       :open="ctx.showSaveModal.value"
       :isNewPalette="ctx.isNewPalette.value"
@@ -129,8 +130,14 @@
       :currentBranchName="ctx.currentBranchName.value"
       :pendingTitle="ctx.pendingTitle.value"
       :pendingDescription="ctx.pendingDescription.value"
-      :pendingFolderId="ctx.pendingFolderId.value"
-      :folders="ctx.folders.value"
+      :pendingFolderId="save.destinationFolderId.value"
+      :folders="save.destinationFolders.value"
+      :allowFolderEditing="save.canCreateDestinationFolder.value"
+      :destinationProjectId="save.destinationProjectId.value"
+      :destinationOptions="save.destinationOptions.value"
+      :destinationLoading="save.destinationLoading.value"
+      :destinationError="save.destinationError.value"
+      @destinationChange="save.selectDestination"
       :saveComment="save.saveComment.value"
       :saveError="save.saveError.value"
       :titleErrorMessage="saveTitleErrorMessage"
@@ -143,11 +150,11 @@
       @save="save.doSave"
       @update:pendingTitle="ctx.pendingTitle.value = $event"
       @update:pendingDescription="ctx.pendingDescription.value = $event"
-      @update:pendingFolderId="ctx.pendingFolderId.value = $event"
+      @update:pendingFolderId="save.destinationFolderId.value = $event"
       @update:saveComment="save.saveComment.value = $event"
       @update:createNewBranch="save.createNewBranch.value = $event"
       @update:newBranchName="save.newBranchName.value = $event"
-      @createFolder="handleCreateFolder"
+      @createFolder="save.createDestinationFolder"
     />
 
     <PaletteEditModal
@@ -156,6 +163,7 @@
       :description="save.editDescription.value"
       :folderId="save.editFolderId.value"
       :folders="ctx.folders.value"
+      :allowFolderEditing="!ctx.project.value || ctx.project.value.permissions.includes('manage_folders')"
       :isSaving="save.isEditing.value"
       :error="save.editError.value"
       :titleErrorMessage="editTitleErrorMessage"
@@ -305,6 +313,16 @@
           <div class="palette-info-description">
             {{ (ctx.history.value?.description ?? ctx.pendingDescription.value)?.trim() || 'No description.' }}
           </div>
+          <section v-if="ctx.history.value?.project" class="palette-info-project">
+            <span>{{ t('projects.titlePlural') }}</span>
+            <RouterLink :to="`/projects/${encodeURIComponent(ctx.history.value.project.creator_username)}/${encodeURIComponent(ctx.history.value.project.slug)}`">
+              <AppIcon name="project" :size="18" /> {{ ctx.history.value.project.title }}
+              <span v-if="ctx.history.value.project.private" class="palette-project-privacy" role="img" :aria-label="t('projects.private')" :title="t('projects.private')"><AppIcon name="lock" :size="14" /></span>
+              <AppIcon name="external-link" :size="14" />
+            </RouterLink>
+            <p v-if="ctx.history.value.project.description">{{ ctx.history.value.project.description }}</p>
+          </section>
+          <button class="palette-project-action" @click="addPaletteToProject"><AppIcon name="project" :size="16" />{{ t('projects.addToProject') }}</button>
           <div class="palette-info-dates">
             <div>
               <span>{{ t('colorPage.created') }}</span>
@@ -326,6 +344,7 @@
       :branchColor="ctx.mobileBranchColor"
       :snapshotCommitHint="ctx.snapshotCommitHint.value"
       :isOwned="ctx.isOwned.value"
+      :canDelete="ctx.isPaletteCreator.value"
       :isSaving="save.isSaving.value"
       :hasUnsavedChanges="ctx.hasUnsavedChanges.value"
       :isNewPalette="ctx.isNewPalette.value"
@@ -362,6 +381,9 @@ import PaletteSnapshotBanner from './components/PaletteSnapshotBanner.vue'
 import PaletteColumnsArea from './components/PaletteColumnsArea.vue'
 import PaletteHistoryPanel from './components/PaletteHistoryPanel.vue'
 import PaletteSaveModal from './components/modals/PaletteSaveModal.vue'
+import PaletteConflictModal from '@/components/palette/PaletteConflictModal.vue'
+import { openProjectTransfer, projectTransfer } from '@/composables/useProjectTransfer'
+import { enterPaletteColumn, leavePaletteColumn } from '@/utils/paletteColumnTransitions'
 import PaletteEditModal from './components/modals/PaletteEditModal.vue'
 import PaletteMergeModal from './components/modals/PaletteMergeModal.vue'
 import PaletteDeletePaletteModal from './components/modals/PaletteDeletePaletteModal.vue'
@@ -378,6 +400,7 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import analyzeImage from 'rgbaster'
 import { foldersApi } from '@/api/folders'
+import { projectsApi } from '@/api/projects'
 import { palettesApi } from '@/api/palettes'
 import { paletteDraftsApi } from '@/api/paletteDrafts'
 import type { PaletteDraftHistorySnapshot } from '@/api/paletteDrafts'
@@ -565,6 +588,12 @@ function hydrateDraftIfReady(): void {
   }
   ctx.colors.value = ctx.wrapColors(draft.colors)
   ctx.selectedSnapshotId.value = draft.selectedSnapshotId
+  if (draft.baseSnapshotId !== undefined) ctx.latestSnapshotId.value = draft.baseSnapshotId
+  else if (draft.mode === 'existing') {
+    const snapshots = [...(ctx.history.value?.main ?? []), ...(ctx.history.value?.branches.flatMap(branch => branch.snapshots) ?? [])]
+    const base = snapshots.find(snapshot => snapshot.palette_colors.map(color => `${color.hex}:${color.label ?? ''}`).join('|') === draft.savedColorsSig)
+    ctx.latestSnapshotId.value = base?.id ?? null
+  }
   ctx.currentBranchId.value = draft.currentBranchId
   ctx.savedColorsSig.value = draft.savedColorsSig
 
@@ -620,6 +649,7 @@ function persistDraftIfNeeded(): void {
     linkPath: ctx.route.fullPath,
     colors: toSaveColors(ctx.colors.value),
     selectedSnapshotId: ctx.selectedSnapshotId.value,
+    baseSnapshotId: ctx.latestSnapshotId.value,
     currentBranchId: ctx.currentBranchId.value,
     savedColorsSig: ctx.savedColorsSig.value,
     undoPast: undo.undoPast.value.map(toDraftHistorySnapshot),
@@ -753,6 +783,14 @@ function openOwnerProfile(): void {
 
 function openPaletteInfoModal(): void {
   showPaletteInfoModal.value = true
+}
+function addPaletteToProject(): void {
+  showPaletteInfoModal.value = false
+  openProjectTransfer({ kind: 'palette', id: ctx.paletteId.value ?? undefined, title: ctx.isNewPalette.value ? 'Untitled-palette' : ctx.paletteTitle.value,
+    description: ctx.history.value?.description ?? ctx.pendingDescription.value,
+    colors: ctx.colors.value.map(c => ({ hex: c.hex, label: c.label })),
+    canMove: ctx.isPaletteCreator.value && !ctx.history.value?.project && !ctx.hasUnsavedChanges.value,
+    onMoved: path => { void ctx.router.replace(path) } })
 }
 
 function openAccessibilityAuditModal(index?: number): void {
@@ -958,9 +996,11 @@ onUnmounted(() => {
 
 function onEscapeKey(event: KeyboardEvent): void {
   if (event.key !== 'Escape') return
+  if (projectTransfer.value) return
   event.preventDefault()
   event.stopImmediatePropagation()
 
+  if (save.conflict.value) { save.conflict.value = null; return }
   if (ctx.showAuthModal.value) { ctx.showAuthModal.value = false; return }
   if (exportModalOpen.value) { exportModalOpen.value = false; return }
   if (imagePaletteOpen.value) { closeImagePaletteModal(); return }
@@ -1122,7 +1162,11 @@ function applyExtractedImageColors(mode: 'add' | 'replace'): void {
 
 async function handleCreateFolder(payload: { name: string; parentId: number | null }) {
   try {
-    await foldersApi.create({ name: payload.name, parent_folder_id: payload.parentId })
+    const data = { name: payload.name, parent_folder_id: payload.parentId }
+    if (ctx.route.params.projectSlug) {
+      if (!ctx.project.value?.permissions.includes('manage_folders')) return
+      await projectsApi.createFolder(ctx.project.value.id, data)
+    } else await foldersApi.create(data)
     await ctx.loadFolders()
   } catch {}
 }
@@ -1177,7 +1221,7 @@ watch(
 )
 
 watch(
-  () => [ctx.route.params.username, ctx.route.params.pathMatch, ctx.route.query.palette],
+  () => [ctx.route.params.username, ctx.route.params.projectSlug, ctx.route.params.pathMatch, ctx.route.query.palette],
   () => {
     hydratedDraftKey.value = null
   },
@@ -1258,48 +1302,11 @@ function onAddEnter(el: Element, done: () => void): void {
     return
   }
   newlyAddedColorKey.value = null
-  const mobile = window.matchMedia('(max-width: 768px)').matches
-  const target = mobile ? element.scrollHeight : element.parentElement!.clientWidth / ctx.colors.value.length
-  const property = mobile ? 'height' : 'flexBasis'
-  element.style.overflow = 'hidden'
-  if (!mobile) element.style.minWidth = '0'
-  element.style.transition = 'none'
-  element.style[property] = '0px'
-  element.offsetWidth
-  element.style.transition = `${mobile ? 'height' : 'flex-basis'} 0.3s cubic-bezier(0.2, 0.9, 0.2, 1)`
-  element.style[property] = `${target}px`
-  let finished = false
-  const finish = () => {
-    if (finished) return
-    finished = true
-    element.removeEventListener('transitionend', onTransitionEnd)
-    clearTimeout(timeout)
-    element.style.removeProperty(mobile ? 'height' : 'flex-basis')
-    element.style.removeProperty('overflow')
-    element.style.removeProperty('min-width')
-    element.style.removeProperty('transition')
-    done()
-  }
-  const onTransitionEnd = (event: TransitionEvent) => {
-    if (event.target === element && event.propertyName === (mobile ? 'height' : 'flex-basis')) finish()
-  }
-  const timeout = setTimeout(finish, 360)
-  element.addEventListener('transitionend', onTransitionEnd)
+  enterPaletteColumn(el, done)
 }
 
 function onLeave(el: Element, done: () => void): void {
-  const e = el as HTMLElement
-  const w = e.getBoundingClientRect().width
-  e.style.flexBasis = w + 'px'
-  e.style.flexGrow = '0'
-  e.style.flexShrink = '0'
-  e.style.minWidth = '0'
-  e.style.overflow = 'hidden'
-  e.offsetWidth
-  e.style.transition = 'flex-basis 0.18s cubic-bezier(0.4,0,1,1), opacity 0.14s ease'
-  e.style.flexBasis = '0px'
-  e.style.opacity = '0'
-  e.addEventListener('transitionend', done, { once: true })
+  leavePaletteColumn(el, done)
 }
 </script>
 

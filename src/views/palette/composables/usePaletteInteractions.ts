@@ -1,4 +1,4 @@
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onBeforeUnmount } from 'vue'
 import type { Ref } from 'vue'
 import type { WorkingColor } from './usePaletteContext'
 import { MAX_PALETTE_COLORS } from '@/utils/paletteConstraints'
@@ -7,6 +7,7 @@ export interface InteractionContext {
   colors: Ref<WorkingColor[]>
   mkKey: () => string
   isOwned: Ref<boolean>
+  autoScroll?: boolean
 }
 
 export interface InteractionActions {
@@ -26,6 +27,12 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
   const ghostOffsetY = ref(0)
   let previousBodyTouchAction = ''
   let previousBodyOverscrollBehavior = ''
+  let previousBodyUserSelect = ''
+  let previousBodyCursor = ''
+  let capturedPointer: { element: Element; id: number } | null = null
+  let scrollFrame = 0
+  let lastPointerEvent: PointerEvent | null = null
+  let dropCleanupTimer: ReturnType<typeof setTimeout> | null = null
 
   let hexLabelEditing = false
   let hexLabelEditTimer: ReturnType<typeof setTimeout> | null = null
@@ -130,7 +137,8 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
 
   // Begin drag and drop for a palette column and create a ghost element.
   function onDragStart(i: number, e: PointerEvent): void {
-    if (!ctx.isOwned.value) return
+    if (!ctx.isOwned.value || e.button !== 0) return
+    cancelDrag()
     actions.captureForUndo()
     const key = ctx.colors.value[i]?._key
     if (key && colsAreaEl.value) {
@@ -162,7 +170,10 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     draggedIdx.value = i
     dragPointerStartX.value = e.clientX
     dragPointerStartY.value = e.clientY
-    ;(e.target as HTMLElement | null)?.setPointerCapture?.(e.pointerId)
+    const target = e.target as Element | null
+    if (target?.setPointerCapture) {
+      try { target.setPointerCapture(e.pointerId); capturedPointer = { element: target, id: e.pointerId } } catch {}
+    }
     e.preventDefault()
 
     document.addEventListener('pointermove', onPointerMove)
@@ -170,15 +181,40 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     document.addEventListener('pointerup', onPointerUp, { once: true })
     previousBodyTouchAction = document.body.style.touchAction
     previousBodyOverscrollBehavior = document.body.style.overscrollBehavior
+    previousBodyUserSelect = document.body.style.userSelect
+    previousBodyCursor = document.body.style.cursor
     document.body.style.userSelect = 'none'
     document.body.style.cursor = 'grabbing'
     document.body.style.touchAction = 'none'
     document.body.style.overscrollBehavior = 'none'
+    lastPointerEvent = e
+    if (ctx.autoScroll) scrollFrame = requestAnimationFrame(autoScroll)
+  }
+
+  // Embedded palettes can overflow their viewport; keep dragging at either edge.
+  function autoScroll(): void {
+    if (draggedIdx.value === null || !colsAreaEl.value || !lastPointerEvent) return
+    const area = colsAreaEl.value, mobile = isMobileLayout(), rect = area.getBoundingClientRect()
+    const pointer = mobile ? lastPointerEvent.clientY : lastPointerEvent.clientX
+    const start = mobile ? rect.top : rect.left, end = mobile ? rect.bottom : rect.right
+    const edge = Math.min(40, (end - start) / 4)
+    const speed = pointer < start + edge ? -Math.min(14, (start + edge - pointer) / 3) : pointer > end - edge ? Math.min(14, (pointer - end + edge) / 3) : 0
+    const previous = mobile ? area.scrollTop : area.scrollLeft
+    if (mobile) area.scrollTop += speed
+    else area.scrollLeft += speed
+    const delta = (mobile ? area.scrollTop : area.scrollLeft) - previous
+    if (delta) {
+      if (mobile) dragPointerStartY.value = (dragPointerStartY.value ?? pointer) - delta
+      else dragPointerStartX.value = (dragPointerStartX.value ?? pointer) - delta
+      onPointerMove(lastPointerEvent)
+    }
+    scrollFrame = requestAnimationFrame(autoScroll)
   }
 
   // Update the drag ghost position and reorder columns in flight.
   function onPointerMove(e: PointerEvent): void {
     if (draggedIdx.value === null) return
+    lastPointerEvent = e
     e.preventDefault()
 
     const mobile = isMobileLayout()
@@ -231,8 +267,12 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
   async function onPointerUp(): Promise<void> {
     document.removeEventListener('pointermove', onPointerMove)
     document.removeEventListener('pointercancel', onPointerUp)
-    document.body.style.userSelect = ''
-    document.body.style.cursor = ''
+    document.removeEventListener('pointerup', onPointerUp)
+    cancelAnimationFrame(scrollFrame)
+    lastPointerEvent = null
+    releaseCapture()
+    document.body.style.userSelect = previousBodyUserSelect
+    document.body.style.cursor = previousBodyCursor
     document.body.style.touchAction = previousBodyTouchAction
     document.body.style.overscrollBehavior = previousBodyOverscrollBehavior
     dragPointerStartX.value = null
@@ -249,14 +289,14 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     }
 
     await nextTick()
+    if (ghostEl.value !== ghost) return
 
     const key = ctx.colors.value[idx]?._key
     const colEl = key ? colsAreaEl.value?.querySelector<HTMLElement>(`.col[data-col-key="${key}"]`) : null
 
     if (!colEl) {
       if (ghost.parentNode) document.body.removeChild(ghost)
-      ghostEl.value = null
-      draggedIdx.value = null
+      if (ghostEl.value === ghost) { ghostEl.value = null; draggedIdx.value = null }
       return
     }
 
@@ -268,15 +308,18 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     const cleanup = () => {
       if (cleanedUp) return
       cleanedUp = true
+      if (dropCleanupTimer) clearTimeout(dropCleanupTimer)
+      dropCleanupTimer = null
       if (ghost.parentNode) document.body.removeChild(ghost)
-      ghostEl.value = null
-      draggedIdx.value = null
+      if (ghostEl.value === ghost) { ghostEl.value = null; draggedIdx.value = null }
     }
+
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { cleanup(); return }
 
     ghost.addEventListener('transitionend', (evt: TransitionEvent) => {
       if (evt.propertyName === animProp || evt.propertyName === 'opacity') cleanup()
     })
-    setTimeout(cleanup, 300)
+    dropCleanupTimer = setTimeout(cleanup, 300)
 
     ghost.style.transition = `${animProp} 0.18s cubic-bezier(0.2,0.9,0.2,1)`
     if (mobile) {
@@ -285,6 +328,37 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
       ghost.style.left = `${finalRect.left}px`
     }
   }
+
+  function releaseCapture(): void {
+    if (!capturedPointer) return
+    try { capturedPointer.element.releasePointerCapture(capturedPointer.id) } catch {}
+    capturedPointer = null
+  }
+
+  function cancelDrag(): void {
+    if (draggedIdx.value === null && !ghostEl.value) return
+    document.removeEventListener('pointermove', onPointerMove)
+    document.removeEventListener('pointerup', onPointerUp)
+    document.removeEventListener('pointercancel', onPointerUp)
+    cancelAnimationFrame(scrollFrame)
+    if (dropCleanupTimer) clearTimeout(dropCleanupTimer)
+    releaseCapture()
+    ghostEl.value?.remove()
+    ghostEl.value = null
+    draggedIdx.value = null
+    dragPointerStartX.value = null
+    dragPointerStartY.value = null
+    lastPointerEvent = null
+    document.body.style.userSelect = previousBodyUserSelect
+    document.body.style.cursor = previousBodyCursor
+    document.body.style.touchAction = previousBodyTouchAction
+    document.body.style.overscrollBehavior = previousBodyOverscrollBehavior
+  }
+
+  onBeforeUnmount(() => {
+    cancelDrag()
+    if (hexLabelEditTimer) clearTimeout(hexLabelEditTimer)
+  })
 
   // Create a random uppercase hex string for new palette colors.
   function randomHex(): string {
@@ -305,5 +379,6 @@ export function usePaletteInteractions(ctx: InteractionContext, actions: Interac
     getColStyle,
     onSwapTap,
     onDragStart,
+    cancelDrag,
   }
 }

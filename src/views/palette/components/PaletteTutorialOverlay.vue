@@ -2,7 +2,8 @@
   <Teleport to="body">
     <div v-if="show" class="tutorial-shell" :class="{ 'focus-history': tutorialFocus === 'history' }">
       <div class="tutorial-dim"></div>
-      <div class="tutorial-card" :class="tutorialCardClass">
+    </div>
+      <div v-if="show" class="tutorial-card" :class="tutorialCardClass">
         <div class="tutorial-top">
           <span class="tutorial-step">{{ t('paletteTutorial.step') }} {{ tutorialStep + 1 }} / {{ tutorialSteps.length }}</span>
           <button class="tutorial-close" type="button" :aria-label="t('paletteTutorial.close')" @click="$emit('close')">
@@ -25,7 +26,6 @@
           <button v-else class="modal-btn confirm" @click="$emit('close')">{{ t('paletteTutorial.gotIt') }}</button>
         </div>
       </div>
-    </div>
   </Teleport>
 </template>
 

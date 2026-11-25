@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div v-if="open" class="modal-overlay" @click.self="$emit('close')">
-      <div class="modal export-modal" :class="{ 'export-modal--visual': exportStep && exportStep !== 'css' }">
+      <div ref="exportModalEl" class="modal export-modal" :class="{ 'export-modal--visual': exportStep && exportStep !== 'css' }" :style="{ minHeight: dropdownMinHeight ? `${dropdownMinHeight}px` : undefined }">
         <button class="modal-close-btn" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
@@ -172,7 +172,7 @@
 
 <script setup lang="ts">
 import { useI18n } from '@/i18n'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import AppLoader from '@/components/ui/AppLoader.vue'
 import { colorApi } from '@/api/color'
@@ -220,6 +220,8 @@ let codeCopiedTimer: ReturnType<typeof setTimeout> | null = null
 const fontDropdownOpen = ref(false)
 const formatDropdownOpen = ref(false)
 const orientationDropdownOpen = ref(false)
+const exportModalEl = ref<HTMLElement | null>(null)
+const dropdownMinHeight = ref(0)
 const fontDropdownEl = ref<HTMLElement | null>(null)
 const formatDropdownEl = ref<HTMLElement | null>(null)
 const orientationDropdownEl = ref<HTMLElement | null>(null)
@@ -276,6 +278,19 @@ watch(() => props.open, (open) => {
     orientationDropdownOpen.value = false
   }
 })
+
+// Keep the closed modal compact; only reserve space while an overlay menu is open.
+async function updateDropdownSpace(): Promise<void> {
+  dropdownMinHeight.value = 0
+  await nextTick()
+  const modal = exportModalEl.value
+  if (!props.open || !modal || !(fontDropdownOpen.value || formatDropdownOpen.value || orientationDropdownOpen.value)) return
+  const menu = modal.querySelector<HTMLElement>('.custom-dd-menu')
+  if (!menu) return
+  const padding = Number.parseFloat(window.getComputedStyle(modal).paddingBottom) || 0
+  dropdownMinHeight.value = Math.min(window.innerHeight - 36, Math.ceil(menu.getBoundingClientRect().bottom - modal.getBoundingClientRect().top + modal.scrollTop + padding))
+}
+watch([fontDropdownOpen, formatDropdownOpen, orientationDropdownOpen, () => props.open, exportStep], updateDropdownSpace)
 
 function toggleFontDropdown(): void {
   fontDropdownOpen.value = !fontDropdownOpen.value
@@ -338,11 +353,13 @@ function onDocKeydown(event: KeyboardEvent): void {
 }
 
 onMounted(() => {
+  window.addEventListener('resize', updateDropdownSpace)
   document.addEventListener('pointerdown', onDocPointerDown, { capture: true })
   document.addEventListener('keydown', onDocKeydown, { capture: true })
 })
 
 onBeforeUnmount(() => {
+  window.removeEventListener('resize', updateDropdownSpace)
   document.removeEventListener('pointerdown', onDocPointerDown, { capture: true })
   document.removeEventListener('keydown', onDocKeydown, { capture: true })
   if (shareCopiedTimer) clearTimeout(shareCopiedTimer)

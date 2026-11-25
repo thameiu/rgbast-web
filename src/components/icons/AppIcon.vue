@@ -1,5 +1,6 @@
 <template>
-  <img v-if="fileIcon" :src="fileIcon" :width="size" :height="size" alt="" aria-hidden="true" /><component v-else-if="libraryIcon" :is="libraryIcon" :size="Number(size)" aria-hidden="true" />
+  <span v-if="inlineMarkup" class="asset-icon" :class="{ 'asset-icon--filled': name === 'project' || name === 'palette' || name === 'file-svg', 'project-icon': name === 'project', 'palette-icon': name === 'palette' }" :style="{ width: `${size}px`, height: `${size}px` }" aria-hidden="true" v-html="inlineMarkup"></span>
+  <component v-else-if="libraryIcon" :is="libraryIcon" :size="Number(size)" aria-hidden="true" />
   <svg v-else
     :width="size"
     :height="size"
@@ -226,19 +227,22 @@
       <rect x="5" y="10" width="14" height="10" rx="2" />
       <path d="M8 10V7a4 4 0 0 1 7.4-2.1" />
     </template>
-    <path v-else-if="name === 'palette'" d="M12 4a8 8 0 1 0 0 16h1.5a2.5 2.5 0 0 0 0-5H12a2 2 0 0 1 0-4h6.2A2.8 2.8 0 0 0 21 8.2 8.2 8.2 0 0 0 12 4Z" />
   </svg>
 </template>
 
 <script setup lang="ts">
 import {computed} from 'vue'
-import pdfIcon from '@/assets/icons/file-pdf.svg'
-import svgIcon from '@/assets/icons/file-svg.svg'
-import aiIcon from '@/assets/icons/file-ai.svg'
-import pngIcon from '@/assets/icons/file-png.svg'
-import { Palette, Columns3, Users, User, Bookmark, Folder, ArrowLeft, LogOut, Settings, PanelsTopLeft, GitBranch, House, Image, FileText, CodeXml, Asterisk, PenTool } from 'lucide-vue-next'
+import pdfIcon from '@/assets/icons/tabler/file-description.svg?raw'
+import svgIcon from '@/assets/icons/simple-icons/svg.svg?raw'
+import aiIcon from '@/assets/icons/tabler/brand-adobe-illustrator.svg?raw'
+import pngIcon from '@/assets/icons/tabler/photo.svg?raw'
+import codeIcon from '@/assets/icons/tabler/code.svg?raw'
+import projectSvg from '@/assets/icons/project.svg?raw'
+import paletteSvg from '@/assets/icons/palette.svg?raw'
+import { Palette, Users, User, Bookmark, Folder, FolderPlus, Pipette, ArrowLeft, LogOut, Settings, PanelsTopLeft, GitBranch, House, Image, Trash2, Save } from 'lucide-vue-next'
 
 export type AppIconName =
+  | 'save'
   | 'arrow-left'
   | 'arrow-right'
   | 'external-link'
@@ -258,6 +262,9 @@ export type AppIconName =
   | 'share'
   | 'bell'
   | 'folder'
+  | 'folder-plus'
+  | 'project'
+  | 'pipette'
   | 'folder-open'
   | 'home'
   | 'search'
@@ -306,13 +313,33 @@ const props=withDefaults(defineProps<{
 }>(), {
   size: 16,
 })
-const iconMap={palette:Columns3,'paint-palette':Palette,users:Users,user:User,bookmark:Bookmark,folder:Folder,'arrow-left':ArrowLeft,logout:LogOut,settings:Settings,desk:PanelsTopLeft,'git-branch':GitBranch,home:House,image:Image,'file-pdf':FileText,'file-svg':Asterisk,'file-ai':PenTool,code:CodeXml}
-const fileIcons={'file-pdf':pdfIcon,'file-svg':svgIcon,'file-ai':aiIcon,'file-png':pngIcon}
-const fileIcon=computed(()=>fileIcons[props.name as keyof typeof fileIcons])
+// Inline the bundled asset without document-wide styles or duplicate IDs.
+function prepareInlineSvg(svg: string): string {
+  return svg
+    .replace(/<\?xml[\s\S]*?\?>/, '')
+    .replace(/<defs>[\s\S]*?<\/defs>/, '')
+    .replace(/\sid="[^"]*"/g, '')
+}
+const inlineIcons = {
+  project: prepareInlineSvg(projectSvg),
+  palette: prepareInlineSvg(paletteSvg),
+  'file-pdf': prepareInlineSvg(pdfIcon),
+  'file-svg': prepareInlineSvg(svgIcon),
+  'file-png': prepareInlineSvg(pngIcon),
+  'file-ai': prepareInlineSvg(aiIcon),
+  code: prepareInlineSvg(codeIcon),
+}
+const inlineMarkup = computed(() => inlineIcons[props.name as keyof typeof inlineIcons])
+const iconMap={save:Save,trash:Trash2,'paint-palette':Palette,users:Users,user:User,bookmark:Bookmark,folder:Folder,'folder-plus':FolderPlus,pipette:Pipette,'arrow-left':ArrowLeft,logout:LogOut,settings:Settings,desk:PanelsTopLeft,'git-branch':GitBranch,home:House,image:Image}
 const libraryIcon=computed(()=>iconMap[props.name as keyof typeof iconMap])
 </script>
 
 <style scoped>
+.asset-icon{display:inline-block;flex-shrink:0;vertical-align:middle}
+.asset-icon :deep(svg){display:block;width:100%;height:100%}
+.asset-icon--filled :deep(path),.asset-icon--filled :deep(rect),.asset-icon--filled :deep(circle){fill:currentColor;stroke:none}
+.palette-icon :deep(.d){fill:none}
+.palette-icon :deep(.e){stroke:currentColor;stroke-width:1;stroke-miterlimit:10}
 svg {
   display: block;
   vector-effect: non-scaling-stroke;

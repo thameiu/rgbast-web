@@ -1,0 +1,55 @@
+/* Shared light modal treatment matches the Atelier surface. */
+.project-overlay{background:rgba(14,14,16,.65);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}
+.project-modal:not(.conflict-modal){background:var(--paper);border:1px solid var(--rule);border-radius:18px;padding:28px;width:400px;max-width:min(100%,calc(100vw - 32px));box-shadow:0 24px 80px rgba(14,14,16,.2);scrollbar-width:thin}
+.project-modal:not(.conflict-modal) h2{font:700 28px/1.1 var(--font-display);color:var(--ink);margin:0 28px 20px 0}
+.project-modal:not(.conflict-modal) label{font-size:11px;letter-spacing:.04em;font-weight:600;margin-bottom:16px;color:var(--ink-2)}
+.project-modal:not(.conflict-modal) input:not([type=checkbox]):not([type=radio]):not(.cp-input):not(.label-input),.project-modal:not(.conflict-modal) select,.project-modal:not(.conflict-modal) textarea{padding:10px 12px;border:1px solid var(--rule);border-radius:8px;background:#fff;color:var(--ink);font:inherit;font-size:13px;width:100%;box-sizing:border-box}
+.project-modal:not(.conflict-modal) input[type=checkbox],.project-modal:not(.conflict-modal) input[type=radio]{width:auto;accent-color:var(--ink)}
+.project-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+.project-modal-actions button[type=button]{background:transparent;color:var(--ink-2);border-color:var(--rule)}
+.project-modal:not(.conflict-modal) .project-targets{display:grid;gap:8px;margin-bottom:16px}.project-modal:not(.conflict-modal) .project-targets button{text-align:left;background:#fff;color:var(--ink);overflow-wrap:anywhere}.project-modal:not(.conflict-modal) .project-targets button.active{background:var(--ink);color:#fff}
+.project-error{font-size:13px;color:#862028;padding:8px 12px;border-radius:6px;border:1px solid rgba(179,32,50,.2);background:rgba(179,32,50,.06);margin:12px 0}
+@keyframes atelier-modal-pop{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.project-fade-enter-active .project-modal:not(.conflict-modal){animation:atelier-modal-pop .2s cubic-bezier(.2,.9,.2,1)}
+
+/* PaletteView keeps the same dark surface, including teleported project forms. */
+.project-modal.project-modal--dark{--paper:#11121a;--ink:#f4f4f7;--ink-2:#b7b8c7;--ink-3:#9091a3;--rule:rgba(255,255,255,.14);color-scheme:dark;background:var(--paper);color:var(--ink);border-color:var(--rule);scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent}
+.project-modal.project-modal--dark h2{color:var(--ink)}
+.project-modal.project-modal--dark input:not([type=checkbox]):not([type=radio]):not(.cp-input):not(.label-input),.project-modal.project-modal--dark select,.project-modal.project-modal--dark textarea{background:#191a25;color:var(--ink);border-color:var(--rule)}
+.project-modal.project-modal--dark input:focus:not(.label-input),.project-modal.project-modal--dark select:focus,.project-modal.project-modal--dark textarea:focus{outline:1px solid var(--magenta);outline-offset:1px}
+.project-modal.project-modal--dark input[type=checkbox]{accent-color:var(--magenta)}
+.project-modal.project-modal--dark button:where(:not(.conflict-swatch,.column-action-btn,.copy-btn)){background:rgba(255,255,255,.05);color:var(--ink);border-color:var(--rule);transition:background .18s ease-in-out,border-color .18s ease-in-out,color .18s ease-in-out}
+.project-modal.project-modal--dark button:where(:not(.conflict-swatch,.column-action-btn,.copy-btn):hover:not(:disabled)){background:rgba(255,255,255,.1)}
+.project-modal.project-modal--dark .project-close{background:transparent;color:var(--ink-2)}
+.project-modal.project-modal--dark .project-modal-actions button:not([type=button]),.project-modal.project-modal--dark .project-primary{background:var(--magenta);border-color:var(--magenta);color:#fff}
+.project-modal.project-modal--dark .project-targets button{background:rgba(255,255,255,.04);color:var(--ink)}
+.project-modal.project-modal--dark .project-targets button.active{border-color:var(--magenta);background:rgba(180,16,204,.15)}
+.project-modal.project-modal--dark .project-error{color:#ffa6ae;background:rgba(255,80,100,.08);border-color:rgba(255,80,100,.25)}
+.project-modal.project-modal--dark::-webkit-scrollbar{width:6px;height:6px}
+.project-modal.project-modal--dark::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:4px}
+
+/* Reuse the palette editor's tree without applying form-button styles to it. */
+.project-modal-field{display:flex;flex-direction:column;gap:8px;margin-bottom:18px;min-width:0}
+.project-modal-field>span{font-size:11px;letter-spacing:.04em;font-weight:600;color:var(--ink-2)}
+.project-folder-field{border:0;padding:0;margin:0;min-width:0}
+.project-folder-field .fp{margin-bottom:0}
+.project-folder-field:disabled{pointer-events:none;opacity:.55}
+.project-modal .project-folder-field button,
+.project-modal.project-modal--dark .project-folder-field button{padding:0;border:0;background:transparent;color:inherit;font:inherit}
+.project-modal .project-folder-field .ft-add-btn{padding:7px 10px;font-size:11px;border:1px solid var(--rule);border-radius:7px}
+.project-modal .project-folder-field .ft-add-btn:hover{background:rgba(128,128,128,.1)}
+.project-modal:not(.conflict-modal) .project-folder-field input:not([type=checkbox]):not([type=radio]){width:auto;min-width:0;padding:2px 4px;border:0;border-bottom:1px solid var(--magenta);border-radius:3px;background:transparent;color:var(--ink);font:italic 12.5px var(--font-sans)}
+.project-modal .project-folder-field .ftn-input-wrap{min-width:0}
+@media(hover:none){.project-folder-field .ftn-btns{display:inline-flex}}
+.project-transfer-preview{margin-bottom:20px;padding:12px;border:1px solid var(--rule);border-radius:10px}
+.project-transfer-preview strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 24px var(--font-display)}
+.project-transfer-colors{display:flex;height:44px;overflow:hidden;border-radius:6px;margin-top:10px}
+.project-transfer-colors>span{flex:1;min-width:0}
+
+.modal .project-removal-option,.bookmark-modal label.project-removal-option,.project-modal:not(.conflict-modal) label.project-removal-option{display:flex;flex-direction:row;align-items:flex-start;gap:10px;padding:12px;margin:0 0 12px;border:1px solid var(--rule);border-radius:8px;cursor:pointer;letter-spacing:normal}
+.project-removal-option input{margin-top:3px;flex-shrink:0;accent-color:var(--ink)}
+.project-removal-option span{display:flex;flex-direction:column;gap:6px;min-width:0}
+.project-removal-option strong{font-size:13px;color:var(--ink)}
+.project-removal-option small{font-size:12px;line-height:1.5;font-weight:400;color:var(--ink-2)}
+.project-removal-option:has(input:checked){border-color:var(--ink);background:rgba(14,14,16,.03)}
+.project-removal-option:focus-within{outline:1px solid var(--ink);outline-offset:2px}

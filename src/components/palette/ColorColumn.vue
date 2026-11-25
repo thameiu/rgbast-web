@@ -1,10 +1,13 @@
 <template>
   <div
     class="col"
-    :class="{ 'is-dragging': isDragging, 'swap-selected': swapSelected || keyboardSelected }"
+    :class="{ 'is-dragging': isDragging, 'swap-selected': swapSelected || keyboardSelected, 'col--compact': compact, 'col--compact-fit': compact && fit, 'col--deleted': deleted }"
     :data-col-key="colKey"
     :style="colStyle"
   >
+    <svg v-if="deleted" class="deletion-stripes" viewBox="0 0 100 100" preserveAspectRatio="none" fill="none" stroke="currentColor" aria-hidden="true" focusable="false">
+      <path v-for="offset in [-50, 0, 50]" :key="offset" :d="`M${offset} 100L${offset + 100} 0`" vector-effect="non-scaling-stroke" stroke-width="3.5" stroke-linecap="round" />
+    </svg>
     <!-- Drag handle -->
     <div v-if="!readOnly" class="drag-handle" aria-hidden="true"
       @pointerdown.stop="onHandlePointerDown"
@@ -19,13 +22,13 @@
       <button v-if="!readOnly" class="column-action-btn remove-btn" @click.stop="$emit('remove')" :title="t('palette.removeColor')">
         <AppIcon name="x" :size="12" />
       </button>
-      <button class="column-action-btn" @click.stop="$emit('openAccessibility')" :title="t('palette.colorAccessibility')">
+      <button v-if="!hideAccessibility" class="column-action-btn" @click.stop="$emit('openAccessibility')" :title="t('palette.colorAccessibility')">
         <AppIcon name="info-circle" :size="13" />
       </button>
     </div>
 
     <button
-      v-if="!readOnly" class="column-action-btn lock-btn"
+      v-if="!readOnly && !hideGenerationLock" class="column-action-btn lock-btn"
       :class="{ active: isGenerationBaseColor }"
       :disabled="!isGenerationBaseColor && !canAddGenerationBaseColor"
       @click.stop="$emit('toggleGenerationBaseColor')"
@@ -40,8 +43,10 @@
     <!-- Footer -->
     <div class="col-footer">
       <input
+        v-if="!compact || !readOnly || modelValue.label"
         class="label-input" :readonly="readOnly"
         :value="modelValue.label ?? ''"
+        :title="modelValue.label ?? ''"
         placeholder="label"
         maxlength="50"
         @input="e => $emit('update:label', (e.target as HTMLInputElement).value || null)"
@@ -68,7 +73,7 @@
         v-if="displaySettings.hex"
         class="hex-row"
       >
-        <span ref="hexTextEl" class="hex-text" @click.stop="openPicker">
+        <span ref="hexTextEl" class="hex-text" :title="'#' + modelValue.hex.toUpperCase()" @click.stop="openPicker">
           #{{ modelValue.hex.toUpperCase() }}
         </span>
         <button
@@ -112,6 +117,11 @@ const { t } = useI18n()
 const props = defineProps<{
   /** Current hex and label for this column. */
   modelValue: { hex: string; label: string | null }
+  compact?: boolean
+  fit?: boolean
+  deleted?: boolean
+  hideAccessibility?: boolean
+  hideGenerationLock?: boolean
   /** Unique key used by TransitionGroup and drag logic. */
   colKey?: string
   readOnly?: boolean

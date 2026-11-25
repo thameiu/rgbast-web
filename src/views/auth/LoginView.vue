@@ -95,15 +95,9 @@
     <!-- Right: form -->
     <section class="form-col">
       <div class="form-inner">
-        <RouterLink to="/" class="brand brand-mobile">
-          <RgbastLogo size="28px" />
-          <span class="brand-name">RGBAST</span>
-        </RouterLink>
 
         <header class="form-head">
-          <p class="step font-mono">{{ t('auth.loginStep') }}</p>
           <h2 class="form-title font-display">{{ t('auth.signIn') }}</h2>
-          <p class="form-copy">{{ t('auth.loginHint') }}</p>
         </header>
 
         <form class="form" @submit.prevent="handleLogin">
@@ -176,7 +170,6 @@
 import { ref, onMounted } from 'vue'
 import { RouterLink, useRoute, useRouter } from 'vue-router'
 import { authApi } from '@/api'
-import RgbastLogo from '@/components/ui/RgbastLogo.vue'
 import SiteHeader from '@/components/layout/SiteHeader.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
 import { useI18n } from '@/i18n'

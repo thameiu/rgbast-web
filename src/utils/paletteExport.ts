@@ -48,7 +48,6 @@ interface LayoutCard {
 interface RenderLayout {
   titleY: number
   cards: LayoutCard[]
-  cardLabelOffset: number
 }
 
 function normalizeHex(hex: string): string {
@@ -57,7 +56,32 @@ function normalizeHex(hex: string): string {
 
 function truncate(text: string, max: number): string {
   if (text.length <= max) return text
-  return `${text.slice(0, Math.max(1, max - 1))}...`
+  return `${text.slice(0, Math.max(1, max - 3))}...`
+}
+
+function displayColorName(color: ExportColorCard, index: number, useCustomLabel: boolean): string {
+  return truncate((useCustomLabel ? color.customLabel?.trim() : '') || color.colorName?.trim() || `Color ${index + 1}`, 24)
+}
+
+function cardTypography(frame: LayoutCard) {
+  const hexSize = Math.round(frame.h * 0.13)
+  const hexY = frame.y + frame.h - Math.max(12, frame.h * 0.06)
+  return {
+    leftX: frame.x + Math.max(12, frame.w * 0.08),
+    hexY,
+    nameY: hexY - hexSize - Math.max(8, frame.h * 0.035),
+    hexSize,
+    nameSize: Math.round(frame.h * 0.068),
+  }
+}
+
+function blockTypography(frame: LayoutCard, landscape: boolean) {
+  const hexSize = Math.max(10, Math.min(frame.w / 5.5, frame.h * 0.28, 46))
+  const nameSize = Math.max(8, hexSize * 0.54)
+  const gap = Math.max(6, hexSize * 0.25)
+  const padding = Math.min(18, frame.h * 0.16)
+  const hexY = landscape ? frame.y + frame.h - padding : frame.y + (frame.h + nameSize + gap + hexSize) / 2
+  return { leftX: frame.x + padding, nameY: hexY - hexSize - gap, hexY, nameSize, hexSize, maxWidth: frame.w - padding * 2 }
 }
 
 function luminance(r: number, g: number, b: number): number {
@@ -115,7 +139,6 @@ function computeLayout(
   height: number,
   colorCount: number,
   columns: number,
-  showLabels: boolean,
   rendering: 'cards' | 'block' = 'cards',
 ): RenderLayout {
   const pagePadX = Math.round(width * 0.06)
@@ -126,7 +149,7 @@ function computeLayout(
 
   if (rendering === 'block') {
     const horizontal = width > height, w = width-pagePadX*2, h = horizontal ? (height-gridTop-pagePadBottom)*.65 : height-gridTop-pagePadBottom
-    return {titleY,cardLabelOffset:0,cards:Array.from({length:colorCount},(_,i)=>({x:pagePadX+(horizontal?i*w/colorCount:0),y:gridTop+(horizontal?0:i*h/colorCount),w:horizontal?w/colorCount:w,h:horizontal?h:h/colorCount}))}
+    return {titleY,cards:Array.from({length:colorCount},(_,i)=>({x:pagePadX+(horizontal?i*w/colorCount:0),y:gridTop+(horizontal?0:i*h/colorCount),w:horizontal?w/colorCount:w,h:horizontal?h:h/colorCount}))}
   }
   const rows = Math.max(1, Math.ceil(colorCount / columns))
   const gapX = Math.max(12, Math.round(width * 0.012))
@@ -134,15 +157,15 @@ function computeLayout(
 
   const baseCardW = (width - (pagePadX * 2) - (gapX * (columns - 1))) / columns
   const baseCardH = baseCardW * 1.34
-  const labelOffset = showLabels ? 28 : 8
+  const rowPadding = 8
 
   const availableHeight = height - gridTop - pagePadBottom
-  const totalForRows = (rows * (baseCardH + labelOffset)) + ((rows - 1) * gapY)
+  const totalForRows = (rows * (baseCardH + rowPadding)) + ((rows - 1) * gapY)
   const scale = totalForRows > availableHeight ? availableHeight / totalForRows : 1
 
   const cardW = baseCardW * scale
   const cardH = baseCardH * scale
-  const rowBlock = cardH + labelOffset
+  const rowBlock = cardH + rowPadding
   const gridHeight = (rowBlock * rows) + (gapY * (rows - 1))
   const startY = gridTop + Math.max(0, (availableHeight - gridHeight) / 2)
 
@@ -164,7 +187,6 @@ function computeLayout(
   return {
     titleY,
     cards,
-    cardLabelOffset: labelOffset,
   }
 }
 
@@ -201,7 +223,6 @@ function renderToCanvas(options: RenderPaletteOptions): HTMLCanvasElement {
     options.height,
     options.colors.length,
     options.columns,
-    options.showLabels,
     options.rendering,
   )
 
@@ -217,19 +238,21 @@ function renderToCanvas(options: RenderPaletteOptions): HTMLCanvasElement {
     const rgb = hexToRgb(hex)
     const onColor = textOnColor(hex)
 
-    const name = truncate((color.colorName || `Color ${index + 1}`).trim(), 24)
-    const customLabel = truncate((color.customLabel?.trim() || ''), 36)
+    const name = displayColorName(color, index, options.showLabels)
 
     drawRoundedRect(ctx, frame.x, frame.y, frame.w, frame.h, options.rendering === 'block' ? 0 : Math.max(12, frame.w * 0.08))
     ctx.fillStyle = `#${hex}`
     ctx.fill()
 
     if (options.rendering === 'block') {
-      const size=Math.max(10,Math.min(frame.w/5.5,frame.h*.28,46)),padding=Math.min(18,frame.h*.16)
-      ctx.fillStyle=onColor;ctx.textAlign='left';ctx.font=`800 ${size}px "${options.fontFamily}", sans-serif`
-      const textY=options.width>options.height?frame.y+frame.h-padding-size*(options.showLabels&&customLabel?1.8:1):frame.y+(frame.h-size)/2
-      ctx.fillText(`#${hex}`,frame.x+padding,textY,frame.w-padding*2)
-      if(options.showLabels && customLabel){ctx.font=`400 ${size*.65}px "${options.fontFamily}", sans-serif`;ctx.fillText(customLabel,frame.x+padding,textY+size*1.15,frame.w-padding*2)}
+      const text = blockTypography(frame, options.width > options.height)
+      ctx.save()
+      ctx.fillStyle = onColor; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic'
+      ctx.font = `600 ${text.nameSize}px "${options.fontFamily}", sans-serif`
+      ctx.fillText(name, text.leftX, text.nameY, text.maxWidth)
+      ctx.font = `800 ${text.hexSize}px "${options.fontFamily}", sans-serif`
+      ctx.fillText(`#${hex}`, text.leftX, text.hexY, text.maxWidth)
+      ctx.restore()
       return
     }
     ctx.fillStyle = onColor
@@ -242,23 +265,15 @@ function renderToCanvas(options: RenderPaletteOptions): HTMLCanvasElement {
     ctx.fillText(`G ${rgb.g}`, rgbX, rgbY + rgbStep)
     ctx.fillText(`B ${rgb.b}`, rgbX, rgbY + (rgbStep * 2))
 
-    const leftX = frame.x + Math.max(12, frame.w * 0.08)
-    const hexY = frame.y + frame.h - Math.max(18, frame.h * 0.16)
-    const nameY = hexY - Math.max(16, frame.h * 0.105)
-
+    const text = cardTypography(frame)
+    ctx.save()
     ctx.textAlign = 'left'
-    ctx.font = `600 ${Math.round(frame.h * 0.068)}px "${options.fontFamily}", sans-serif`
-    ctx.fillText(name, leftX, nameY)
-
-    ctx.font = `700 ${Math.round(frame.h * 0.13)}px "${options.fontFamily}", sans-serif`
-    ctx.fillText(`#${hex}`, leftX, hexY)
-
-    if (options.showLabels && customLabel) {
-      ctx.fillStyle = '#2D2D37'
-      ctx.font = `500 ${Math.round(frame.h * 0.074)}px "${options.fontFamily}", sans-serif`
-      const labelY = frame.y + frame.h + Math.max(14, layout.cardLabelOffset * 0.55)
-      ctx.fillText(customLabel, frame.x, labelY)
-    }
+    ctx.textBaseline = 'alphabetic'
+    ctx.font = `600 ${text.nameSize}px "${options.fontFamily}", sans-serif`
+    ctx.fillText(name, text.leftX, text.nameY, frame.w - (text.leftX - frame.x) * 2)
+    ctx.font = `700 ${text.hexSize}px "${options.fontFamily}", sans-serif`
+    ctx.fillText(`#${hex}`, text.leftX, text.hexY)
+    ctx.restore()
   })
 
   return canvas
@@ -270,12 +285,12 @@ function renderToSvg(options: RenderPaletteOptions): string {
     options.height,
     options.colors.length,
     options.columns,
-    options.showLabels,
     options.rendering,
   )
   const lines: string[] = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<svg xmlns="http://www.w3.org/2000/svg" width="${options.width > options.height ? 297 : 210}mm" height="${options.width > options.height ? 210 : 297}mm" viewBox="0 0 ${options.width} ${options.height}">`,
+    `<g id="palette-layer" data-export-layer="${escapeXml(options.title || 'Untitled palette')}">`,
     `<rect width="${options.width}" height="${options.height}" fill="#FFFFFF" />`,
     `<text x="${Math.round(options.width * 0.06)}" y="${layout.titleY}" font-family="${escapeXml(options.fontFamily)}" font-size="${Math.round(options.height * 0.038)}" font-weight="700" fill="#111118">${escapeXml(truncate(options.title || 'Untitled palette', 52))}</text>`,
   ]
@@ -286,17 +301,17 @@ function renderToSvg(options: RenderPaletteOptions): string {
     const hex = normalizeHex(color.hex)
     const rgb = hexToRgb(hex)
     const onColor = textOnColor(hex)
-    const name = truncate((color.colorName || `Color ${index + 1}`).trim(), 24)
-    const customLabel = truncate((color.customLabel?.trim() || ''), 36)
+    const name = displayColorName(color, index, options.showLabels)
     const radius = options.rendering === 'block' ? 0 : Math.max(12, frame.w * 0.08)
 
+    lines.push(`<g id="color-${index + 1}" data-export-color="${hex}">`)
     lines.push(`<rect x="${frame.x}" y="${frame.y}" width="${frame.w}" height="${frame.h}" rx="${radius}" ry="${radius}" fill="#${hex}" />`)
 
     if(options.rendering === 'block') {
-      const size=Math.max(10,Math.min(frame.w/5.5,frame.h*.28,46)),padding=Math.min(18,frame.h*.16)
-      const textY=options.width>options.height?frame.y+frame.h-padding-(options.showLabels&&customLabel?size*.85:0):frame.y+(frame.h+size*.7)/2
-      lines.push(`<text x="${frame.x+padding}" y="${textY}" font-family="${escapeXml(options.fontFamily)}, sans-serif" font-size="${size}" font-weight="800" fill="${onColor}">#${hex}</text>`)
-      if(options.showLabels && customLabel)lines.push(`<text x="${frame.x+padding}" y="${textY+size*.8}" font-family="${escapeXml(options.fontFamily)}, sans-serif" font-size="${size*.65}" fill="${onColor}">${escapeXml(truncate(customLabel,Math.floor(frame.w/(size*.4))))}</text>`)
+      const text = blockTypography(frame, options.width > options.height)
+      lines.push(`<text x="${text.leftX}" y="${text.nameY}" font-family="${escapeXml(options.fontFamily)}" font-size="${text.nameSize}" font-weight="600" fill="${onColor}">${escapeXml(name)}</text>`)
+      lines.push(`<text x="${text.leftX}" y="${text.hexY}" font-family="${escapeXml(options.fontFamily)}" font-size="${text.hexSize}" font-weight="800" fill="${onColor}">#${hex}</text>`)
+      lines.push('</g>')
       return
     }
     const rgbX = frame.x + frame.w - Math.max(12, frame.w * 0.08)
@@ -308,19 +323,13 @@ function renderToSvg(options: RenderPaletteOptions): string {
     lines.push(`<text x="${rgbX}" y="${rgbY + rgbStep}" text-anchor="end" font-family="${escapeXml(options.fontFamily)}" font-size="${rgbSize}" font-weight="600" fill="${onColor}">G ${rgb.g}</text>`)
     lines.push(`<text x="${rgbX}" y="${rgbY + (rgbStep * 2)}" text-anchor="end" font-family="${escapeXml(options.fontFamily)}" font-size="${rgbSize}" font-weight="600" fill="${onColor}">B ${rgb.b}</text>`)
 
-    const leftX = frame.x + Math.max(12, frame.w * 0.08)
-    const hexY = frame.y + frame.h - Math.max(12, frame.h * 0.06)
-    const nameY = hexY - Math.max(16, frame.h * 0.105)
-    const labelY = frame.y + frame.h + Math.max(14, layout.cardLabelOffset * 0.55)
-
-    lines.push(`<text x="${leftX}" y="${nameY}" font-family="${escapeXml(options.fontFamily)}" font-size="${Math.round(frame.h * 0.068)}" font-weight="600" fill="${onColor}">${escapeXml(name)}</text>`)
-    lines.push(`<text x="${leftX}" y="${hexY}" font-family="${escapeXml(options.fontFamily)}" font-size="${Math.round(frame.h * 0.13)}" font-weight="700" fill="${onColor}">#${hex}</text>`)
-    if (options.showLabels && customLabel) {
-      lines.push(`<text x="${frame.x}" y="${labelY}" font-family="${escapeXml(options.fontFamily)}" font-size="${Math.round(frame.h * 0.074)}" font-weight="500" fill="#2D2D37">${escapeXml(customLabel)}</text>`)
-    }
+    const text = cardTypography(frame)
+    lines.push(`<text x="${text.leftX}" y="${text.nameY}" font-family="${escapeXml(options.fontFamily)}" font-size="${text.nameSize}" font-weight="600" fill="${onColor}">${escapeXml(name)}</text>`)
+    lines.push(`<text x="${text.leftX}" y="${text.hexY}" font-family="${escapeXml(options.fontFamily)}" font-size="${text.hexSize}" font-weight="700" fill="${onColor}">#${hex}</text>`)
+    lines.push('</g>')
   })
 
-  lines.push('</svg>')
+  lines.push('</g></svg>')
   return lines.join('')
 }
 

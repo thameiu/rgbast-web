@@ -1,7 +1,7 @@
 <template>
   <Teleport to="body">
     <div v-if="open" class="modal-overlay">
-      <div class="modal">
+      <div class="modal project-destination-modal">
         <button class="modal-close-btn" type="button" aria-label="Close save modal" @click="$emit('close')">
           <AppIcon name="x" :size="16" />
         </button>
@@ -29,13 +29,21 @@
             rows="3"
             @input="$emit('update:pendingDescription', ($event.target as HTMLTextAreaElement).value)"
           ></textarea>
-          <label class="field-label">Folder</label>
+          <span class="field-label">{{ t('bookmarksPage.destination') }}</span>
+          <ProjectContentSelect :model-value="destinationProjectId" :options="destinationOptions" :label="t('bookmarksPage.destination')" :disabled="isSaving || destinationLoading" @update:model-value="$emit('destinationChange', $event)" />
+          <p v-if="destinationLoading" class="modal-sub" role="status">{{ t('common.loading') }}</p>
+          <p v-if="destinationError" class="modal-error" role="alert">{{ destinationError }}</p>
+          <label class="field-label">{{ t('dashboard.folders') }}</label>
+          <fieldset class="save-destination-folders" :disabled="isSaving || destinationLoading">
           <FolderPicker
+            :key="destinationProjectId ?? 'personal'"
             :folders="folders"
+            :allowFolderEditing="allowFolderEditing"
             :modelValue="pendingFolderId"
             @update:modelValue="$emit('update:pendingFolderId', $event)"
             @createFolder="$emit('createFolder', $event)"
           />
+          </fieldset>
         </template>
 
         <template v-else-if="selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot">
@@ -135,6 +143,7 @@
             class="modal-btn confirm"
             :disabled="
               isSaving ||
+              (isNewPalette && (destinationLoading || !!destinationError)) ||
               (isNewPalette && !pendingTitle.trim()) ||
               !!titleErrorMessage ||
               ((((selectedSnapshotCtx?.isMain && !isSelectedLatestMainSnapshot) || selectedSnapshotCtx?.isMerged)) && !newBranchName.trim())
@@ -154,6 +163,7 @@ import AppIcon from '@/components/icons/AppIcon.vue'
 import type { FolderResponse } from '@/api/types'
 import type { SnapshotContext } from '../../composables/usePaletteContext'
 import FolderPicker from '@/components/folder/FolderPicker.vue'
+import ProjectContentSelect, { type ProjectContentOption } from '@/components/project/ProjectContentSelect.vue'
 import { useI18n } from '@/i18n'
 
 const { t } = useI18n()
@@ -167,6 +177,11 @@ defineProps<{
   pendingDescription: string
   pendingFolderId: number | null
   folders: FolderResponse[]
+  destinationProjectId: number | null
+  destinationOptions: ProjectContentOption[]
+  destinationLoading: boolean
+  destinationError: string
+  allowFolderEditing?: boolean
   saveComment: string
   saveError: string
   createNewBranch: boolean
@@ -180,6 +195,7 @@ defineProps<{
 // Emits: close, save, field updates for the save flow, and folder creation.
 defineEmits<{
   (e: 'close'): void
+  (e: 'destinationChange', value: number | null): void
   (e: 'save'): void
   (e: 'update:pendingTitle', value: string): void
   (e: 'update:pendingDescription', value: string): void

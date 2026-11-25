@@ -36,7 +36,7 @@
             </div>
           </dl></div>
 
-          <div v-show="!bookmarksActive" class="folder-panel">
+          <div v-show="!bookmarksActive && !projectsActive" class="folder-panel">
             <p class="folder-panel-label font-mono">{{ t('dashboard.folders') }}</p>
             <div class="folder-panel-tree">
               <FolderTree
@@ -76,7 +76,8 @@
         </header>
 
         <BookmarksView v-if="bookmarksVisited" v-show="bookmarksActive" embedded @count="bookmarkCount=$event" />
-        <div v-show="!bookmarksActive" class="palettes-section">
+        <ProjectsPanel v-if="projectsVisited" v-show="projectsActive" />
+        <div v-show="!bookmarksActive && !projectsActive" class="palettes-section">
           <input v-model="localQuery" class="atelier-search" :placeholder="t('searchPage.palettePlaceholder')" :aria-label="t('searchPage.palettePlaceholder')" />
           <div class="section-bar">
 
@@ -125,11 +126,9 @@
             </button>
           </div>
 
-          <div v-if="!isCreatingFolderCard && visibleFolderCards.length === 0 && filteredPalettes.length === 0" class="empty-state">
-            <AppIcon class="empty-icon" name="palette" :size="36" />
-            <p>{{ activeFolderKey === 'all' ? t('dashboard.noPalettes') : t('dashboard.noFolderPalettes') }}</p>
+          <AtelierEmptyState v-if="!isCreatingFolderCard && visibleFolderCards.length === 0 && filteredPalettes.length === 0" icon="palette" :message="activeFolderKey === 'all' ? t('dashboard.noPalettes') : t('dashboard.noFolderPalettes')">
             <button class="empty-cta" @click="newPalette">{{ emptyCta }}</button>
-          </div>
+          </AtelierEmptyState>
 
           <div v-else class="palettes-grid">
             <article
@@ -177,9 +176,7 @@
                   </svg>
                 </button>
                 <button class="dashboard-folder-action dashboard-folder-action--danger" :title="t('dashboard.deleteFolder')" @click.stop="openDeleteFolder(folder)">
-                  <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-                    <path d="M1.5 3h10M5 3V1.5h3V3M4 3l.5 8M6.5 3v8M9 3l-.5 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
+                  <AppIcon name="trash" :size="13" />
                 </button>
               </div>
 
@@ -292,9 +289,9 @@
             {{ t('common.delete') }} <strong>{{ deleteFolderTarget.name }}</strong>? {{ t('dashboard.deleteFolderConfirm') }}
           </p>
           <div class="edit-field">
-            <label class="edit-label">{{ t('dashboard.palettesInsideFolder') }}</label>
+            <p class="modal-sub">{{ t('dashboard.palettesInsideFolder') }}:</p>
             <div class="folder-delete-options">
-              <label class="check-row">
+              <label class="project-removal-option">
                 <input
                   type="radio"
                   name="delete-folder-palette-strategy"
@@ -302,9 +299,9 @@
                   :checked="deleteFolderPaletteStrategy === 'move_root'"
                   @change="deleteFolderPaletteStrategy = 'move_root'"
                 />
-                <span>{{ t('dashboard.movePalettesRoot') }}</span>
+                <span><strong>{{ t('dashboard.movePalettesRoot') }}</strong><small>{{ t('dashboard.deleteFolderConfirm') }}</small></span>
               </label>
-              <label class="check-row">
+              <label class="project-removal-option">
                 <input
                   type="radio"
                   name="delete-folder-palette-strategy"
@@ -312,7 +309,7 @@
                   :checked="deleteFolderPaletteStrategy === 'delete'"
                   @change="deleteFolderPaletteStrategy = 'delete'"
                 />
-                <span>{{ t('dashboard.deletePalettesToo') }}</span>
+                <span><strong>{{ t('dashboard.deletePalettesToo') }}</strong><small>{{ t('projects.deletePaletteWarning') }}</small></span>
               </label>
             </div>
           </div>
@@ -338,8 +335,10 @@
 
 <script setup lang="ts">
 import BookmarksView from '@/views/bookmarks/BookmarksView.vue'
+import ProjectsPanel from '@/components/project/ProjectsPanel.vue'
 import UserAvatar from '@/components/ui/UserAvatar.vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import AtelierEmptyState from '@/components/ui/AtelierEmptyState.vue'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import AtelierTabs from '@/components/layout/AtelierTabs.vue'
 import { colorBookmarksApi } from '@/api/colorBookmarks'
@@ -365,6 +364,9 @@ import { useI18n } from '@/i18n'
 const router = useRouter()
 const route = useRoute()
 const bookmarksActive = computed(() => route.name === 'bookmarks')
+const projectsActive = computed(() => route.name === 'projects')
+const projectsVisited = ref(projectsActive.value)
+watch(projectsActive, active => { if (active) projectsVisited.value = true })
 const bookmarksVisited = ref(bookmarksActive.value)
 watch(bookmarksActive, active => { if (active) bookmarksVisited.value = true })
 const palettesTabPath = ref(route.name === 'dashboard' ? route.path : '/atelier/palettes')

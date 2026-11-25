@@ -9,6 +9,7 @@
         :modelValue="modelValue"
         :theme="props.theme"
         mode="picker"
+        :allowFolderEditing="allowFolderEditing"
         @update:modelValue="emit('update:modelValue', typeof $event === 'number' ? $event : null)"
         @createFolder="emit('createFolder', $event)"
       />
@@ -25,7 +26,8 @@ const props = withDefaults(defineProps<{
   folders: FolderResponse[]
   modelValue: number | null
   theme?: 'light' | 'dark'
-}>(), { theme: 'dark' })
+  allowFolderEditing?: boolean
+}>(), { theme: 'dark', allowFolderEditing: true })
 
 const emit = defineEmits<{
   (e: 'update:modelValue', val: number | null): void

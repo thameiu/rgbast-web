@@ -100,7 +100,7 @@
         <p class="commit-msg" :class="{ expanded: node.id === selectedId }">
           {{ node.comment || 'Initial palette creation' }}
         </p>
-        <time class="commit-time">{{ fmtDate(node.created_at) }}</time>
+        <time class="commit-time">{{ fmtDate(node.created_at) }}<span v-if="node.author"> · {{ node.author }}</span></time>
 
         <button
           v-if="node.id === selectedId && showRevertButton"

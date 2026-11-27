@@ -15,6 +15,7 @@
       :branches="ctx.allBranches.value"
       :hasUnsavedChanges="ctx.hasUnsavedChanges.value"
       :isSaving="save.isSaving.value"
+      :isGenerating="generator.generateLoading.value"
       :historyOpen="ctx.historyOpen.value"
       :isOwned="ctx.isOwned.value"
       :isNewPalette="ctx.isNewPalette.value"

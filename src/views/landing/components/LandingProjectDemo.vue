@@ -39,14 +39,14 @@ onBeforeUnmount(() => media?.revert())
 <style scoped>
 .demo-project{position:relative;width:68%;max-width:320px;height:170px;cursor:pointer;isolation:isolate;outline:none}
 .demo-project.is-open,.demo-project:focus-visible{z-index:5}
-.demo-project-back,.demo-project-face{position:absolute;inset:0;border-radius:12px;background:var(--ink);color:#fff}
+.demo-project-back,.demo-project-face{position:absolute;inset:0;border-radius:12px;border:1px solid var(--rule);background:#fff;color:var(--ink)}
 .demo-project-back{z-index:0}
 .demo-project-face{z-index:3;display:flex;flex-direction:column;justify-content:flex-end;gap:14px;padding:24px;overflow:hidden;box-shadow:0 8px 28px rgba(14,14,16,.12)}
 .demo-project:focus-visible .demo-project-face{outline:2px solid var(--magenta);outline-offset:4px}
-.demo-project-art{position:absolute;inset:0;overflow:hidden;color:#303033;pointer-events:none}
-.demo-project-art :deep(.project-icon){position:absolute;left:0;top:-25%;width:100%!important;height:150%!important}
+.demo-project-art{position:absolute;inset:0;overflow:hidden;color:#e7e7eb;pointer-events:none}
+.demo-project-art :deep(.project-icon){position:absolute;right:-18%;top:-25%;width:100%!important;height:150%!important}
 .demo-project h3{position:relative;font:700 clamp(32px,4vw,44px)/1 var(--font-display);margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.demo-project-counts{position:relative;display:flex;align-items:center;gap:10px;font:500 11px var(--font-mono);color:rgba(255,255,255,.75)}
+.demo-project-counts{position:relative;display:flex;align-items:center;gap:10px;font:500 11px var(--font-mono);color:var(--ink-2)}
 .demo-project-counts>span{display:flex;align-items:center;gap:6px}.demo-project-counts i{width:3px;height:3px;background:currentColor;opacity:.6}
 .demo-project-reveal{position:absolute;z-index:1;left:50%;top:18%;width:62%;opacity:0;visibility:hidden;pointer-events:none;border-radius:10px;overflow:hidden;box-shadow:0 4px 18px rgba(14,14,16,.18)}
 .demo-project-palette{background:#fff}.demo-project-swatches{display:flex;height:58px}.demo-project-swatches>span{flex:1;min-width:0}.demo-project-palette>strong{display:block;padding:8px 10px;font:700 22px/1 var(--font-display);color:var(--ink)}

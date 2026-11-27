@@ -266,8 +266,9 @@
 
       <!-- Generate split-button -->
       <div class="gen-btn-group">
-        <button class="gen-instant-btn" :disabled="!isOwned" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
-          <AppIcon name="sparkles" :size="13" />
+        <button class="gen-instant-btn" :aria-busy="!!isGenerating" :disabled="!isOwned" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
+          <AppLoader v-if="isGenerating" compact message="" color="#d060e8" aria-hidden="true" />
+          <AppIcon v-else name="sparkles" :size="13" />
           <span>{{ t('palette.generate') }}</span>
         </button>
         <button class="gen-settings-btn" :disabled="!isOwned" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
@@ -382,8 +383,9 @@
         <AppIcon name="history" :size="15" />
       </button>
       <div class="gen-btn-group gen-btn-group--mobile">
-        <button class="gen-instant-btn" :disabled="!isOwned" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
-          <AppIcon name="sparkles" :size="13" />
+        <button class="gen-instant-btn" :aria-busy="!!isGenerating" :disabled="!isOwned" @click="$emit('generate')" :title="t('palette.generatePaletteTitle')">
+          <AppLoader v-if="isGenerating" compact message="" color="#d060e8" aria-hidden="true" />
+          <AppIcon v-else name="sparkles" :size="13" />
         </button>
         <button class="gen-settings-btn" :disabled="!isOwned" @click="$emit('openGenerateSettings')" :title="t('palette.generateSettingsTitle')">
           <AppIcon name="settings" :size="12" />
@@ -503,6 +505,7 @@
 import { ref, shallowRef, computed, onMounted, onUnmounted, onUpdated } from 'vue'
 import type { CSSProperties } from 'vue'
 import AppIcon from '@/components/icons/AppIcon.vue'
+import AppLoader from '@/components/ui/AppLoader.vue'
 import { getBranchColor } from '@/utils/branchColors'
 import type { PaletteColorFormat, PaletteDisplaySettings } from '@/utils/paletteColorFormats'
 import type { GlobalColorAdjustments } from '@/utils/paletteColorAdjustments'
@@ -523,6 +526,7 @@ const props = defineProps<{
   isNewPalette?: boolean
   /** Whether a save request is in-flight. */
   isSaving: boolean
+  isGenerating?: boolean
   /** Whether the history panel is currently open. */
   historyOpen: boolean
   /** Whether the current user owns the palette. */
